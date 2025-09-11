@@ -6,6 +6,7 @@ import json
 import plotly.express as px
 from boto3.dynamodb.conditions import Key,Attr
 import os
+# import pandas as pd
 
 aws_key = st.secrets["AWS_ACCESS_KEY_ID"]
 aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
@@ -16,21 +17,20 @@ dynamodb = boto3.resource(
     aws_secret_access_key=aws_secret,
     region_name=region
 )
+# dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('HotelPrices')  
 
 def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     """
-    Query DynamoDB for hotel prices based on filters.
+    Query DynamoDB for hotel prices based on filters and date ranges.
     """
     location = filters.get('location')
     time = filters.get('time')
     persons = filters.get('persons')
     nights = filters.get('nights')
     
-
     if date_range:
         dates = date_range.split(' - ')
-        # Convert from DD-MM-YYYY to YYYY-MM-DD
         def convert_date_format(date_str):
             day, month, year = date_str.split('-')
             return f"{year}-{month}-{day}"
@@ -40,36 +40,42 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     else:
         checkin_start = None
         checkin_end = None
-    
-    # Partition key
+
     partition_key = f"{location}#{persons}#{nights}#{time}"
-    
-    key_condition = Key('location#persons#nights#time').eq(partition_key)
-    
-    if scraped_date_start and scraped_date_end:
-        key_condition &= Key('scraped_date#hotel_id#checkin_date#checkout_date').begins_with(scraped_date_start)
     
     filter_expression = None
     if checkin_start and checkin_end:
         filter_expression = Attr('checkin_date').between(checkin_start, checkin_end)
     
+    all_items = []
+    
+    # Generate list of scrape dates to loop over
+    
+    scrape_dates = pd.date_range(scraped_date_start, scraped_date_end).strftime("%Y-%m-%d").tolist()
+    
     try:
-        response = table.query(
-            KeyConditionExpression=key_condition,
-            FilterExpression=filter_expression
-        )
-        
-        items = response['Items']
-        while 'LastEvaluatedKey' in response:
+        for sd in scrape_dates:
+            key_condition = Key('location#persons#nights#time').eq(partition_key) & \
+                            Key('scraped_date#hotel_id#checkin_date#checkout_date').begins_with(sd)
+            
             response = table.query(
                 KeyConditionExpression=key_condition,
-                FilterExpression=filter_expression,
-                ExclusiveStartKey=response['LastEvaluatedKey']
+                FilterExpression=filter_expression
             )
-            items.extend(response['Items'])
+            
+            items = response['Items']
+            while 'LastEvaluatedKey' in response:
+                response = table.query(
+                    KeyConditionExpression=key_condition,
+                    FilterExpression=filter_expression,
+                    ExclusiveStartKey=response['LastEvaluatedKey']
+                )
+                items.extend(response['Items'])
+            
+            all_items.extend(items)
         
         transformed_items = []
-        for item in items:
+        for item in all_items:
             transformed_items.append({
                 'name': item.get('hotel_name', ''),
                 'price': item.get('price', 0),
@@ -86,10 +92,11 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
             })
         
         return transformed_items
-        
+    
     except Exception as e:
         st.error(f"Error querying DynamoDB: {str(e)}")
         return []
+
 
 # Configure page
 st.set_page_config(
