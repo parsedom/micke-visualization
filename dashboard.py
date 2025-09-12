@@ -43,37 +43,41 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
 
     partition_key = f"{location}#{persons}#{nights}#{time}"
     
+    # Build filter expression for checkin date range if provided
     filter_expression = None
     if checkin_start and checkin_end:
         filter_expression = Attr('checkin_date').between(checkin_start, checkin_end)
     
     all_items = []
     
-    # Generate list of scrape dates to loop over
-    
-    scrape_dates = pd.date_range(scraped_date_start, scraped_date_end).strftime("%Y-%m-%d").tolist()
-    
     try:
-        for sd in scrape_dates:
-            key_condition = Key('location#persons#nights#time').eq(partition_key) & \
-                            Key('scraped_date#hotel_id#checkin_date#checkout_date').begins_with(sd)
-            
+        # Use between condition for the sort key range
+        # The '~' character is a good choice as it's ASCII value is higher than '#'
+        key_condition = (
+            Key('location#persons#nights#time').eq(partition_key) &
+            Key('scraped_date#hotel_id#checkin_date#checkout_date')
+                .between(f"{scraped_date_start}#", f"{scraped_date_end}~")
+        )
+        
+        response = table.query(
+            KeyConditionExpression=key_condition,
+            FilterExpression=filter_expression
+        )
+        
+        items = response['Items']
+        
+        # Handle pagination
+        while 'LastEvaluatedKey' in response:
             response = table.query(
                 KeyConditionExpression=key_condition,
-                FilterExpression=filter_expression
+                FilterExpression=filter_expression,
+                ExclusiveStartKey=response['LastEvaluatedKey']
             )
-            
-            items = response['Items']
-            while 'LastEvaluatedKey' in response:
-                response = table.query(
-                    KeyConditionExpression=key_condition,
-                    FilterExpression=filter_expression,
-                    ExclusiveStartKey=response['LastEvaluatedKey']
-                )
-                items.extend(response['Items'])
-            
-            all_items.extend(items)
+            items.extend(response['Items'])
         
+        all_items.extend(items)
+        
+        # Transform the items
         transformed_items = []
         for item in all_items:
             transformed_items.append({
