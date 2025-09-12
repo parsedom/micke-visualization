@@ -158,8 +158,17 @@ with st.sidebar:
         time_of_day = st.selectbox("Time", ["evening", "morning"])
     
     with st.expander("📅 Date Ranges", expanded=True):
-        scraped_date_range = st.date_input("Scrape Dates", [])
-        price_date_range = st.date_input("Price Dates", [])
+        # Use unique keys for each date input to prevent caching issues
+        scraped_date_range = st.date_input(
+            "Scrape Dates", 
+            value=[], 
+            key="scrape_dates_unique"
+        )
+        price_date_range = st.date_input(
+            "Price Dates", 
+            value=[], 
+            key="price_dates_unique"
+        )
     
     st.markdown("---")
     query_button = st.button("🚀 Execute Query", type="primary", use_container_width=True)
@@ -176,13 +185,20 @@ if query_button:
     scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
     scraped_end = scraped_date_range[1].strftime("%Y-%m-%d")
     
+    # DEBUG: Show what dates are being used
+    # st.write(f"Scrape dates selected: {scraped_date_range}")
+    # st.write(f"Formatted scrape dates: {scraped_start} to {scraped_end}")
+    
     try:
-        # Use DD-MM-YYYY 
         price_start = price_date_range[0].strftime("%d-%m-%Y")
         price_end = price_date_range[1].strftime("%d-%m-%Y")
     except ValueError:
         price_start = price_date_range[0].strftime("%d-%m-%Y")
         price_end = price_date_range[1].strftime("%d-%m-%Y")
+    
+    # st.write(f"Price dates selected: {price_date_range}")
+    # st.write(f"Formatted price dates: {price_start} to {price_end}")
+
 
     with st.spinner("🔍 Searching hotels..."):
         filters = {
