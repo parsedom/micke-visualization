@@ -34,7 +34,7 @@ FLAGGED_HOTELS = [
     "Holiday Club Tampereen Kehräämö",
     "Hotel Kauppi",
     "Varala Sports & Nature Hotel",
-    "Lilian Hotel & Kök",
+    "Lillan Hotel & Kök",
     "Forenom Aparthotel Tampere Kaleva",
     "Norlandia Tampere Hotel",
     "Hotelli Vaakko - Hotel and Apartments by UHANDA",
