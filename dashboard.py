@@ -7,6 +7,49 @@ import plotly.express as px
 from boto3.dynamodb.conditions import Key,Attr
 import os
 # import pandas as pd
+FLAGGED_HOTELS = [
+    "H28 - Hotel, Apartments and Suites by UHANDA",
+    "Forenom Aparthotel Tampere Kauppakatu",
+    "Forenom Serviced Apartments Tampere Pyynikki",
+    "Scandic Tampere Hämeenpuisto",
+    "Uumen Hotels - Tampere, Finlayson",
+    "Scandic Tampere Koskipuisto",
+    "Radisson Blu Grand Hotel Tammer",
+    "Original Sokos Hotel Ilves Tampere",
+    "Omena Hotel Tampere",
+    "Scandic Tampere City",
+    "Holiday Inn Tampere - Central Station by IHG",
+    "Solo Sokos Hotel Torni Tampere",
+    "Scandic Tampere Station",
+    "Lapland Hotels Arena",
+    "Hotel Citi Inn",
+    "Scandic Rosendahl",
+    "Original Sokos Hotel Villa Tampere",
+    "Lapland Hotels Tampere",
+    "Unity Tampere - A Studio Hotel",
+    "Courtyard Tampere City",
+    "Hotelli Ville",
+    "Hotel Homeland",
+    "Mango Hotel",
+    "Holiday Club Tampereen Kehräämö",
+    "Hotel Kauppi",
+    "Varala Sports & Nature Hotel",
+    "Lilian Hotel & Kök",
+    "Forenom Aparthotel Tampere Kaleva",
+    "Norlandia Tampere Hotel",
+    "Hotelli Vaakko - Hotel and Apartments by UHANDA",
+    "Hotel Lamminpää",
+    "Hotel Hermica",
+    "Oma Hotelli",
+    "Scandic Eden Nokia",
+    "Hotelli Iisoppi",
+    "Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA",
+    "Hotel Urkin Pillopirtti",
+    "Hotel Waltikka",
+    "Aapiskukko Hotel",
+    "Hotel Ackas",
+    "Hotelli Sointula"
+]
 
 aws_key = st.secrets["AWS_ACCESS_KEY_ID"]
 aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
@@ -233,21 +276,66 @@ if 'results' in st.session_state and st.session_state.results:
     if not df.empty:
         # Hotel selection section
         st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
-        
+
         col1, col2, col3 = st.columns([3, 1, 1])
         with col1:
             st.markdown("### 🏨 Hotel Selection")
+            
+            # Get unique hotel names from current data
+            unique_hotels = sorted(df['name'].unique())
+            
+            # Create quick selection buttons
+            st.markdown("**Quick Selection:**")
+            col_bt1, col_bt2, col_bt3 = st.columns(3)
+            
+            with col_bt1:
+                if st.button("✅ Select All", key="select_all_btn", use_container_width=True, help="Select all available hotels"):
+                    st.session_state.selected_hotels = unique_hotels
+            
+            with col_bt2:
+                if st.button("🚩 Flagged Hotels", key="select_flagged_btn", use_container_width=True, help="Select only flagged hotels"):
+                    # Get only flagged hotels that exist in current data
+                    available_flagged = [hotel for hotel in FLAGGED_HOTELS if hotel in unique_hotels]
+                    st.session_state.selected_hotels = available_flagged
+            
+            with col_bt3:
+                if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True, help="Clear all selections"):
+                    st.session_state.selected_hotels = []
+            
+            # Initialize session state if it doesn't exist
+            if 'selected_hotels' not in st.session_state:
+                st.session_state.selected_hotels = []
+            
+            # Create the hotel selection dropdown
             hotels = st.multiselect(
                 "Select hotels to analyze:",
-                sorted(df['name'].unique()),
+                unique_hotels,
+                default=st.session_state.selected_hotels,
                 key="hotel_selector"
             )
+            
+            # Update session state with current selection
+            st.session_state.selected_hotels = hotels
+
         with col2:
-            st.metric("Total Hotels", len(df['name'].unique()))
+            total_hotels = len(unique_hotels)
+            st.metric("Total Hotels", total_hotels)
+            
+            # Show how many flagged hotels are available
+            available_flagged = len([h for h in FLAGGED_HOTELS if h in unique_hotels])
+            if available_flagged > 0:
+                st.metric("🚩 Available", available_flagged)
+
         with col3:
             if hotels:
-                st.metric("Selected", len(hotels))
-        
+                selected_count = len(hotels)
+                st.metric("Selected", selected_count)
+                
+                # Show flagged hotels count if any are selected
+                flagged_selected = len([h for h in hotels if h in FLAGGED_HOTELS])
+                if flagged_selected > 0:
+                    st.metric("🚩 Flagged", flagged_selected)
+
         st.markdown('</div>', unsafe_allow_html=True)
         
         if hotels:
