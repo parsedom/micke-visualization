@@ -43,51 +43,43 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
 
     partition_key = f"{location}#{persons}#{nights}#{time}"
     
+    # Build filter expression for checkin date range if provided
+    filter_expression = None
+    if checkin_start and checkin_end:
+        filter_expression = Attr('checkin_date').between(checkin_start, checkin_end)
+    
     all_items = []
     
     try:
         # Use between condition for the sort key range
+        # The '~' character is a good choice as it's ASCII value is higher than '#'
         key_condition = (
             Key('location#persons#nights#time').eq(partition_key) &
             Key('scraped_date#hotel_id#checkin_date#checkout_date')
                 .between(f"{scraped_date_start}#", f"{scraped_date_end}~")
         )
         
-        # FIRST: Get ALL items without filter to handle pagination properly
-        response = table.query(KeyConditionExpression=key_condition)
+        response = table.query(
+            KeyConditionExpression=key_condition,
+            FilterExpression=filter_expression
+        )
+        
         items = response['Items']
         
-        # Handle pagination - get ALL pages first
+        # Handle pagination
         while 'LastEvaluatedKey' in response:
             response = table.query(
                 KeyConditionExpression=key_condition,
+                FilterExpression=filter_expression,
                 ExclusiveStartKey=response['LastEvaluatedKey']
             )
             items.extend(response['Items'])
         
-        st.write(f"📊 Found {len(items)} items before filtering")
-        
-        # SECOND: Apply filters in memory after getting all data
-        filtered_items = []
-        for item in items:
-            # Filter by scrape date range
-            scraped_date = item.get('scraped_date', '')
-            if scraped_date < scraped_date_start or scraped_date > scraped_date_end:
-                continue
-            
-            # Filter by checkin date if provided
-            if checkin_start and checkin_end:
-                checkin_date = item.get('checkin_date', '')
-                if checkin_date < checkin_start or checkin_date > checkin_end:
-                    continue
-            
-            filtered_items.append(item)
-        
-        st.write(f"📊 Found {len(filtered_items)} items after filtering")
+        all_items.extend(items)
         
         # Transform the items
         transformed_items = []
-        for item in filtered_items:
+        for item in all_items:
             transformed_items.append({
                 'name': item.get('hotel_name', ''),
                 'price': item.get('price', 0),
@@ -107,8 +99,6 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     
     except Exception as e:
         st.error(f"Error querying DynamoDB: {str(e)}")
-        import traceback
-        st.error(traceback.format_exc())
         return []
 
 
