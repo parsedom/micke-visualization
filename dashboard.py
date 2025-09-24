@@ -427,70 +427,149 @@ if 'results' in st.session_state and st.session_state.results:
 
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # ------------------ Line Chart Hotel Selector ------------------
+        st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
+        st.markdown("### 📈 Line Chart Hotel Selection (Optional)")
+
+        if 'line_hotels' not in st.session_state:
+            st.session_state.line_hotels = []
+
+        line_hotels = st.multiselect(
+            "Select hotels for line chart trend:",
+            unique_hotels,
+            default=st.session_state.line_hotels,
+            key="line_chart_selector"
+        )
+        st.session_state.line_hotels = line_hotels
+        st.markdown('</div>', unsafe_allow_html=True)
+
         
         if hotels:
-            filtered_df = df[df['name'].isin(hotels)]
-            # Parse date in DD-MM-YYYY format
-            filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
+            # filtered_df = df[df['name'].isin(hotels)]
+            # # Parse date in DD-MM-YYYY format
+            # filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
                     
-            # Analytics section
-            # st.markdown("## 📊 Analytics Dashboard")
+            # # Analytics section
+            # # st.markdown("## 📊 Analytics Dashboard")
             
-            # # Key metrics row
-            # col1, col2, col3, col4 = st.columns(4)
-            # with col1:
-            #     avg_price = filtered_df['price'].mean()
-            #     st.metric("Average Price", f"€{avg_price:.1f}")
-            # with col2:
-            #     min_price = filtered_df['price'].min()
-            #     st.metric("Lowest Price", f"€{min_price:.1f}")
-            # with col3:
-            #     max_price = filtered_df['price'].max()
-            #     st.metric("Highest Price", f"€{max_price:.1f}")
-            # with col4:
-            #     price_range = max_price - min_price
-            #     st.metric("Price Range", f"€{price_range:.1f}")
+            # # # Key metrics row
+            # # col1, col2, col3, col4 = st.columns(4)
+            # # with col1:
+            # #     avg_price = filtered_df['price'].mean()
+            # #     st.metric("Average Price", f"€{avg_price:.1f}")
+            # # with col2:
+            # #     min_price = filtered_df['price'].min()
+            # #     st.metric("Lowest Price", f"€{min_price:.1f}")
+            # # with col3:
+            # #     max_price = filtered_df['price'].max()
+            # #     st.metric("Highest Price", f"€{max_price:.1f}")
+            # # with col4:
+            # #     price_range = max_price - min_price
+            # #     st.metric("Price Range", f"€{price_range:.1f}")
             
-            # # Charts section
-            # col1, col2 = st.columns(2)
+            # # # Charts section
+            # # col1, col2 = st.columns(2)
             
-            # with col1:
-            #     st.markdown("### 📈 Price Trends")
-            #     fig_line = px.line(
-            #         filtered_df, x='price_date', y='price', color='name',
-            #         title='Hotel Price Evolution', markers=True,
-            #         color_discrete_sequence=px.colors.qualitative.Set3
-            #     )
-            #     fig_line.update_layout(height=400, showlegend=True)
-            #     st.plotly_chart(fig_line, use_container_width=True)
+            # # with col1:
+            # #     st.markdown("### 📈 Price Trends")
+            # #     fig_line = px.line(
+            # #         filtered_df, x='price_date', y='price', color='name',
+            # #         title='Hotel Price Evolution', markers=True,
+            # #         color_discrete_sequence=px.colors.qualitative.Set3
+            # #     )
+            # #     fig_line.update_layout(height=400, showlegend=True)
+            # #     st.plotly_chart(fig_line, use_container_width=True)
             
-            # with col2:
-            #     st.markdown("### 📊 Price Distribution")
-            #     fig_box = px.box(
-            #         filtered_df, x='name', y='price',
-            #         title='Price Distribution by Hotel',
-            #         color_discrete_sequence=['#7dd3c0']
-            #     )
-            #     fig_box.update_xaxes(tickangle=45)
-            #     fig_box.update_layout(height=400)
-            #     st.plotly_chart(fig_box, use_container_width=True)
+            # # with col2:
+            # #     st.markdown("### 📊 Price Distribution")
+            # #     fig_box = px.box(
+            # #         filtered_df, x='name', y='price',
+            # #         title='Price Distribution by Hotel',
+            # #         color_discrete_sequence=['#7dd3c0']
+            # #     )
+            # #     fig_box.update_xaxes(tickangle=45)
+            # #     fig_box.update_layout(height=400)
+            # #     st.plotly_chart(fig_box, use_container_width=True)
             
-            # Bar chart
-            st.markdown("### 📊 Daily Average Prices")
-            daily_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
-            daily_avg['date_label'] = daily_avg['price_date'].dt.strftime('%b %d')
+            # # Bar chart
+            # st.markdown("### 📊 Daily Average Prices")
+            # daily_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
+            # daily_avg['date_label'] = daily_avg['price_date'].dt.strftime('%b %d')
             
-            fig_bar = px.bar(
-                daily_avg, x='date_label', y='price',
-                title='Average Prices Across All Selected Hotels',
-                color_discrete_sequence=['#7dd3c0'], text='price'
-            )
-            fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
-            fig_bar.update_layout(
-                height=500, showlegend=False,
-                xaxis_title="Date", yaxis_title="Average Price (€)"
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
+            # fig_bar = px.bar(
+            #     daily_avg, x='date_label', y='price',
+            #     title='Average Prices Across All Selected Hotels',
+            #     color_discrete_sequence=['#7dd3c0'], text='price'
+            # )
+            # fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
+            # fig_bar.update_layout(
+            #     height=500, showlegend=False,
+            #     xaxis_title="Date", yaxis_title="Average Price (€)"
+            # )
+            # st.plotly_chart(fig_bar, use_container_width=True)
+
+            filtered_df = df[df['name'].isin(hotels)]
+            filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
+
+            # Bar chart for main selection
+            bar_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
+            bar_avg['date_label'] = bar_avg['price_date'].dt.strftime('%b %d')
+
+            if hotels and line_hotels:
+                # Line over bar chart
+                line_df = filtered_df[filtered_df['name'].isin(line_hotels)].copy()
+                line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
+
+                # Pivot table like your detailed matrix
+                pivot_line = line_df.pivot_table(
+                    index='scrape_date',
+                    columns='price_date',
+                    values='price',
+                    aggfunc='mean'
+                )
+
+                # If you want a single line chart across all scrape dates, take the mean across scrapes
+                line_avg = pivot_line.mean(axis=0).reset_index()
+                line_avg.columns = ['price_date', 'price']
+
+                # Format date labels
+                line_avg['date_label'] = pd.to_datetime(line_avg['price_date']).dt.strftime('%b %d')
+
+
+                # Bar trace
+                fig = px.bar(
+                    bar_avg, x='date_label', y='price',
+                    color_discrete_sequence=['#7dd3c0'], text='price',
+                    labels={'price': 'Average Price (€)', 'date_label': 'Date'},
+                    title='Average Prices with Trend Line'
+                )
+
+                # Update only the bar trace for text
+                fig.data[0].texttemplate = '€%{text:.1f}'
+                fig.data[0].textposition = 'outside'
+
+                # Line/Scatter trace
+                fig.add_scatter(
+                    x=line_avg['date_label'], y=line_avg['price'],
+                    mode='lines+markers',
+                    name='Trend',
+                    line=dict(color='red', width=3)
+                )
+
+                fig.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
+                st.plotly_chart(fig, use_container_width=True)
+
+
+            else:
+                # Only bar chart if no line hotels selected
+                fig_bar = px.bar(
+                    bar_avg, x='date_label', y='price',
+                    title='Average Prices Across Selected Hotels',
+                    color_discrete_sequence=['#7dd3c0'], text='price'
+                )
+                fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
+                fig_bar.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
+                st.plotly_chart(fig_bar, use_container_width=True)
             
             # Detailed table section
             st.markdown("### 📋 Detailed Price Matrix")
