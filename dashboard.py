@@ -6,8 +6,64 @@ import json
 import plotly.express as px
 from boto3.dynamodb.conditions import Key,Attr
 import os
-# import pandas as pd
-FLAGGED_HOTELS = [
+
+ZONE1_HOTELS = [
+    "Courtyard Tampere City",
+    "Forenom Aparthotel Tampere Kauppakatu",
+    "H28 - Hotel, Apartments and Suites by UHANDA",
+    "Holiday Club Tampereen Kehräämö",
+    "Holiday Inn Tampere - Central Station by IHG",
+    "Hotel Kauppi",
+    "Hotelli Vaakko - Hotel and Apartments by UHANDA",
+    "Lapland Hotels Arena",
+    "Lapland Hotels Tampere",
+    "Lillan Hotel & Kök",
+    "Original Sokos Hotel Ilves Tampere",
+    "Original Sokos Hotel Villa Tampere",
+    "Radisson Blu Grand Hotel Tammer",
+    "Scandic Rosendahl",
+    "Scandic Tampere City",
+    "Scandic Tampere Hämeenpuisto",
+    "Scandic Tampere Koskipuisto",
+    "Scandic Tampere Station",
+    "Solo Sokos Hotel Torni Tampere",
+    "Unity Tampere - A Studio Hotel"
+]
+
+
+ZONE2_HOTELS = [
+    "Courtyard Tampere City",
+    "Forenom Aparthotel Tampere Kauppakatu",
+    "H28 - Hotel, Apartments and Suites by UHANDA",
+    "Holiday Club Tampereen Kehräämö",
+    "Holiday Inn Tampere - Central Station by IHG",
+    "Hotel Citi Inn",
+    "Hotel Hermica",
+    "Hotel Homeland",
+    "Hotel Kauppi",
+    "Hotelli Vaakko - Hotel and Apartments by UHANDA",
+    "Hotelli Ville",
+    "Lapland Hotels Arena",
+    "Lapland Hotels Tampere",
+    "Lillan Hotel & Kök",
+    "Mango Hotel",
+    "Omena Hotel Tampere",
+    "Original Sokos Hotel Ilves Tampere",
+    "Original Sokos Hotel Villa Tampere",
+    "Radisson Blu Grand Hotel Tammer",
+    "Scandic Eden Nokia",
+    "Scandic Rosendahl",
+    "Scandic Tampere City",
+    "Scandic Tampere Hämeenpuisto",
+    "Scandic Tampere Koskipuisto",
+    "Scandic Tampere Station",
+    "Solo Sokos Hotel Torni Tampere",
+    "Unity Tampere - A Studio Hotel",
+    "Uumen Hotels - Tampere, Finlayson"
+]
+
+
+ZONE3_HOTELS = [
     "H28 - Hotel, Apartments and Suites by UHANDA",
     "Forenom Aparthotel Tampere Kauppakatu",
     "Forenom Serviced Apartments Tampere Pyynikki",
@@ -54,6 +110,7 @@ FLAGGED_HOTELS = [
 aws_key = st.secrets["AWS_ACCESS_KEY_ID"]
 aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
+
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -208,7 +265,7 @@ with st.sidebar:
             key="scrape_dates_unique"
         )
         price_date_range = st.date_input(
-            "Price Dates", 
+            "Stay Dates", 
             value=[], 
             key="price_dates_unique"
         )
@@ -222,7 +279,7 @@ if query_button:
         st.error("⚠️ Please select both scrape dates")
         st.stop()
     if len(price_date_range) != 2:
-        st.error("⚠️ Please select both price dates")
+        st.error("⚠️ Please select both stay dates")
         st.stop()
 
     scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
@@ -286,19 +343,28 @@ if 'results' in st.session_state and st.session_state.results:
             
             # Create quick selection buttons
             st.markdown("**Quick Selection:**")
-            col_bt1, col_bt2, col_bt3 = st.columns(3)
+            col_bt1, col_bt2, col_bt3, col_bt4, col_bt5 = st.columns(5)
             
             with col_bt1:
                 if st.button("✅ Select All", key="select_all_btn", use_container_width=True, help="Select all available hotels"):
                     st.session_state.selected_hotels = unique_hotels
             
             with col_bt2:
-                if st.button("🚩 Flagged Hotels", key="select_flagged_btn", use_container_width=True, help="Select only flagged hotels"):
-                    # Get only flagged hotels that exist in current data
-                    available_flagged = [hotel for hotel in FLAGGED_HOTELS if hotel in unique_hotels]
-                    st.session_state.selected_hotels = available_flagged
+                if st.button("🌍 Zone 1", key="select_zone1_btn", use_container_width=True, help="Select only Zone 1 hotels"):
+                    available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in unique_hotels]
+                    st.session_state.selected_hotels = available_zone1
             
             with col_bt3:
+                if st.button("🏙️ Zone 2", key="select_zone2_btn", use_container_width=True, help="Select only Zone 2 hotels"):
+                    available_zone2 = [hotel for hotel in ZONE2_HOTELS if hotel in unique_hotels]
+                    st.session_state.selected_hotels = available_zone2
+            
+            with col_bt4:
+                if st.button("🚩 Zone 3", key="select_zone3_btn", use_container_width=True, help="Select only Zone 3 hotels"):
+                    available_zone3 = [hotel for hotel in ZONE3_HOTELS if hotel in unique_hotels]
+                    st.session_state.selected_hotels = available_zone3
+            
+            with col_bt5:
                 if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True, help="Clear all selections"):
                     st.session_state.selected_hotels = []
             
@@ -321,22 +387,37 @@ if 'results' in st.session_state and st.session_state.results:
             total_hotels = len(unique_hotels)
             st.metric("Total Hotels", total_hotels)
             
-            # Show how many flagged hotels are available
-            available_flagged = len([h for h in FLAGGED_HOTELS if h in unique_hotels])
-            if available_flagged > 0:
-                st.metric("🚩 Available", available_flagged)
+            available_zone1 = len([h for h in ZONE1_HOTELS if h in unique_hotels])
+            if available_zone1 > 0:
+                st.metric("🌍 Zone 1 Available", available_zone1)
+
+            available_zone2 = len([h for h in ZONE2_HOTELS if h in unique_hotels])
+            if available_zone2 > 0:
+                st.metric("🏙️ Zone 2 Available", available_zone2)
+
+            available_zone3 = len([h for h in ZONE3_HOTELS if h in unique_hotels])
+            if available_zone3 > 0:
+                st.metric("🚩 Zone 3 Available", available_zone3)
 
         with col3:
             if hotels:
                 selected_count = len(hotels)
                 st.metric("Selected", selected_count)
                 
-                # Show flagged hotels count if any are selected
-                flagged_selected = len([h for h in hotels if h in FLAGGED_HOTELS])
-                if flagged_selected > 0:
-                    st.metric("🚩 Flagged", flagged_selected)
+                zone1_selected = len([h for h in hotels if h in ZONE1_HOTELS])
+                if zone1_selected > 0:
+                    st.metric("🌍 Zone 1 Selected", zone1_selected)
+
+                zone2_selected = len([h for h in hotels if h in ZONE2_HOTELS])
+                if zone2_selected > 0:
+                    st.metric("🏙️ Zone 2 Selected", zone2_selected)
+
+                zone3_selected = len([h for h in hotels if h in ZONE3_HOTELS])
+                if zone3_selected > 0:
+                    st.metric("🚩 Zone 3 Selected", zone3_selected)
 
         st.markdown('</div>', unsafe_allow_html=True)
+
         
         if hotels:
             filtered_df = df[df['name'].isin(hotels)]
