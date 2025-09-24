@@ -341,6 +341,10 @@ if 'results' in st.session_state and st.session_state.results:
             # Get unique hotel names from current data
             unique_hotels = sorted(df['name'].unique())
             
+            # Initialize session state if it doesn't exist
+            if 'selected_hotels' not in st.session_state:
+                st.session_state.selected_hotels = []
+            
             # Create quick selection buttons
             st.markdown("**Quick Selection:**")
             col_bt1, col_bt2, col_bt3, col_bt4, col_bt5 = st.columns(5)
@@ -348,29 +352,30 @@ if 'results' in st.session_state and st.session_state.results:
             with col_bt1:
                 if st.button("✅ Select All", key="select_all_btn", use_container_width=True, help="Select all available hotels"):
                     st.session_state.selected_hotels = unique_hotels
+                    st.rerun()  # Force rerun to update the multiselect
             
             with col_bt2:
                 if st.button("🌍 Zone 1", key="select_zone1_btn", use_container_width=True, help="Select only Zone 1 hotels"):
                     available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in unique_hotels]
                     st.session_state.selected_hotels = available_zone1
+                    st.rerun()  # Force rerun to update the multiselect
             
             with col_bt3:
                 if st.button("🏙️ Zone 2", key="select_zone2_btn", use_container_width=True, help="Select only Zone 2 hotels"):
                     available_zone2 = [hotel for hotel in ZONE2_HOTELS if hotel in unique_hotels]
                     st.session_state.selected_hotels = available_zone2
+                    st.rerun()  # Force rerun to update the multiselect
             
             with col_bt4:
                 if st.button("🚩 Zone 3", key="select_zone3_btn", use_container_width=True, help="Select only Zone 3 hotels"):
                     available_zone3 = [hotel for hotel in ZONE3_HOTELS if hotel in unique_hotels]
                     st.session_state.selected_hotels = available_zone3
+                    st.rerun()  # Force rerun to update the multiselect
             
             with col_bt5:
                 if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True, help="Clear all selections"):
                     st.session_state.selected_hotels = []
-            
-            # Initialize session state if it doesn't exist
-            if 'selected_hotels' not in st.session_state:
-                st.session_state.selected_hotels = []
+                    st.rerun()  # Force rerun to update the multiselect
             
             # Create the hotel selection dropdown
             hotels = st.multiselect(
@@ -380,8 +385,10 @@ if 'results' in st.session_state and st.session_state.results:
                 key="hotel_selector"
             )
             
-            # Update session state with current selection
-            st.session_state.selected_hotels = hotels
+            # Update session state when user manually changes selection
+            if hotels != st.session_state.selected_hotels:
+                st.session_state.selected_hotels = hotels
+
 
         with col2:
             total_hotels = len(unique_hotels)
