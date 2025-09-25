@@ -111,6 +111,8 @@ aws_key = st.secrets["AWS_ACCESS_KEY_ID"]
 aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
+
+
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -252,7 +254,7 @@ with st.sidebar:
     st.markdown("### 🔧 Configuration")
     
     with st.expander("📍 Location & Booking Details", expanded=True):
-        location = st.selectbox("Location", ["tampere", "oulu"], index=0)
+        location = st.selectbox("Location", ["tampere", "oulu","rauma","turku","jyvaskyla"], index=0)
         persons = st.selectbox("Persons", [1, 2])
         nights = st.selectbox("Nights", [1, 3, 7])
         time_of_day = st.selectbox("Time", ["evening", "morning"])
@@ -436,8 +438,8 @@ if 'results' in st.session_state and st.session_state.results:
 
         line_hotels = st.multiselect(
             "Select hotels for line chart trend:",
-            unique_hotels,
-            default=st.session_state.line_hotels,
+            sorted(df['name'].unique()),  # show all hotels in data, not limited to 'hotels'
+            default=st.session_state.get('line_hotels', []),
             key="line_chart_selector"
         )
         st.session_state.line_hotels = line_hotels
@@ -517,7 +519,7 @@ if 'results' in st.session_state and st.session_state.results:
 
             if hotels and line_hotels:
                 # Line over bar chart
-                line_df = filtered_df[filtered_df['name'].isin(line_hotels)].copy()
+                line_df = df[df['name'].isin(line_hotels)].copy()
                 line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
 
                 # Pivot table like your detailed matrix
@@ -574,13 +576,18 @@ if 'results' in st.session_state and st.session_state.results:
             # Detailed table section
             st.markdown("### 📋 Detailed Price Matrix")
 
-            # Create pivot
+            # Create pivot - keep numeric values for proper sorting
             pivot = filtered_df.pivot_table(
                 index=['scrape_date', 'name'], columns='price_date',
-                values='price', aggfunc='mean', fill_value=''
+                values='price', aggfunc='mean'
             )
+            
+            # Format column names
             pivot.columns = [col.strftime('%Y-%m-%d') if isinstance(col, pd.Timestamp) else col for col in pivot.columns]
             pivot = pivot.reset_index()
+
+            # Get the numeric column names (date columns)
+            numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name']]
 
             # Add group separators (empty rows between scrape dates)
             unique_dates = pivot['scrape_date'].unique()
@@ -590,20 +597,17 @@ if 'results' in st.session_state and st.session_state.results:
                     group = pivot[pivot['scrape_date'] == date]
                     final_pivot = pd.concat([final_pivot, group], ignore_index=True)
                     if i < len(unique_dates) - 1:
-                        # Add empty row as separator
+                        # Add empty row as separator - use empty strings for all columns
                         empty_row = {col: '' for col in pivot.columns}
                         empty_df = pd.DataFrame([empty_row])
                         final_pivot = pd.concat([final_pivot, empty_df], ignore_index=True)
                 pivot = final_pivot
 
             # Add average row
-            numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name']]
             if numeric_cols:
                 valid_data = pivot[pivot['scrape_date'] != '']
                 
-                for col in numeric_cols:
-                    valid_data[col] = pd.to_numeric(valid_data[col], errors='coerce')
-                
+                # Calculate averages for numeric columns
                 averages = valid_data[numeric_cols].mean()
                 
                 # Add empty row as separator before average
@@ -614,38 +618,46 @@ if 'results' in st.session_state and st.session_state.results:
                 # Average row
                 avg_row = {'scrape_date': 'AVERAGE', 'name': ''}
                 for col in numeric_cols:
-                    avg_row[col] = round(averages[col], 2) if not pd.isna(averages[col]) else ''
+                    avg_row[col] = averages[col] if not pd.isna(averages[col]) else ''
                 
                 avg_df = pd.DataFrame([avg_row])
                 pivot = pd.concat([pivot, avg_df], ignore_index=True)
 
+            # Drop rows that are completely empty
             pivot = pivot.dropna(how='all')
 
+            # Custom styling function
             def style_table(row):
                 if 'AVERAGE' in str(row['scrape_date']):
                     return ['background-color: #e8f4fd; font-weight: bold; color: #1f77b4'] * len(row)
                 return [''] * len(row)
 
-            def format_numeric_value(x):
-                if x != '' and not pd.isna(x):
-                    try:
-                        num = float(x)
-                        formatted = f"{num:.2f}"
-                        if formatted.endswith('.00'):
-                            return formatted[:-3]
-                        elif formatted.endswith('0'):
-                            return formatted[:-1]
-                        else:
-                            return formatted
-                    except (ValueError, TypeError):
-                        return str(x)
-                return ''
+            # Custom number formatting function that preserves numeric type for sorting
+            def format_dataframe_for_display(df):
+                display_df = df.copy()
+                for col in numeric_cols:
+                    # Only format non-null numeric values for display, but keep them as numbers
+                    display_df[col] = display_df[col].apply(lambda x: 
+                        f"{x:.2f}".rstrip('0').rstrip('.') if pd.notna(x) and x != '' else x
+                    )
+                return display_df
 
-            for col in numeric_cols:
-                pivot[col] = pivot[col].apply(format_numeric_value)
+            # Apply styling and formatting
+            styled_pivot = pivot.style.apply(style_table, axis=1)
 
-            st.dataframe(pivot.style.apply(style_table, axis=1), 
-                        use_container_width=True, height=600, hide_index=True)
+            # Display the dataframe with proper numeric sorting enabled
+            st.dataframe(
+                styled_pivot, 
+                use_container_width=True, 
+                height=600, 
+                hide_index=True,
+                column_config={
+                    col: st.column_config.NumberColumn(
+                        col,
+                        format="%.2f"
+                    ) for col in numeric_cols
+                }
+            )
             
             # # Export section
             # st.markdown("### 💾 Export Options")
