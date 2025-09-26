@@ -6,7 +6,92 @@ import json
 import plotly.express as px
 from boto3.dynamodb.conditions import Key,Attr
 import os
+import hashlib
+import hmac
 
+# Configure page - must be first Streamlit command
+st.set_page_config(
+    page_title="Hotel Booking Dashboard",
+    page_icon="🏨",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Authentication configuration
+USERS = {
+    "micke": "micke@vis",  
+}
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+    
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if hmac.compare_digest(st.session_state["password"], USERS.get(st.session_state["username"], "")):
+            st.session_state["password_correct"] = True
+            st.session_state["authenticated_user"] = st.session_state["username"]
+            del st.session_state["password"]  # Don't store password
+            del st.session_state["username"]  # Don't store username in session state
+        else:
+            st.session_state["password_correct"] = False
+
+    # Return True if password is validated
+    if st.session_state.get("password_correct", False):
+        return True
+
+    # Show login form
+    st.markdown("""
+    <div style="max-width: 400px; margin: 5rem auto; padding: 2rem; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h1 style="color: white; text-align: center; margin-bottom: 2rem;">
+            🏨 Hotel Dashboard Login
+        </h1>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Login form in centered container
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        with st.container():
+            st.markdown("""
+            <div style="background: white; padding: 2rem; border-radius: 10px; 
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-top: 2rem;">
+            """, unsafe_allow_html=True)
+            
+            st.markdown("### 🔐 Please Login")
+            st.text_input("Username", key="username", placeholder="Enter your username")
+            st.text_input("Password", type="password", key="password", placeholder="Enter your password")
+            st.button("Login", on_click=password_entered, type="primary", use_container_width=True)
+            
+            if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+                st.error("😞 User not known or password incorrect")
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Add some info about the dashboard
+            st.markdown("""
+            <div style="text-align: center; margin-top: 2rem; color: #666;">
+                <p><strong>Hotel Price Analytics Dashboard</strong></p>
+                <p>Analyze hotel prices across different dates and locations</p>
+                <p><small>Contact your administrator for login credentials</small></p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    return False
+
+def logout():
+    """Clear session state for logout"""
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
+
+# Check authentication
+if not check_password():
+    st.stop()
+
+# Hotel zone definitions
 ZONE1_HOTELS = [
     "Courtyard Tampere City",
     "Forenom Aparthotel Tampere Kauppakatu",
@@ -29,7 +114,6 @@ ZONE1_HOTELS = [
     "Solo Sokos Hotel Torni Tampere",
     "Unity Tampere - A Studio Hotel"
 ]
-
 
 ZONE2_HOTELS = [
     "Courtyard Tampere City",
@@ -61,7 +145,6 @@ ZONE2_HOTELS = [
     "Unity Tampere - A Studio Hotel",
     "Uumen Hotels - Tampere, Finlayson"
 ]
-
 
 ZONE3_HOTELS = [
     "H28 - Hotel, Apartments and Suites by UHANDA",
@@ -119,7 +202,6 @@ dynamodb = boto3.resource(
     aws_secret_access_key=aws_secret,
     region_name=region
 )
-# dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('HotelPrices')  
 
 def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
@@ -203,20 +285,12 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
         st.error(f"Error querying DynamoDB: {str(e)}")
         return []
 
-
-# Configure page
-st.set_page_config(
-    page_title="Hotel Booking Dashboard",
-    page_icon="🏨",
-    layout="wide"
-)
-
-
+# Styling
 st.markdown("""
 <style>
     .main-header {
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem
+        padding: 2rem;
         border-radius: 10px;
         margin-bottom: 2rem;
         color: white;
@@ -239,15 +313,35 @@ st.markdown("""
         border-radius: 10px;
         margin-bottom: 2rem;
     }
+    .user-info {
+        background: #e8f4fd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #1f77b4;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<div class="main-header">
-    <h1>🏨 Hotel Booking Price Dashboard</h1>
-    <p>Analyze hotel prices across different dates and locations</p>
-</div>
-""", unsafe_allow_html=True)
+# Header with user info and logout
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.markdown("""
+    <div class="main-header">
+        <h1>🏨 Hotel Booking Price Dashboard</h1>
+        <p>Analyze hotel prices across different dates and locations</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+    <div class="user-info">
+        <p><strong>👤 Logged in as:</strong><br>{st.session_state.get('authenticated_user', 'Unknown')}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("🚪 Logout", type="secondary", use_container_width=True):
+        logout()
 
 # Sidebar
 with st.sidebar:
@@ -256,7 +350,7 @@ with st.sidebar:
     with st.expander("📍 Location & Booking Details", expanded=True):
         location = st.selectbox("Location", ["tampere", "oulu","rauma","turku","jyvaskyla"], index=0)
         persons = st.selectbox("Persons", [1, 2])
-        nights = st.selectbox("Nights", [1, 3, 7])
+        nights = st.selectbox("Nights", [1,2,3, 7])
         time_of_day = st.selectbox("Time", ["evening", "morning"])
     
     with st.expander("📅 Date Ranges", expanded=True):
@@ -287,20 +381,12 @@ if query_button:
     scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
     scraped_end = scraped_date_range[1].strftime("%Y-%m-%d")
     
-    # DEBUG: Show what dates are being used
-    # st.write(f"Scrape dates selected: {scraped_date_range}")
-    # st.write(f"Formatted scrape dates: {scraped_start} to {scraped_end}")
-    
     try:
         price_start = price_date_range[0].strftime("%d-%m-%Y")
         price_end = price_date_range[1].strftime("%d-%m-%Y")
     except ValueError:
         price_start = price_date_range[0].strftime("%d-%m-%Y")
         price_end = price_date_range[1].strftime("%d-%m-%Y")
-    
-    # st.write(f"Price dates selected: {price_date_range}")
-    # st.write(f"Formatted price dates: {price_start} to {price_end}")
-
 
     with st.spinner("🔍 Searching hotels..."):
         filters = {
@@ -311,7 +397,6 @@ if query_button:
         }
         
         date_range = f"{price_start} - {price_end}"
-    
         
         results = query_hotels(
             filters=filters,
@@ -383,16 +468,17 @@ if 'results' in st.session_state and st.session_state.results:
                     st.session_state.multiselect_key += 1
             
             # Create the hotel selection dropdown with dynamic key
+            default_hotels = [h for h in st.session_state.selected_hotels if h in unique_hotels]
+
             hotels = st.multiselect(
                 "Select hotels to analyze:",
                 unique_hotels,
-                default=st.session_state.selected_hotels,
+                default=default_hotels,
                 key=f"hotel_selector_{st.session_state.multiselect_key}"
             )
             
             # Update session state when user manually changes selection
             st.session_state.selected_hotels = hotels
-
 
         with col2:
             total_hotels = len(unique_hotels)
@@ -429,7 +515,7 @@ if 'results' in st.session_state and st.session_state.results:
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # ------------------ Line Chart Hotel Selector ------------------
+        # Line Chart Hotel Selector
         st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
         st.markdown("### 📈 Line Chart Hotel Selection (Optional)")
 
@@ -445,71 +531,7 @@ if 'results' in st.session_state and st.session_state.results:
         st.session_state.line_hotels = line_hotels
         st.markdown('</div>', unsafe_allow_html=True)
 
-        
         if hotels:
-            # filtered_df = df[df['name'].isin(hotels)]
-            # # Parse date in DD-MM-YYYY format
-            # filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
-                    
-            # # Analytics section
-            # # st.markdown("## 📊 Analytics Dashboard")
-            
-            # # # Key metrics row
-            # # col1, col2, col3, col4 = st.columns(4)
-            # # with col1:
-            # #     avg_price = filtered_df['price'].mean()
-            # #     st.metric("Average Price", f"€{avg_price:.1f}")
-            # # with col2:
-            # #     min_price = filtered_df['price'].min()
-            # #     st.metric("Lowest Price", f"€{min_price:.1f}")
-            # # with col3:
-            # #     max_price = filtered_df['price'].max()
-            # #     st.metric("Highest Price", f"€{max_price:.1f}")
-            # # with col4:
-            # #     price_range = max_price - min_price
-            # #     st.metric("Price Range", f"€{price_range:.1f}")
-            
-            # # # Charts section
-            # # col1, col2 = st.columns(2)
-            
-            # # with col1:
-            # #     st.markdown("### 📈 Price Trends")
-            # #     fig_line = px.line(
-            # #         filtered_df, x='price_date', y='price', color='name',
-            # #         title='Hotel Price Evolution', markers=True,
-            # #         color_discrete_sequence=px.colors.qualitative.Set3
-            # #     )
-            # #     fig_line.update_layout(height=400, showlegend=True)
-            # #     st.plotly_chart(fig_line, use_container_width=True)
-            
-            # # with col2:
-            # #     st.markdown("### 📊 Price Distribution")
-            # #     fig_box = px.box(
-            # #         filtered_df, x='name', y='price',
-            # #         title='Price Distribution by Hotel',
-            # #         color_discrete_sequence=['#7dd3c0']
-            # #     )
-            # #     fig_box.update_xaxes(tickangle=45)
-            # #     fig_box.update_layout(height=400)
-            # #     st.plotly_chart(fig_box, use_container_width=True)
-            
-            # # Bar chart
-            # st.markdown("### 📊 Daily Average Prices")
-            # daily_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
-            # daily_avg['date_label'] = daily_avg['price_date'].dt.strftime('%b %d')
-            
-            # fig_bar = px.bar(
-            #     daily_avg, x='date_label', y='price',
-            #     title='Average Prices Across All Selected Hotels',
-            #     color_discrete_sequence=['#7dd3c0'], text='price'
-            # )
-            # fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
-            # fig_bar.update_layout(
-            #     height=500, showlegend=False,
-            #     xaxis_title="Date", yaxis_title="Average Price (€)"
-            # )
-            # st.plotly_chart(fig_bar, use_container_width=True)
-
             filtered_df = df[df['name'].isin(hotels)]
             filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
 
@@ -537,7 +559,6 @@ if 'results' in st.session_state and st.session_state.results:
                 # Format date labels
                 line_avg['date_label'] = pd.to_datetime(line_avg['price_date']).dt.strftime('%b %d')
 
-
                 # Bar trace
                 fig = px.bar(
                     bar_avg, x='date_label', y='price',
@@ -560,7 +581,6 @@ if 'results' in st.session_state and st.session_state.results:
 
                 fig.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
                 st.plotly_chart(fig, use_container_width=True)
-
 
             else:
                 # Only bar chart if no line hotels selected
@@ -632,16 +652,6 @@ if 'results' in st.session_state and st.session_state.results:
                     return ['background-color: #e8f4fd; font-weight: bold; color: #1f77b4'] * len(row)
                 return [''] * len(row)
 
-            # Custom number formatting function that preserves numeric type for sorting
-            def format_dataframe_for_display(df):
-                display_df = df.copy()
-                for col in numeric_cols:
-                    # Only format non-null numeric values for display, but keep them as numbers
-                    display_df[col] = display_df[col].apply(lambda x: 
-                        f"{x:.2f}".rstrip('0').rstrip('.') if pd.notna(x) and x != '' else x
-                    )
-                return display_df
-
             # Apply styling and formatting
             styled_pivot = pivot.style.apply(style_table, axis=1)
 
@@ -658,28 +668,6 @@ if 'results' in st.session_state and st.session_state.results:
                     ) for col in numeric_cols
                 }
             )
-            
-            # # Export section
-            # st.markdown("### 💾 Export Options")
-            # col1, col2 = st.columns(2)
-            # with col1:
-            #     csv_data = filtered_df.to_csv(index=False)
-            #     st.download_button(
-            #         "📥 Download Raw Data (CSV)",
-            #         csv_data,
-            #         f"hotel_data_{location}_{datetime.now().strftime('%Y%m%d')}.csv",
-            #         "text/csv",
-            #         use_container_width=True
-            #     )
-            # with col2:
-            #     pivot_csv = pivot.to_csv(index=False)
-            #     st.download_button(
-            #         "📊 Download Summary Table (CSV)",
-            #         pivot_csv,
-            #         f"hotel_summary_{location}_{datetime.now().strftime('%Y%m%d')}.csv",
-            #         "text/csv",
-            #         use_container_width=True
-            #     )
         
         else:
             st.info("👆 Please select one or more hotels to view the analysis")
@@ -695,6 +683,5 @@ else:
         <p style="font-size: 1.2em; color: #666; margin-bottom: 2rem;">
             Configure your search parameters in the sidebar and click "Execute Query" to begin analysis
         </p>
-        
     </div>
     """, unsafe_allow_html=True)
