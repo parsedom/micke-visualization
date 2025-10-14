@@ -8,6 +8,7 @@ from boto3.dynamodb.conditions import Key,Attr
 import os
 import hashlib
 import hmac
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Configure page - must be first Streamlit command
 st.set_page_config(
@@ -196,6 +197,8 @@ region = st.secrets["AWS_DEFAULT_REGION"]
 
 
 
+
+
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -276,7 +279,8 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
                 'review_score': item.get('review_score', 0),
                 'city': item.get('city', ''),
                 'distance': item.get('distance', ''),
-                'hotel_url': item.get('hotel_url', '')
+                'hotel_url': item.get('hotel_url', ''),
+                'breakfast_included': item.get('breakfast_included', False)
             })
         
         return transformed_items
@@ -352,6 +356,7 @@ with st.sidebar:
         persons = st.selectbox("Persons", [1, 2])
         nights = st.selectbox("Nights", [1,2,3, 7])
         time_of_day = st.selectbox("Time", ["evening", "morning"])
+        breakfast_filter = st.checkbox("🍳 Include Breakfast Only", value=False)
     
     with st.expander("📅 Date Ranges", expanded=True):
         # Use unique keys for each date input to prevent caching issues
@@ -416,6 +421,10 @@ if 'results' in st.session_state and st.session_state.results:
     df = pd.DataFrame(st.session_state.results)
     df['price'] = pd.to_numeric(df['price'], errors='coerce')
     df = df.dropna(subset=['price'])
+
+    if breakfast_filter:
+        df = df[df['breakfast_included'] == True]
+        st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
     
     if not df.empty:
         # Hotel selection section
@@ -522,10 +531,13 @@ if 'results' in st.session_state and st.session_state.results:
         if 'line_hotels' not in st.session_state:
             st.session_state.line_hotels = []
 
+        all_hotels = sorted(df['name'].unique())  # or a master list
+        valid_defaults = [h for h in st.session_state.get('line_hotels', []) if h in all_hotels]
+
         line_hotels = st.multiselect(
             "Select hotels for line chart trend:",
-            sorted(df['name'].unique()),  # show all hotels in data, not limited to 'hotels'
-            default=st.session_state.get('line_hotels', []),
+            options=all_hotels,
+            default=valid_defaults,
             key="line_chart_selector"
         )
         st.session_state.line_hotels = line_hotels
@@ -596,20 +608,21 @@ if 'results' in st.session_state and st.session_state.results:
             # Detailed table section
             st.markdown("### 📋 Detailed Price Matrix")
 
-            # Create pivot - keep numeric values for proper sorting
+            # Create pivot
             pivot = filtered_df.pivot_table(
-                index=['scrape_date', 'name'], columns='price_date',
-                values='price', aggfunc='mean'
+                index=['scrape_date', 'name', 'breakfast_included'], 
+                columns='price_date',
+                values='price', 
+                aggfunc='mean'
             )
-            
+
             # Format column names
             pivot.columns = [col.strftime('%Y-%m-%d') if isinstance(col, pd.Timestamp) else col for col in pivot.columns]
             pivot = pivot.reset_index()
 
-            # Get the numeric column names (date columns)
-            numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name']]
+            numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name', 'breakfast_included']]
 
-            # Add group separators (empty rows between scrape dates)
+            # Add group separators (use None for numeric/boolean)
             unique_dates = pivot['scrape_date'].unique()
             if len(unique_dates) > 1:
                 final_pivot = pd.DataFrame()
@@ -617,56 +630,62 @@ if 'results' in st.session_state and st.session_state.results:
                     group = pivot[pivot['scrape_date'] == date]
                     final_pivot = pd.concat([final_pivot, group], ignore_index=True)
                     if i < len(unique_dates) - 1:
-                        # Add empty row as separator - use empty strings for all columns
-                        empty_row = {col: '' for col in pivot.columns}
+                        empty_row = {col: None for col in pivot.columns}
                         empty_df = pd.DataFrame([empty_row])
                         final_pivot = pd.concat([final_pivot, empty_df], ignore_index=True)
                 pivot = final_pivot
 
             # Add average row
             if numeric_cols:
-                valid_data = pivot[pivot['scrape_date'] != '']
-                
-                # Calculate averages for numeric columns
+                valid_data = pivot[pivot['scrape_date'].notnull()]
                 averages = valid_data[numeric_cols].mean()
-                
-                # Add empty row as separator before average
-                empty_row = {col: '' for col in pivot.columns}
+
+                empty_row = {col: None for col in pivot.columns}
                 empty_df = pd.DataFrame([empty_row])
                 pivot = pd.concat([pivot, empty_df], ignore_index=True)
-                
-                # Average row
-                avg_row = {'scrape_date': 'AVERAGE', 'name': ''}
+
+                avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE', 'breakfast_included': None}
+
                 for col in numeric_cols:
-                    avg_row[col] = averages[col] if not pd.isna(averages[col]) else ''
-                
+                    if not pd.isna(averages[col]):
+                        avg_row[col] = round(averages[col], 2)  # round to 2 decimals
+                    else:
+                        avg_row[col] = None
                 avg_df = pd.DataFrame([avg_row])
                 pivot = pd.concat([pivot, avg_df], ignore_index=True)
+            
+            pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
 
-            # Drop rows that are completely empty
-            pivot = pivot.dropna(how='all')
+            # Build AgGrid
+            gb = GridOptionsBuilder.from_dataframe(pivot)
 
-            # Custom styling function
-            def style_table(row):
-                if 'AVERAGE' in str(row['scrape_date']):
-                    return ['background-color: #e8f4fd; font-weight: bold; color: #1f77b4'] * len(row)
-                return [''] * len(row)
+            # Pin first 3 columns
+            gb.configure_columns(['scrape_date', 'name', 'breakfast_included'], pinned='left', minWidth=150)
 
-            # Apply styling and formatting
-            styled_pivot = pivot.style.apply(style_table, axis=1)
+            # Numeric columns - same width, 2 decimal precision
+            gb.configure_columns(
+                numeric_cols,
+                type=['numericColumn'],
+                precision=2,
+                minWidth=100,
+                maxWidth=100
+            )
 
-            # Display the dataframe with proper numeric sorting enabled
-            st.dataframe(
-                styled_pivot, 
-                use_container_width=True, 
-                height=600, 
-                hide_index=True,
-                column_config={
-                    col: st.column_config.NumberColumn(
-                        col,
-                        format="%.2f"
-                    ) for col in numeric_cols
-                }
+
+            # Make columns resizable
+            gb.configure_default_column(resizable=True)
+
+            # Optional: set row height
+            gb.configure_grid_options(rowHeight=35)
+
+            gridOptions = gb.build()
+
+            AgGrid(
+                pivot,
+                gridOptions=gridOptions,
+                height=600,
+                fit_columns_on_grid_load=False,  # important: don't shrink
+                enable_enterprise_modules=False,
             )
         
         else:
