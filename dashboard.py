@@ -191,11 +191,26 @@ ZONE3_HOTELS = [
     "Hotelli Sointula"
 ]
 
+Alert_Comparison = [
+    "Unity Tampere - A Studio Hotel",
+    "Scandic Tampere Station",
+    "Scandic Tampere Koskipuisto",
+    "Scandic Tampere Hämeenpuisto",
+    "Scandic Tampere City",
+    "Scandic Rosendahl",
+    "Original Sokos Hotel Villa Tampere",
+    "Lillan Hotel & Kök",
+    "Hotelli Vaakko - Hotel and Apartments by UHNDA",
+    "Hotel Kauppi",
+    "Holiday Inn Tampere - Central Station by IHG",
+    "Holiday Club Tampereen Kehräämö",
+    "H28 - Hotel, Apartments and Suites by UHNDA",
+    "Courtyard Tampere City"
+]
+
 aws_key = st.secrets["AWS_ACCESS_KEY_ID"]
 aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
-
-
 
 
 
@@ -445,7 +460,7 @@ if 'results' in st.session_state and st.session_state.results:
             
             # Create quick selection buttons
             st.markdown("**Quick Selection:**")
-            col_bt1, col_bt2, col_bt3, col_bt4, col_bt5 = st.columns(5)
+            col_bt1, col_bt2, col_bt3, col_bt4, col_bt5,col_bt6 = st.columns(6)
             
             # Button actions - update session state and increment key
             with col_bt1:
@@ -472,6 +487,11 @@ if 'results' in st.session_state and st.session_state.results:
                     st.session_state.multiselect_key += 1
             
             with col_bt5:
+                if st.button("🚨Alerts", key="select_alert_comp_btn", use_container_width=True, help="Select only alert comparision hotels"):
+                    available_comp = [hotel for hotel in Alert_Comparison if hotel in unique_hotels]
+                    st.session_state.selected_hotels = available_comp
+                    st.session_state.multiselect_key += 1
+            with col_bt6:
                 if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True, help="Clear all selections"):
                     st.session_state.selected_hotels = []
                     st.session_state.multiselect_key += 1
@@ -504,6 +524,10 @@ if 'results' in st.session_state and st.session_state.results:
             available_zone3 = len([h for h in ZONE3_HOTELS if h in unique_hotels])
             if available_zone3 > 0:
                 st.metric("🚩 Zone 3 Available", available_zone3)
+            
+            available_comp = len([h for h in Alert_Comparison if h in unique_hotels])
+            if available_comp > 0:
+                st.metric("🚨Alert Comparison hotels Available", available_comp)
 
         with col3:
             if hotels:
@@ -521,6 +545,10 @@ if 'results' in st.session_state and st.session_state.results:
                 zone3_selected = len([h for h in hotels if h in ZONE3_HOTELS])
                 if zone3_selected > 0:
                     st.metric("🚩 Zone 3 Selected", zone3_selected)
+                
+                comp_selected = len([h for h in hotels if h in Alert_Comparison])
+                if comp_selected > 0:
+                    st.metric("🚨Alert Comparison hotels Selected", comp_selected)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
