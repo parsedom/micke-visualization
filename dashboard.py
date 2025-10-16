@@ -440,12 +440,12 @@ if 'results' in st.session_state and st.session_state.results:
     if breakfast_filter:
         df = df[df['breakfast_included'] == True]
         st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
-    else:
-        df = df.sort_values(
-            by=['hotel_name', 'price', 'breakfast_included'],
-            ascending=[True, True, False]
-        )
-        df = df.drop_duplicates(subset=['hotel_name'], keep='first')
+    # else:
+    #     df = df.sort_values(
+    #         by=['name', 'price', 'breakfast_included'],
+    #         ascending=[True, True, False]
+    #     )
+    #     df = df.drop_duplicates(subset=['name'], keep='first')
     
     if not df.empty:
         # Hotel selection section
