@@ -204,7 +204,7 @@ Alert_Comparison = [
     "Hotel Kauppi",
     "Holiday Inn Tampere - Central Station by IHG",
     "Holiday Club Tampereen Kehräämö",
-    "H28 - Hotel, Apartments and Suites by UHNDA",
+    "H28 - Hotel, Apartments and Suites by UHANDA",
     "Courtyard Tampere City"
 ]
 
@@ -440,6 +440,12 @@ if 'results' in st.session_state and st.session_state.results:
     if breakfast_filter:
         df = df[df['breakfast_included'] == True]
         st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
+    else:
+        df = df.sort_values(
+            by=['hotel_name', 'price', 'breakfast_included'],
+            ascending=[True, True, False]
+        )
+        df = df.drop_duplicates(subset=['hotel_name'], keep='first')
     
     if not df.empty:
         # Hotel selection section
