@@ -1,0 +1,992 @@
+name,price,price_date,scrape_date,location,persons,nights,time,review_score,city,distance,hotel_url,breakfast_included
+Ellivuori Suite with Sauna and Balcony,180.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.9,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/1-4-hengen-huoneisto-saunalla-isolla-lasitetulla-parvekkeella-ja-jarvinakymalla.html,False
+Ellivuori Suite with Sauna and Balcony,180.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.9,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/1-4-hengen-huoneisto-saunalla-isolla-lasitetulla-parvekkeella-ja-jarvinakymalla.html,False
+1 bedroom apartment with city views,117.5,2025-10-19,2025-10-16,tampere,1,1,morning,10.0,Tampere,250 m from map center,https://www.booking.com/hotel/fi/1-bedroom-apartment-with-city-view.html,False
+"Iso perheasunto keskustassa, Särkänniemen lähellä",120.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,100 m from map center,https://www.booking.com/hotel/fi/2-bedroom-apt-downtown.html,False
+"Iso perheasunto keskustassa, Särkänniemen lähellä",115.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,100 m from map center,https://www.booking.com/hotel/fi/2-bedroom-apt-downtown.html,False
+"Iso perheasunto keskustassa, Särkänniemen lähellä",115.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,100 m from map center,https://www.booking.com/hotel/fi/2-bedroom-apt-downtown.html,False
+"""Hämeenkatu"" - Renovated Loft at the BEST location, Hosted by 2ndhomes",124.2,2025-10-16,2025-10-16,tampere,1,1,morning,8.0,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/2ndhomes-hameenkatu-apartment-brand-new-apartment-in-historical-building-with-gr.html,False
+"""Pirkankatu"" - Historical Homelike Apartment in Pyynikki",149.8,2025-10-17,2025-10-16,tampere,1,1,morning,7.6,Tampere,450 m from map center,https://www.booking.com/hotel/fi/2ndhomes-pyynikintori-apartment.html,False
+"""Pirkankatu"" - Historical Homelike Apartment in Pyynikki",165.9,2025-10-19,2025-10-16,tampere,1,1,morning,7.6,Tampere,450 m from map center,https://www.booking.com/hotel/fi/2ndhomes-pyynikintori-apartment.html,False
+"""Pieni Verka"" - Homelike 1BR Apartment next to Restaurants",138.3,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/2ndhomes-superior-center-apt-pieni-verka.html,False
+"""Pieni Verka"" - Homelike 1BR Apartment next to Restaurants",138.3,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/2ndhomes-superior-center-apt-pieni-verka.html,False
+"""Tuulensuu"" - Historical 2BR Apartment with Sauna & Great Location, Hosted by 2ndhomes",205.2,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-2br-tuulensuu-apartment-sauna-historical-building-amp-great-loc.html,False
+"""Tuulensuu"" - Historical 2BR Apartment with Sauna & Great Location, Hosted by 2ndhomes",163.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-2br-tuulensuu-apartment-sauna-historical-building-amp-great-loc.html,False
+"""Tuulensuu"" - Historical 2BR Apartment with Sauna & Great Location, Hosted by 2ndhomes",163.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-2br-tuulensuu-apartment-sauna-historical-building-amp-great-loc.html,False
+"""Tuulensuu"" - Historical 2BR Apartment with Sauna & Great Location, Hosted by 2ndhomes",163.6,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-2br-tuulensuu-apartment-sauna-historical-building-amp-great-loc.html,False
+"Homelike 1BR Apartment with Sauna, Balcony & Free Parking - Hosted by 2ndhomes",162.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.5,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-espa-2-luxurious-tampella-area-apartment-sauna-balcony-amp-lake.html,False
+Modern 2BR Apartment with Balcony & Central Location - Hosted by 2ndhomes,162.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-iso-ronka-2br-apt-with-balcony-amp-great-location.html,False
+Modern 2BR Apartment with Balcony & Central Location - Hosted by 2ndhomes,143.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-iso-ronka-2br-apt-with-balcony-amp-great-location.html,False
+Modern 2BR Apartment with Balcony & Central Location - Hosted by 2ndhomes,143.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-iso-ronka-2br-apt-with-balcony-amp-great-location.html,False
+"""Koskenranta"" - Sauna, Rooftop Terrace & Amazing Views, Hosted by 2ndhomes",157.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-koskenranta-apartment-sauna-rooftop-balcony-amp-amazing-views.html,False
+"""Koskenranta"" - Sauna, Rooftop Terrace & Amazing Views, Hosted by 2ndhomes",157.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-koskenranta-apartment-sauna-rooftop-balcony-amp-amazing-views.html,False
+"""Koskenranta"" - Sauna, Rooftop Terrace & Amazing Views, Hosted by 2ndhomes",157.6,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-koskenranta-apartment-sauna-rooftop-balcony-amp-amazing-views.html,False
+"""Keskustori"" - Renovated 1BR Apartment with Sauna at the BEST Location, Hosted by 2ndhomes",143.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,400 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-luxurious-keskustori-apartment-private-sauna-amp-great-location.html,False
+"""Keskustori"" - Renovated 1BR Apartment with Sauna at the BEST Location, Hosted by 2ndhomes",143.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,400 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-luxurious-keskustori-apartment-private-sauna-amp-great-location.html,False
+"""KANSI"" - 15th Floor Penthouse with Jacuzzi & 60m2 Terrace, Hosted by 2ndhomes",387.2,2025-10-18,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-luxurious-top-floor-apartment-kansi-jacuzzi-amp-private-terrace.html,False
+"""KANSI"" - 15th Floor Penthouse with Jacuzzi & 60m2 Terrace, Hosted by 2ndhomes",312.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-luxurious-top-floor-apartment-kansi-jacuzzi-amp-private-terrace.html,False
+"""KANSI"" - 15th Floor Penthouse with Jacuzzi & 60m2 Terrace, Hosted by 2ndhomes",312.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-luxurious-top-floor-apartment-kansi-jacuzzi-amp-private-terrace.html,False
+"""KANSI"" - 15th Floor Penthouse with Jacuzzi & 60m2 Terrace, Hosted by 2ndhomes",312.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-luxurious-top-floor-apartment-kansi-jacuzzi-amp-private-terrace.html,False
+Brand New Top Floor Loft with Balcony - Hosted by 2ndhomes,138.6,2025-10-18,2025-10-16,tampere,1,1,morning,9.2,Tampere,250 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-metso-loft-apartment-brand-new-top-floor-loft-apt.html,False
+Brand New Top Floor Loft with Balcony - Hosted by 2ndhomes,133.8,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,250 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-metso-loft-apartment-brand-new-top-floor-loft-apt.html,False
+Brand New Top Floor Loft with Balcony - Hosted by 2ndhomes,133.8,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,250 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-metso-loft-apartment-brand-new-top-floor-loft-apt.html,False
+Brand New 3BR Penthouse Loft with Sauna & Free Parking - Hosted by 2ndhomes,182.4,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,250 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-metsonkulma-apartment-spacious-3br-penthouse-loft-with-sauna-am.html,False
+Brand New 3BR Penthouse Loft with Sauna & Free Parking - Hosted by 2ndhomes,182.4,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,250 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-metsonkulma-apartment-spacious-3br-penthouse-loft-with-sauna-am.html,False
+Heartful 1BR Apartment with Balcony next to Railway Station - Hosted by 2ndhomes,129.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-modern-center-apartment-with-balcony-near-train-station-and-res.html,False
+Heartful 1BR Apartment with Balcony next to Railway Station - Hosted by 2ndhomes,129.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-modern-center-apartment-with-balcony-near-train-station-and-res.html,False
+Newly Renovated 1BR Home that Hosts up to 8 Guests - Hosted by 2ndhomes,128.8,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-otavala-apartment-just-renovated-hosts-8.html,False
+Newly Renovated 1BR Home that Hosts up to 8 Guests - Hosted by 2ndhomes,124.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-otavala-apartment-just-renovated-hosts-8.html,False
+Newly Renovated 1BR Home that Hosts up to 8 Guests - Hosted by 2ndhomes,124.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-otavala-apartment-just-renovated-hosts-8.html,False
+Unique Loft in a Historical Building in Pyynikki - Hosted by 2ndhomes,133.8,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,450 m from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-panimo-top-floor-loft-apartment.html,False
+Modern 1BR Apartment with Balcony next to Railway Station - Hosted by 2ndhomes,124.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-posteljooni-apt-new-1br-apt-with-balcony-and-best-location.html,False
+Modern 1BR Apartment with Balcony next to Railway Station - Hosted by 2ndhomes,124.2,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-posteljooni-apt-new-1br-apt-with-balcony-and-best-location.html,False
+Modern 1BR Apartment with Balcony next to Railway Station - Hosted by 2ndhomes,124.2,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-posteljooni-apt-new-1br-apt-with-balcony-and-best-location.html,False
+"""Kanava"" - New 1BR Apartment with Sauna, Balcony & Views, Hosted by 2ndhomes",143.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-ranta-tampella-apartment-brand-new-apartment-with-lake-view.html,False
+"""Kanava"" - New 1BR Apartment with Sauna, Balcony & Views, Hosted by 2ndhomes",143.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-ranta-tampella-apartment-brand-new-apartment-with-lake-view.html,False
+"""Kanava"" - New 1BR Apartment with Sauna, Balcony & Views, Hosted by 2ndhomes",143.6,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-ranta-tampella-apartment-brand-new-apartment-with-lake-view.html,False
+Historical 3BR Downtown Apartment with Sauna - Hosted by 2ndhomes,172.4,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-ruuskanen-apartment-3-bedrooms-best-location-amp-sauna.html,False
+Historical 3BR Downtown Apartment with Sauna - Hosted by 2ndhomes,172.4,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-ruuskanen-apartment-3-bedrooms-best-location-amp-sauna.html,False
+Stunning Views 11th Floor 2BR Home with Sauna - Hosted by 2ndhomes,172.4,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-silta-apartment-2br-luxurious-apartment-with-sauna-amp-amazing.html,False
+Stunning Views 11th Floor 2BR Home with Sauna - Hosted by 2ndhomes,172.4,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-silta-apartment-2br-luxurious-apartment-with-sauna-amp-amazing.html,False
+"""PENTHOUSE"" - Renovated 1BR Apt with Sauna & 60m2 Private Terrace, Hosted by 2ndhomes",219.6,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-spa-apartment.html,False
+"""PENTHOUSE"" - Renovated 1BR Apt with Sauna & 60m2 Private Terrace, Hosted by 2ndhomes",219.6,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-spa-apartment.html,False
+"""PENTHOUSE"" - Renovated 1BR Apt with Sauna & 60m2 Private Terrace, Hosted by 2ndhomes",172.4,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-spa-apartment.html,False
+"""PENTHOUSE"" - Renovated 1BR Apt with Sauna & 60m2 Private Terrace, Hosted by 2ndhomes",172.4,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-spa-apartment.html,False
+2BR Apartment with Sauna & Balcony at Tammela Stadium - Hosted by 2ndhomes,200.4,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammela-apartment-2br-brand-new-apartment-with-sauna-and-balcon.html,False
+2BR Apartment with Sauna & Balcony at Tammela Stadium - Hosted by 2ndhomes,167.6,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammela-apartment-2br-brand-new-apartment-with-sauna-and-balcon.html,False
+2BR Apartment with Sauna & Balcony at Tammela Stadium - Hosted by 2ndhomes,167.6,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammela-apartment-2br-brand-new-apartment-with-sauna-and-balcon.html,False
+2BR Apartment with Sauna & Balcony at Tammela Stadium - Hosted by 2ndhomes,167.6,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammela-apartment-2br-brand-new-apartment-with-sauna-and-balcon.html,False
+Modern & Spacious 1BR Apartment with Balcony & Great Location - Hosted by 2ndhomes,128.8,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammeripuisto-apt.html,False
+Modern & Spacious 1BR Apartment with Balcony & Great Location - Hosted by 2ndhomes,128.8,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammeripuisto-apt.html,False
+Modern & Spacious 1BR Apartment with Balcony & Great Location - Hosted by 2ndhomes,128.8,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tammeripuisto-apt.html,False
+"Top Floor 1BR Apartment in Tampella with Free Parking, Sauna & Balcony - Hosted by 2ndhomes",162.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/2ndhomes-tampere-tampella-apartment-1br-top-floor-apt-with-sauna-amp-balcony.html,False
+Spacious Downtown Apartment with Balcony next to Restaurants - Hosted by 2ndhomes,138.6,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/2ndhomes-verkatehdas-apartment.html,False
+Spacious Downtown Apartment with Balcony next to Restaurants - Hosted by 2ndhomes,124.2,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/2ndhomes-verkatehdas-apartment.html,False
+Spacious Downtown Apartment with Balcony next to Restaurants - Hosted by 2ndhomes,124.2,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/2ndhomes-verkatehdas-apartment.html,False
+Spacious Downtown Apartment with Balcony next to Restaurants - Hosted by 2ndhomes,124.2,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/2ndhomes-verkatehdas-apartment.html,False
+7th Heaven,72.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/7th-heaven.html,False
+7th Heaven,72.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/7th-heaven.html,False
+Aapiskukko Hotel,63.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,False
+Aapiskukko Hotel,63.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,False
+Aapiskukko Hotel,63.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,False
+Aapiskukko Hotel,63.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,False
+Aapiskukko Hotel,63.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,False
+Aapiskukko Hotel,63.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,False
+Aapiskukko Hotel,63.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,True
+Aapiskukko Hotel,63.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,True
+Aapiskukko Hotel,63.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,True
+Aapiskukko Hotel,63.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,True
+Aapiskukko Hotel,63.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,True
+Aapiskukko Hotel,63.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.4,Pälkäne,31.5 km from map center,https://www.booking.com/hotel/fi/aapiskukko.html,True
+Aleksi Apartment,194.4,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/aleksi-apartment.html,False
+Aleksi Apartment,194.4,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/aleksi-apartment.html,False
+Alexi Apartments - Newly Renovated Apt in the Heart of the City near to Railway Station and Nokia Arena,109.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.5,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/alexi-apartments-newly-renovated-apt-in-the-heart-of-the-city-near-to-railway-st.html,False
+Alexi Apartments - Newly Renovated Apt in the Heart of the City near to Railway Station and Nokia Arena,109.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.5,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/alexi-apartments-newly-renovated-apt-in-the-heart-of-the-city-near-to-railway-st.html,False
+Alexi Apartments - Newly Renovated Apt in the Heart of the City near to Railway Station and Nokia Arena,109.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.5,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/alexi-apartments-newly-renovated-apt-in-the-heart-of-the-city-near-to-railway-st.html,False
+Alexi Apartments - Newly Renovated Apt in the Heart of the City near to Railway Station and Nokia Arena,109.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.5,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/alexi-apartments-newly-renovated-apt-in-the-heart-of-the-city-near-to-railway-st.html,False
+Alexi Apartments - Newly Renovated Apt in the Heart of the City near to Railway Station and Nokia Arena,109.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.5,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/alexi-apartments-newly-renovated-apt-in-the-heart-of-the-city-near-to-railway-st.html,False
+Alexi Apartments - Newly Renovated Apt in the Heart of the City near to Railway Station and Nokia Arena,109.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.5,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/alexi-apartments-newly-renovated-apt-in-the-heart-of-the-city-near-to-railway-st.html,False
+Annalan Helmi - Viihtyisä koti hyvillä kulkuyhteyksillä ja saunalla,91.2,2025-10-16,2025-10-16,tampere,1,1,morning,8.8,Tampere,9 km from map center,https://www.booking.com/hotel/fi/annalan-helmi.html,False
+Annalan Helmi - Viihtyisä koti hyvillä kulkuyhteyksillä ja saunalla,91.2,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,9 km from map center,https://www.booking.com/hotel/fi/annalan-helmi.html,False
+Annalan Helmi - Viihtyisä koti hyvillä kulkuyhteyksillä ja saunalla,91.2,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,9 km from map center,https://www.booking.com/hotel/fi/annalan-helmi.html,False
+Paradise,85.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/apart.html,False
+Paradise,85.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/apart.html,False
+Paradise,85.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/apart.html,False
+Apartment suitable for everyone 50m,59.4,2025-10-20,2025-10-16,tampere,1,1,morning,5.0,Tampere,6.7 km from map center,https://www.booking.com/hotel/fi/apartment-suitable-for-everyone-50m.html,False
+Apartment suitable for everyone 50m,59.4,2025-10-21,2025-10-16,tampere,1,1,morning,5.0,Tampere,6.7 km from map center,https://www.booking.com/hotel/fi/apartment-suitable-for-everyone-50m.html,False
+ARENA Studio,95.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/areena-tampere-studio.html,False
+ARENA Studio,89.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/areena-tampere-studio.html,False
+ARENA Studio,90.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/areena-tampere-studio.html,False
+"Arena Location, 5th Floor Modern Flat",113.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/arena-location-5th-floor-modern-flat.html,False
+"As 10 Lumi incl Sauna, Wifi",112.5,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Valkeakoski,28.4 km from map center,https://www.booking.com/hotel/fi/as-10-lumi.html,False
+"As 10 Lumi incl Sauna, Wifi",112.5,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Valkeakoski,28.4 km from map center,https://www.booking.com/hotel/fi/as-10-lumi.html,False
+"As 10 Lumi incl Sauna, Wifi",112.5,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Valkeakoski,28.4 km from map center,https://www.booking.com/hotel/fi/as-10-lumi.html,False
+"As 10 Lumi incl Sauna, Wifi",112.5,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Valkeakoski,28.4 km from map center,https://www.booking.com/hotel/fi/as-10-lumi.html,False
+Asuntoni keskustassa,526.5,2025-10-16,2025-10-16,tampere,1,1,morning,0.0,Tampere,400 m from map center,https://www.booking.com/hotel/fi/asuntoni-keskustassa.html,False
+Asuntoni keskustassa,526.5,2025-10-17,2025-10-16,tampere,1,1,morning,0.0,Tampere,400 m from map center,https://www.booking.com/hotel/fi/asuntoni-keskustassa.html,False
+Asuntoni keskustassa,526.5,2025-10-18,2025-10-16,tampere,1,1,morning,0.0,Tampere,400 m from map center,https://www.booking.com/hotel/fi/asuntoni-keskustassa.html,False
+Asuntoni keskustassa,526.5,2025-10-19,2025-10-16,tampere,1,1,morning,0.0,Tampere,400 m from map center,https://www.booking.com/hotel/fi/asuntoni-keskustassa.html,False
+Asuntoni keskustassa,526.5,2025-10-20,2025-10-16,tampere,1,1,morning,0.0,Tampere,400 m from map center,https://www.booking.com/hotel/fi/asuntoni-keskustassa.html,False
+Asuntoni keskustassa,526.5,2025-10-21,2025-10-16,tampere,1,1,morning,0.0,Tampere,400 m from map center,https://www.booking.com/hotel/fi/asuntoni-keskustassa.html,False
+Theater and Beach Apartment,168.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/beach-and-studio.html,False
+Theater and Beach Apartment,137.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/beach-and-studio.html,False
+Theater and Beach Apartment,137.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/beach-and-studio.html,False
+Theater and Beach Apartment,137.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/beach-and-studio.html,False
+Beautiful apartment in the center of Tampere,116.1,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/beautiful-apartment-in-the-center-of-tampere.html,False
+Beautiful apartment in the center of Tampere,116.1,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/beautiful-apartment-in-the-center-of-tampere.html,False
+Beautiful apartment in the center of Tampere,89.1,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/beautiful-apartment-in-the-center-of-tampere.html,False
+Beautiful apartment in the center of Tampere,89.1,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/beautiful-apartment-in-the-center-of-tampere.html,False
+Beautiful apartment in the center of Tampere,89.1,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/beautiful-apartment-in-the-center-of-tampere.html,False
+BlueSolarPearl R - Vaihtoehto majoittumiselle,85.5,2025-10-18,2025-10-16,tampere,1,1,morning,9.2,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/bluesolarpearl-r-vaihtoehto-majoittumiselle.html,False
+BlueSolarPearl R - Vaihtoehto majoittumiselle,85.5,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/bluesolarpearl-r-vaihtoehto-majoittumiselle.html,False
+BlueSolarPearl R - Vaihtoehto majoittumiselle,85.5,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/bluesolarpearl-r-vaihtoehto-majoittumiselle.html,False
+BlueSolarPearl R - Vaihtoehto majoittumiselle,85.5,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/bluesolarpearl-r-vaihtoehto-majoittumiselle.html,False
+BlueSolarPearl T - More than a hotel,94.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Nokia,13 km from map center,https://www.booking.com/hotel/fi/bluesolarpearl-t-more-than-a.html,False
+Brand-new City Home 33m2,89.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/brand-new-city-home-luminary-33m2-tampere-keskusta.html,False
+Brand-new City Home 33m2,90.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/brand-new-city-home-luminary-33m2-tampere-keskusta.html,False
+Bright studio in the heart of Tampere,73.1,2025-10-19,2025-10-16,tampere,1,1,morning,8.1,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/bright-studio-in-the-heart-of-tampere.html,False
+Bright studio in the heart of Tampere,73.1,2025-10-20,2025-10-16,tampere,1,1,morning,8.1,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/bright-studio-in-the-heart-of-tampere.html,False
+Bright studio in the heart of Tampere,73.1,2025-10-21,2025-10-16,tampere,1,1,morning,8.1,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/bright-studio-in-the-heart-of-tampere.html,False
+"Casa Kaisa,cozy one-bedroom apartment, free parking",70.2,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,3.6 km from map center,https://www.booking.com/hotel/fi/casa-kaisa-cozy-one-bedroom-apartment-free-parking.html,False
+Center located apartment close to University,114.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.3,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/center-located-apartment-close-to-university.html,False
+Central Aleksanteri,151.1,2025-10-16,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-aleksanteri.html,False
+Central Aleksanteri,151.1,2025-10-17,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-aleksanteri.html,False
+Central Aleksanteri,151.1,2025-10-18,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-aleksanteri.html,False
+Central Aleksanteri,113.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-aleksanteri.html,False
+Central Aleksanteri,113.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-aleksanteri.html,False
+Central Aleksanteri,113.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-aleksanteri.html,False
+Central Alexandra,132.1,2025-10-16,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-alexandra.html,False
+Central Alexandra,179.6,2025-10-17,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-alexandra.html,False
+Central Alexandra,179.6,2025-10-18,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-alexandra.html,False
+Central Alexandra,132.1,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-alexandra.html,False
+Central Alexandra,132.1,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-alexandra.html,False
+Central Alexandra,132.1,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-alexandra.html,False
+Central Ojakatu,132.1,2025-10-16,2025-10-16,tampere,1,1,morning,9.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-ojakatu.html,False
+Central Ojakatu,141.6,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-ojakatu.html,False
+Central Ojakatu,141.6,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-ojakatu.html,False
+Central Ojakatu,113.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-ojakatu.html,False
+Central Ojakatu,113.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-ojakatu.html,False
+Central Ojakatu,113.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/central-ojakatu.html,False
+Central Studio Apartment,100.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.1,Tampere,100 m from map center,https://www.booking.com/hotel/fi/central-studio-apartment-tampere.html,False
+Chalet Ellivuori huoneisto as 1,252.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.3,Sastamala,38.7 km from map center,https://www.booking.com/hotel/fi/chalet-ellivuori-huoneisto-as-1.html,False
+Chalet Ellivuori huoneisto as 1,252.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.3,Sastamala,38.7 km from map center,https://www.booking.com/hotel/fi/chalet-ellivuori-huoneisto-as-1.html,False
+Chalet Ellivuori huoneisto as 1,252.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.3,Sastamala,38.7 km from map center,https://www.booking.com/hotel/fi/chalet-ellivuori-huoneisto-as-1.html,False
+Charming studio in the French Quarter of Tampere,117.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/charming-studio-in-the-french-quarter-of-tampere.html,False
+Charming studio in the French Quarter of Tampere,117.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/charming-studio-in-the-french-quarter-of-tampere.html,False
+Charming studio in the French Quarter of Tampere,117.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/charming-studio-in-the-french-quarter-of-tampere.html,False
+Charming studio in the French Quarter of Tampere,129.6,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/charming-studio-in-the-french-quarter-of-tampere.html,True
+Charming studio in the French Quarter of Tampere,129.6,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/charming-studio-in-the-french-quarter-of-tampere.html,True
+Charming studio in the French Quarter of Tampere,129.6,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/charming-studio-in-the-french-quarter-of-tampere.html,True
+Hotel Citi Inn,72.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,False
+Hotel Citi Inn,78.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,False
+Hotel Citi Inn,78.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,False
+Hotel Citi Inn,72.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,False
+Hotel Citi Inn,72.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,False
+Hotel Citi Inn,72.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,False
+Hotel Citi Inn,72.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,True
+Hotel Citi Inn,78.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,True
+Hotel Citi Inn,78.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,True
+Hotel Citi Inn,72.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,True
+Hotel Citi Inn,72.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,True
+Hotel Citi Inn,72.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/citi-inn.html,True
+City Apartment Wallesmanni ja helppo pysäköinti,239.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-apartment-wallesmanni.html,False
+City Apartment Wallesmanni ja helppo pysäköinti,209.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-apartment-wallesmanni.html,False
+City Apartment Wallesmanni ja helppo pysäköinti,209.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-apartment-wallesmanni.html,False
+City Apartment Wallesmanni ja helppo pysäköinti,209.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-apartment-wallesmanni.html,False
+"City Home Finland Panorama Suite - New Luxury Suite with Own SAUNA, One Bedroom, Spacious Balcony with City Views and Great Location next to Nokia Arena",159.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-arena-suite-sauna-amp-balcony.html,False
+"City Home Finland Panorama Suite - New Luxury Suite with Own SAUNA, One Bedroom, Spacious Balcony with City Views and Great Location next to Nokia Arena",159.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-arena-suite-sauna-amp-balcony.html,False
+"City Home Finland Panorama Suite - New Luxury Suite with Own SAUNA, One Bedroom, Spacious Balcony with City Views and Great Location next to Nokia Arena",160.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-arena-suite-sauna-amp-balcony.html,False
+"City Home Finland Big Luxury Suite - Spacious Suite with Own SAUNA, One Bedroom and Furnished Balcony next to Train Station",147.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-big-luxury-suite-58m2-sauna.html,False
+"City Home Finland Big Luxury Suite - Spacious Suite with Own SAUNA, One Bedroom and Furnished Balcony next to Train Station",147.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-big-luxury-suite-58m2-sauna.html,False
+"City Home Finland Big Luxury Suite - Spacious Suite with Own SAUNA, One Bedroom and Furnished Balcony next to Train Station",147.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-big-luxury-suite-58m2-sauna.html,False
+City Home Finland Studio Suite - Great City Views and Perfect Location next to Railway Station,135.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-centrum-tower-city-view-2.html,False
+City Home Finland Studio Suite - Great City Views and Perfect Location next to Railway Station,135.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-centrum-tower-city-view-2.html,False
+City Home Finland Studio Suite - Great City Views and Perfect Location next to Railway Station,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-centrum-tower-city-view-2.html,False
+City Home Finland Studio Suite - Great City Views and Perfect Location next to Railway Station,135.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-centrum-tower-city-view-2.html,False
+City Home Finland - Junior Suite - Great Location and Amenities,122.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-junior-suite.html,False
+City Home Finland - Junior Suite - Great Location and Amenities,122.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-junior-suite.html,False
+City Home Finland - Junior Suite - Great Location and Amenities,122.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-junior-suite.html,False
+City Home Finland - Junior Suite - Great Location and Amenities,122.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-junior-suite.html,False
+City Home Finland - Junior Suite - Great Location and Amenities,122.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-junior-suite.html,False
+AP City Suite - City View over Tampere and Best Location,139.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-luminary-2.html,False
+AP City Suite - City View over Tampere and Best Location,139.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-luminary-2.html,False
+AP City Suite - City View over Tampere and Best Location,139.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-luminary-2.html,False
+AP City Suite - City View over Tampere and Best Location,139.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-luminary-2.html,False
+AP City Suite - City View over Tampere and Best Location,139.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.6,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/city-home-finland-luminary-2.html,False
+City Home Finland Arena Studio - Perfect location in Downtown of Tampere and Great Amenities,122.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-nokia-arena-studio-perfect-location-in-downtown-of-tampere-and.html,False
+City Home Finland Arena Studio - Perfect location in Downtown of Tampere and Great Amenities,122.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-nokia-arena-studio-perfect-location-in-downtown-of-tampere-and.html,False
+City Home Finland Arena Studio - Perfect location in Downtown of Tampere and Great Amenities,122.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-nokia-arena-studio-perfect-location-in-downtown-of-tampere-and.html,False
+City Home Finland Arena Studio - Perfect location in Downtown of Tampere and Great Amenities,122.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-nokia-arena-studio-perfect-location-in-downtown-of-tampere-and.html,False
+City Home Finland Arena Studio - Perfect location in Downtown of Tampere and Great Amenities,122.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-nokia-arena-studio-perfect-location-in-downtown-of-tampere-and.html,False
+City Home Finland Arena Studio - Perfect location in Downtown of Tampere and Great Amenities,122.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/city-home-finland-nokia-arena-studio-perfect-location-in-downtown-of-tampere-and.html,False
+City Home Finland Penthouse – SAUNA & Best Location,135.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-penthouse-sauna-amp-best-location.html,False
+City Home Finland Penthouse – SAUNA & Best Location,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-penthouse-sauna-amp-best-location.html,False
+City Home Finland Penthouse – SAUNA & Best Location,146.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/city-home-finland-penthouse-sauna-amp-best-location.html,False
+City Home Finland Arena Suite - Perfect location with City View,122.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/city-home-finland-uros-live-suite-brand-new-studio-with-city-view-next-to-uros-l.html,False
+City Home Finland Arena Suite - Perfect location with City View,127.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/city-home-finland-uros-live-suite-brand-new-studio-with-city-view-next-to-uros-l.html,False
+City Home Finland Arena Suite - Perfect location with City View,122.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/city-home-finland-uros-live-suite-brand-new-studio-with-city-view-next-to-uros-l.html,False
+Homelike Studio at the Very Center of Downtown Tampere,114.4,2025-10-19,2025-10-16,tampere,1,1,morning,7.6,Tampella,1 km from map center,https://www.booking.com/hotel/fi/cityhome-near-train-station-free-wifi.html,False
+Homelike Studio at the Very Center of Downtown Tampere,114.4,2025-10-20,2025-10-16,tampere,1,1,morning,7.6,Tampella,1 km from map center,https://www.booking.com/hotel/fi/cityhome-near-train-station-free-wifi.html,False
+Homelike Studio at the Very Center of Downtown Tampere,114.4,2025-10-21,2025-10-16,tampere,1,1,morning,7.6,Tampella,1 km from map center,https://www.booking.com/hotel/fi/cityhome-near-train-station-free-wifi.html,False
+"Come in! ""Ilmatar"" Luxury apartments in the heart of Tampere with yacuzzi option!",234.6,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/come-in-ilmatar-93sqm-luxury-3bd-apartment-for-5-people-in-centrum-next-tampere.html,False
+"Come in! ""Ilmatar"" Luxury apartments in the heart of Tampere with yacuzzi option!",264.2,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/come-in-ilmatar-93sqm-luxury-3bd-apartment-for-5-people-in-centrum-next-tampere.html,False
+"Come in! ""Pirkanportti"" In the heart of Tampere next to the railway station for 9 people!",179.5,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,1 km from map center,https://www.booking.com/hotel/fi/come-in-pirkanportti-in-the-heart-of-tampere-next-to-the-railway-station.html,False
+"Come in! ""Pirkanportti"" In the heart of Tampere next to the railway station for 9 people!",200.1,2025-10-20,2025-10-16,tampere,1,1,morning,9.3,Tampere,1 km from map center,https://www.booking.com/hotel/fi/come-in-pirkanportti-in-the-heart-of-tampere-next-to-the-railway-station.html,False
+"Come in! ""Tammela"" 1bd Best Location for 5 Guests next to the Tammela soccer stadium!",118.3,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/come-in-tammela-1bd-best-location-5-guests-in-centrum.html,False
+"Come in! ""Tammela"" 1bd Best Location for 5 Guests next to the Tammela soccer stadium!",118.3,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/come-in-tammela-1bd-best-location-5-guests-in-centrum.html,False
+"Come in! ""Tammela"" 1bd Best Location for 5 Guests next to the Tammela soccer stadium!",137.2,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/come-in-tammela-1bd-best-location-5-guests-in-centrum.html,False
+Topaasi - Nokia Arena Apartments above the skies by Come in!,118.2,2025-10-17,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/come-in-topaasi-3-magnificent-1bd-studio-above-the-skies-in-heart-of-tam-tampere.html,False
+Topaasi - Nokia Arena Apartments above the skies by Come in!,136.7,2025-10-18,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/come-in-topaasi-3-magnificent-1bd-studio-above-the-skies-in-heart-of-tam-tampere.html,False
+Topaasi - Nokia Arena Apartments above the skies by Come in!,95.1,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/come-in-topaasi-3-magnificent-1bd-studio-above-the-skies-in-heart-of-tam-tampere.html,False
+Topaasi - Nokia Arena Apartments above the skies by Come in!,95.1,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/come-in-topaasi-3-magnificent-1bd-studio-above-the-skies-in-heart-of-tam-tampere.html,False
+Topaasi - Nokia Arena Apartments above the skies by Come in!,109.9,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/come-in-topaasi-3-magnificent-1bd-studio-above-the-skies-in-heart-of-tam-tampere.html,False
+Comfy studio,74.7,2025-10-19,2025-10-16,tampere,1,1,morning,0.0,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/comfy-studio.html,False
+Comfy studio,74.7,2025-10-20,2025-10-16,tampere,1,1,morning,0.0,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/comfy-studio.html,False
+Comfy studio,74.7,2025-10-21,2025-10-16,tampere,1,1,morning,0.0,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/comfy-studio.html,False
+Kokoushotelli Murikanranta,118.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Terälahti,22.9 km from map center,https://www.booking.com/hotel/fi/conference-murikanranta.html,False
+Kokoushotelli Murikanranta,118.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Terälahti,22.9 km from map center,https://www.booking.com/hotel/fi/conference-murikanranta.html,True
+Kokoushotelli Murikanranta,118.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Terälahti,22.9 km from map center,https://www.booking.com/hotel/fi/conference-murikanranta.html,True
+Kokoushotelli Murikanranta,118.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Terälahti,22.9 km from map center,https://www.booking.com/hotel/fi/conference-murikanranta.html,True
+Cosy and peaceful apartment,355.5,2025-10-19,2025-10-16,tampere,1,1,morning,1.0,Tampere,8.2 km from map center,https://www.booking.com/hotel/fi/cosy-and-peaceful-apartment.html,False
+Cosy and peaceful apartment,355.5,2025-10-20,2025-10-16,tampere,1,1,morning,1.0,Tampere,8.2 km from map center,https://www.booking.com/hotel/fi/cosy-and-peaceful-apartment.html,False
+Cosy and peaceful apartment,355.5,2025-10-21,2025-10-16,tampere,1,1,morning,1.0,Tampere,8.2 km from map center,https://www.booking.com/hotel/fi/cosy-and-peaceful-apartment.html,False
+Cosy studio apartment near by Ideapark,79.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.5,Lempäälä,11.9 km from map center,https://www.booking.com/hotel/fi/cosy-apartment-near-by-ideapark.html,False
+Cosy studio apartment near by Ideapark,79.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Lempäälä,11.9 km from map center,https://www.booking.com/hotel/fi/cosy-apartment-near-by-ideapark.html,False
+Cosy studio apartment near by Ideapark,79.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Lempäälä,11.9 km from map center,https://www.booking.com/hotel/fi/cosy-apartment-near-by-ideapark.html,False
+Cosy studio apartment near by Ideapark,79.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Lempäälä,11.9 km from map center,https://www.booking.com/hotel/fi/cosy-apartment-near-by-ideapark.html,False
+Cosy studio apartment + free private parking,91.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.1,Kangasala,16.4 km from map center,https://www.booking.com/hotel/fi/cosy-studio-apartment-free-private-parking.html,False
+Cosy studio apartment + free private parking,91.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.1,Kangasala,16.4 km from map center,https://www.booking.com/hotel/fi/cosy-studio-apartment-free-private-parking.html,False
+Cosy studio apartment + free private parking,91.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Kangasala,16.4 km from map center,https://www.booking.com/hotel/fi/cosy-studio-apartment-free-private-parking.html,False
+Cosy studio apartment + free private parking,91.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Kangasala,16.4 km from map center,https://www.booking.com/hotel/fi/cosy-studio-apartment-free-private-parking.html,False
+Cosy studio apartment + free private parking,91.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Kangasala,16.4 km from map center,https://www.booking.com/hotel/fi/cosy-studio-apartment-free-private-parking.html,False
+Courtyard Tampere City,114.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,False
+Courtyard Tampere City,124.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,False
+Courtyard Tampere City,184.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,False
+Courtyard Tampere City,99.2,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,False
+Courtyard Tampere City,91.2,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,False
+Courtyard Tampere City,107.2,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,False
+Courtyard Tampere City,129.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,True
+Courtyard Tampere City,139.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,True
+Courtyard Tampere City,199.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,True
+Courtyard Tampere City,111.2,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,True
+Courtyard Tampere City,103.2,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,True
+Courtyard Tampere City,119.2,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/courtyard-tampere.html,True
+Cozy 2 br in the heart of the city,200.1,2025-10-17,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/cozy-2-br-in-the-heart-of-the-city.html,False
+Cozy 2 br in the heart of the city,105.3,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/cozy-2-br-in-the-heart-of-the-city.html,False
+Cozy 2 br in the heart of the city,84.2,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/cozy-2-br-in-the-heart-of-the-city.html,False
+Retrohenkinen taiteilijakoti - Tampere Kaleva,198.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.1,Tampere,3 km from map center,https://www.booking.com/hotel/fi/cozy-apartment-in-tampere-kaleva.html,False
+Retrohenkinen taiteilijakoti - Tampere Kaleva,198.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.1,Tampere,3 km from map center,https://www.booking.com/hotel/fi/cozy-apartment-in-tampere-kaleva.html,False
+Retrohenkinen taiteilijakoti - Tampere Kaleva,198.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,3 km from map center,https://www.booking.com/hotel/fi/cozy-apartment-in-tampere-kaleva.html,False
+Retrohenkinen taiteilijakoti - Tampere Kaleva,198.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,3 km from map center,https://www.booking.com/hotel/fi/cozy-apartment-in-tampere-kaleva.html,False
+Delightful downtown studio on the top floor,81.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.2,Tampere,450 m from map center,https://www.booking.com/hotel/fi/delightful-downtown-studio-on-the-top-floor.html,False
+Delightful downtown studio on the top floor,81.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.2,Tampere,450 m from map center,https://www.booking.com/hotel/fi/delightful-downtown-studio-on-the-top-floor.html,False
+Delightful downtown studio on the top floor,81.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.2,Tampere,450 m from map center,https://www.booking.com/hotel/fi/delightful-downtown-studio-on-the-top-floor.html,False
+Ellilän Kievari,80.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,False
+Ellilän Kievari,80.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,False
+Ellilän Kievari,80.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,False
+Ellilän Kievari,80.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,True
+Ellilän Kievari,80.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,True
+Ellilän Kievari,80.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,True
+Ellilän Kievari,80.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,True
+Ellilän Kievari,80.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,True
+Ellilän Kievari,80.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Toijala,38.4 km from map center,https://www.booking.com/hotel/fi/ellilan-kievari.html,True
+Ellin Pooli 3,66.5,2025-10-17,2025-10-16,tampere,1,1,morning,8.0,Sastamala,38.9 km from map center,https://www.booking.com/hotel/fi/ellin-pooli-3.html,False
+Ellin Pooli 3,66.5,2025-10-18,2025-10-16,tampere,1,1,morning,8.0,Sastamala,38.9 km from map center,https://www.booking.com/hotel/fi/ellin-pooli-3.html,False
+Ellivuori Asuinhuoneistot Apartments,297.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-asuinhuoneistot-apartments.html,False
+Ellivuori Asuinhuoneistot Apartments,297.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-asuinhuoneistot-apartments.html,False
+Ellivuori Asuinhuoneistot Apartments,297.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-asuinhuoneistot-apartments.html,False
+Ellivuori Chalet,163.2,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Sastamala,38.7 km from map center,https://www.booking.com/hotel/fi/ellivuori-chalet.html,False
+Ellivuori. Ellin Pooli 4,78.4,2025-10-17,2025-10-16,tampere,1,1,morning,8.0,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli-4.html,False
+Ellivuori. Ellin Pooli 4,78.4,2025-10-18,2025-10-16,tampere,1,1,morning,8.0,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli-4.html,False
+"Ellivuori, Ellin Pooli 5",76.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.3,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli-5.html,False
+"Ellivuori, Ellin Pooli 5",76.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.3,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli-5.html,False
+"Ellivuori, Ellin Pooli 6",72.0,2025-10-16,2025-10-16,tampere,1,1,morning,6.5,Karkku,38.7 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli-6.html,False
+"Ellivuori, Ellin Pooli 6",72.0,2025-10-17,2025-10-16,tampere,1,1,morning,6.5,Karkku,38.7 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli-6.html,False
+"Ellivuori, Ellin Pooli 1",66.5,2025-10-16,2025-10-16,tampere,1,1,morning,8.3,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli.html,False
+"Ellivuori, Ellin Pooli 1",66.5,2025-10-17,2025-10-16,tampere,1,1,morning,8.3,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli.html,False
+"Ellivuori, Ellin Pooli 1",66.5,2025-10-18,2025-10-16,tampere,1,1,morning,8.3,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli.html,False
+"Ellivuori, Ellin Pooli2",66.5,2025-10-16,2025-10-16,tampere,1,1,morning,6.6,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli2.html,False
+"Ellivuori, Ellin Pooli2",66.5,2025-10-17,2025-10-16,tampere,1,1,morning,6.6,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli2.html,False
+"Ellivuori, Ellin Pooli2",76.0,2025-10-18,2025-10-16,tampere,1,1,morning,6.6,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-ellin-pooli2.html,False
+Ellivuori Resort Hehku 2,130.5,2025-10-16,2025-10-16,tampere,1,1,morning,7.4,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-resort-hehku-2.html,False
+Ellivuori Resort Hehku 2,144.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.4,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-resort-hehku-2.html,False
+Ellivuori Resort Hehku 2,144.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.4,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-resort-hehku-2.html,False
+Ellivuori Resort Hehku,147.2,2025-10-16,2025-10-16,tampere,1,1,morning,8.1,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-resort-hehku.html,False
+Ellivuori Resort Hehku,166.2,2025-10-17,2025-10-16,tampere,1,1,morning,8.1,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/ellivuori-resort-hehku.html,False
+Ellivuori Resort,99.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.0,Sastamala,38.9 km from map center,https://www.booking.com/hotel/fi/ellivuori.html,False
+Ellivuori Resort,119.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.0,Sastamala,38.9 km from map center,https://www.booking.com/hotel/fi/ellivuori.html,False
+"Entire flat located 2km from center, free parking",67.5,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,2.7 km from map center,https://www.booking.com/hotel/fi/entire-flat-located-2km-from-center-free-parking.html,False
+"Entire flat located 2km from center, free parking",67.5,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,2.7 km from map center,https://www.booking.com/hotel/fi/entire-flat-located-2km-from-center-free-parking.html,False
+"Entire flat located 2km from center, free parking",67.5,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,2.7 km from map center,https://www.booking.com/hotel/fi/entire-flat-located-2km-from-center-free-parking.html,False
+"Entire flat located 2km from center, free parking",67.5,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,2.7 km from map center,https://www.booking.com/hotel/fi/entire-flat-located-2km-from-center-free-parking.html,False
+"EP City Suite - Sauna, Balcony & Free parking",132.1,2025-10-18,2025-10-16,tampere,1,1,morning,9.1,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/ep-city-suite-sauna-and-balcony.html,False
+"EP City Suite - Sauna, Balcony & Free parking",113.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/ep-city-suite-sauna-and-balcony.html,False
+"EP City Suite - Sauna, Balcony & Free parking",113.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/ep-city-suite-sauna-and-balcony.html,False
+"EP City Suite - Sauna, Balcony & Free parking",113.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/ep-city-suite-sauna-and-balcony.html,False
+City Home Finland Ratina - Spacious Studio with Own SAUNA and Great Location Next to Uros Live Arena,135.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,1 km from map center,https://www.booking.com/hotel/fi/exclusive-city-home-ratina-52m2-private-sauna.html,False
+City Home Finland Ratina - Spacious Studio with Own SAUNA and Great Location Next to Uros Live Arena,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,1 km from map center,https://www.booking.com/hotel/fi/exclusive-city-home-ratina-52m2-private-sauna.html,False
+City Home Finland Ratina - Spacious Studio with Own SAUNA and Great Location Next to Uros Live Arena,135.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,1 km from map center,https://www.booking.com/hotel/fi/exclusive-city-home-ratina-52m2-private-sauna.html,False
+Forenom Aparthotel Tampere Kaleva,158.1,2025-10-16,2025-10-16,tampere,1,1,morning,7.8,Tampere,3.3 km from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kaleva.html,False
+Forenom Aparthotel Tampere Kaleva,153.4,2025-10-17,2025-10-16,tampere,1,1,morning,7.8,Tampere,3.3 km from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kaleva.html,False
+Forenom Aparthotel Tampere Kaleva,153.4,2025-10-18,2025-10-16,tampere,1,1,morning,7.8,Tampere,3.3 km from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kaleva.html,False
+Forenom Aparthotel Tampere Kaleva,151.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.8,Tampere,3.3 km from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kaleva.html,False
+Forenom Aparthotel Tampere Kaleva,158.1,2025-10-20,2025-10-16,tampere,1,1,morning,7.8,Tampere,3.3 km from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kaleva.html,False
+Forenom Aparthotel Tampere Kaleva,171.1,2025-10-21,2025-10-16,tampere,1,1,morning,7.8,Tampere,3.3 km from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kaleva.html,False
+Forenom Aparthotel Tampere Kauppakatu,86.8,2025-10-16,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kauppakatu.html,False
+Forenom Aparthotel Tampere Kauppakatu,117.8,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kauppakatu.html,False
+Forenom Aparthotel Tampere Kauppakatu,259.2,2025-10-18,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kauppakatu.html,False
+Forenom Aparthotel Tampere Kauppakatu,70.7,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kauppakatu.html,False
+Forenom Aparthotel Tampere Kauppakatu,81.8,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kauppakatu.html,False
+Forenom Aparthotel Tampere Kauppakatu,81.8,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/forenom-aparthotel-tampere-kauppakatu.html,False
+Forenom Serviced Apartments Tampere Pyynikki,132.2,2025-10-16,2025-10-16,tampere,1,1,morning,8.3,Tampere,450 m from map center,https://www.booking.com/hotel/fi/forenom-city-suites-tampere.html,False
+Forenom Serviced Apartments Tampere Pyynikki,123.9,2025-10-17,2025-10-16,tampere,1,1,morning,8.3,Tampere,450 m from map center,https://www.booking.com/hotel/fi/forenom-city-suites-tampere.html,False
+Forenom Serviced Apartments Tampere Pyynikki,123.9,2025-10-18,2025-10-16,tampere,1,1,morning,8.3,Tampere,450 m from map center,https://www.booking.com/hotel/fi/forenom-city-suites-tampere.html,False
+Forenom Serviced Apartments Tampere Pyynikki,123.9,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Tampere,450 m from map center,https://www.booking.com/hotel/fi/forenom-city-suites-tampere.html,False
+Forenom Serviced Apartments Tampere Pyynikki,123.9,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Tampere,450 m from map center,https://www.booking.com/hotel/fi/forenom-city-suites-tampere.html,False
+Forenom Serviced Apartments Tampere Pyynikki,114.5,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Tampere,450 m from map center,https://www.booking.com/hotel/fi/forenom-city-suites-tampere.html,False
+"Guesthouse Onnia, kattohuoneisto Siurossa",77.3,2025-10-18,2025-10-16,tampere,1,1,morning,9.6,Siuro,22.1 km from map center,https://www.booking.com/hotel/fi/guesthouse-onnia-kattohuoneisto-siurossa.html,False
+"Guesthouse Onnia, kattohuoneisto Siurossa",77.3,2025-10-19,2025-10-16,tampere,1,1,morning,9.6,Siuro,22.1 km from map center,https://www.booking.com/hotel/fi/guesthouse-onnia-kattohuoneisto-siurossa.html,False
+"Guesthouse Onnia, kattohuoneisto Siurossa",77.3,2025-10-20,2025-10-16,tampere,1,1,morning,9.6,Siuro,22.1 km from map center,https://www.booking.com/hotel/fi/guesthouse-onnia-kattohuoneisto-siurossa.html,False
+"Guesthouse Onnia, kattohuoneisto Siurossa",77.3,2025-10-21,2025-10-16,tampere,1,1,morning,9.6,Siuro,22.1 km from map center,https://www.booking.com/hotel/fi/guesthouse-onnia-kattohuoneisto-siurossa.html,False
+Guesthouse with sauna & hot tub & cold water tub,189.1,2025-10-17,2025-10-16,tampere,1,1,morning,9.7,Nokia,15.5 km from map center,https://www.booking.com/hotel/fi/guesthouse-with-sauna-amp-hot-tub.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,False
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,True
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,True
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,True
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,True
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,True
+"H28 - Hotel, Apartments and Suites by UHANDA",97.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,50 m from map center,https://www.booking.com/hotel/fi/h28-apartments-and-suites-by-uhanda.html,True
+Haave Apartments,102.3,2025-10-17,2025-10-16,tampere,1,1,morning,8.5,Valkeakoski,29.2 km from map center,https://www.booking.com/hotel/fi/haave-apartments-82.html,False
+Haave Apartments,102.3,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Valkeakoski,29.2 km from map center,https://www.booking.com/hotel/fi/haave-apartments-82.html,False
+Haave Apartments,102.3,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Valkeakoski,29.2 km from map center,https://www.booking.com/hotel/fi/haave-apartments-82.html,False
+Haave Apartments,102.3,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Valkeakoski,29.2 km from map center,https://www.booking.com/hotel/fi/haave-apartments-82.html,False
+Haave Apartments Tampere,114.4,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/haave-apartments-tampere.html,False
+Haave Apartments Tampere,124.6,2025-10-17,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/haave-apartments-tampere.html,False
+Haave Apartments Tampere,133.9,2025-10-18,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/haave-apartments-tampere.html,False
+Haave Apartments Tampere,110.7,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/haave-apartments-tampere.html,False
+Haave Apartments Tampere,110.7,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/haave-apartments-tampere.html,False
+Härmälän Kotoisa - valoisa yksiö - free parking & wifi,85.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/harmala-harmony-free-wifi.html,False
+Härmälän Kotoisa - valoisa yksiö - free parking & wifi,85.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/harmala-harmony-free-wifi.html,False
+Hotel Hermica,97.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,False
+Hotel Hermica,88.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,False
+Hotel Hermica,82.4,2025-10-18,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,False
+Hotel Hermica,90.9,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,False
+Hotel Hermica,101.3,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,False
+Hotel Hermica,101.3,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,False
+Hotel Hermica,97.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,True
+Hotel Hermica,88.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,True
+Hotel Hermica,82.4,2025-10-18,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,True
+Hotel Hermica,90.9,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,True
+Hotel Hermica,101.3,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,True
+Hotel Hermica,101.3,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,8 km from map center,https://www.booking.com/hotel/fi/hermica.html,True
+Hervannassa uusi saunallinen kaksio + Parkkipaikka + Ratikka,91.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.6,Hervanta,6.9 km from map center,https://www.booking.com/hotel/fi/hervannassa-uusi-saunallinen-kaksio-parkkipaikka-ratikka.html,False
+Hervannassa uusi saunallinen kaksio + Parkkipaikka + Ratikka,95.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.6,Hervanta,6.9 km from map center,https://www.booking.com/hotel/fi/hervannassa-uusi-saunallinen-kaksio-parkkipaikka-ratikka.html,False
+Hiisi Homes Kangasala,178.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.0,Suorama,10.5 km from map center,https://www.booking.com/hotel/fi/hiisi-homes-kangasala.html,False
+Hiisi Homes Kangasala,178.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.0,Suorama,10.5 km from map center,https://www.booking.com/hotel/fi/hiisi-homes-kangasala.html,False
+Hiisi Homes Kangasala,198.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.0,Suorama,10.5 km from map center,https://www.booking.com/hotel/fi/hiisi-homes-kangasala.html,False
+Hiisi Homes Kangasala,198.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.0,Suorama,10.5 km from map center,https://www.booking.com/hotel/fi/hiisi-homes-kangasala.html,False
+Hiisi Homes Kangasala,198.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.0,Suorama,10.5 km from map center,https://www.booking.com/hotel/fi/hiisi-homes-kangasala.html,False
+Holiday Club Tampereen Kehräämö Apartments,285.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-resort-tampere-spa.html,False
+Holiday Club Tampereen Kehräämö Apartments,268.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-resort-tampere-spa.html,False
+Holiday Club Tampereen Kehräämö Apartments,235.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-resort-tampere-spa.html,False
+Holiday Club Tampereen Kehräämö Apartments,255.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-resort-tampere-spa.html,False
+Holiday Club Tampereen Kehräämö Apartments,276.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-resort-tampere-spa.html,False
+Holiday Club Tampereen Kehräämö,189.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,False
+Holiday Club Tampereen Kehräämö,133.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,False
+Holiday Club Tampereen Kehräämö,147.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,False
+Holiday Club Tampereen Kehräämö,165.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,False
+Holiday Club Tampereen Kehräämö,189.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,True
+Holiday Club Tampereen Kehräämö,133.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,True
+Holiday Club Tampereen Kehräämö,147.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,True
+Holiday Club Tampereen Kehräämö,165.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/holiday-club-tampereen-kylpyla.html,True
+Holiday Inn Tampere - Central Station by IHG,100.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,False
+Holiday Inn Tampere - Central Station by IHG,129.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,False
+Holiday Inn Tampere - Central Station by IHG,164.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,False
+Holiday Inn Tampere - Central Station by IHG,86.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,False
+Holiday Inn Tampere - Central Station by IHG,75.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,False
+Holiday Inn Tampere - Central Station by IHG,103.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,False
+Holiday Inn Tampere - Central Station by IHG,110.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,True
+Holiday Inn Tampere - Central Station by IHG,139.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,True
+Holiday Inn Tampere - Central Station by IHG,174.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,True
+Holiday Inn Tampere - Central Station by IHG,101.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,True
+Holiday Inn Tampere - Central Station by IHG,90.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,True
+Holiday Inn Tampere - Central Station by IHG,118.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/holiday-inn-tampere-central-station.html,True
+Home Suites - Boutique apartment in city centre - Free parking,144.6,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,300 m from map center,https://www.booking.com/hotel/fi/home-suites-boutique-apartment-in-city-centre.html,False
+Home Suites - Boutique apartment in city centre - Free parking,144.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,300 m from map center,https://www.booking.com/hotel/fi/home-suites-boutique-apartment-in-city-centre.html,False
+Home Suites - Boutique apartment in city centre - Free parking,144.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,300 m from map center,https://www.booking.com/hotel/fi/home-suites-boutique-apartment-in-city-centre.html,False
+Home Suites - Boutique apartment in city centre - Free parking,144.6,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,300 m from map center,https://www.booking.com/hotel/fi/home-suites-boutique-apartment-in-city-centre.html,False
+Hotel Homeland,135.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,False
+Hotel Homeland,135.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,False
+Hotel Homeland,135.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,False
+Hotel Homeland,135.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,False
+Hotel Homeland,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,False
+Hotel Homeland,135.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,False
+Hotel Homeland,135.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,True
+Hotel Homeland,135.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,True
+Hotel Homeland,135.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,True
+Hotel Homeland,135.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,True
+Hotel Homeland,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,True
+Hotel Homeland,135.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/homeland.html,True
+Hotelli Ville,74.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/hotel-ville.html,False
+Hotelli Ville,79.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/hotel-ville.html,False
+Hotelli Ville,79.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/hotel-ville.html,False
+Hotelli Ville,74.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/hotel-ville.html,False
+Hotelli Ville,74.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/hotel-ville.html,False
+Hotelli Ville,74.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/hotel-ville.html,False
+Hotelli Iisoppi,84.0,2025-10-16,2025-10-16,tampere,1,1,morning,6.3,Nokia,13 km from map center,https://www.booking.com/hotel/fi/hotelli-iisoppi.html,False
+Hotelli Iisoppi,72.0,2025-10-17,2025-10-16,tampere,1,1,morning,6.3,Nokia,13 km from map center,https://www.booking.com/hotel/fi/hotelli-iisoppi.html,False
+Hotelli Iisoppi,72.0,2025-10-18,2025-10-16,tampere,1,1,morning,6.3,Nokia,13 km from map center,https://www.booking.com/hotel/fi/hotelli-iisoppi.html,False
+Hotelli Iisoppi,84.0,2025-10-20,2025-10-16,tampere,1,1,morning,6.3,Nokia,13 km from map center,https://www.booking.com/hotel/fi/hotelli-iisoppi.html,False
+Hotelli Iisoppi,84.0,2025-10-21,2025-10-16,tampere,1,1,morning,6.3,Nokia,13 km from map center,https://www.booking.com/hotel/fi/hotelli-iisoppi.html,False
+Hotelli Sointula,74.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.0,Orivesi,38.2 km from map center,https://www.booking.com/hotel/fi/hotelli-sointula.html,False
+Hotelli Sointula,74.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.0,Orivesi,38.2 km from map center,https://www.booking.com/hotel/fi/hotelli-sointula.html,False
+Hotelli Sointula,74.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.0,Orivesi,38.2 km from map center,https://www.booking.com/hotel/fi/hotelli-sointula.html,False
+Hotelli Vaakko - Hotel and Apartments by UHANDA,94.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.3 km from map center,https://www.booking.com/hotel/fi/hotelli-vaakko-and-apartments-by-uhanda.html,False
+Hotelli Vaakko - Hotel and Apartments by UHANDA,94.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.3 km from map center,https://www.booking.com/hotel/fi/hotelli-vaakko-and-apartments-by-uhanda.html,False
+Hotelli Vaakko - Hotel and Apartments by UHANDA,103.5,2025-10-18,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.3 km from map center,https://www.booking.com/hotel/fi/hotelli-vaakko-and-apartments-by-uhanda.html,False
+Hotelli Vaakko - Hotel and Apartments by UHANDA,94.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.3 km from map center,https://www.booking.com/hotel/fi/hotelli-vaakko-and-apartments-by-uhanda.html,False
+"✭Huippuvarusteltu Luksuskoti, Sauna, Ilmainen pysäköinti✭",119.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/huippuvarusteltu-luksuskoti-sauna-ilmainen-pysakointi.html,False
+"✭Huippuvarusteltu Luksuskoti, Sauna, Ilmainen pysäköinti✭",119.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/huippuvarusteltu-luksuskoti-sauna-ilmainen-pysakointi.html,False
+"✭Huippuvarusteltu Luksuskoti, Sauna, Ilmainen pysäköinti✭",119.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/huippuvarusteltu-luksuskoti-sauna-ilmainen-pysakointi.html,False
+Huoneisto Nokia Areenan yhteydessä,405.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/huoneisto-nokia-areenan-yhteydessa.html,False
+Huoneisto Nokia Areenan yhteydessä,405.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/huoneisto-nokia-areenan-yhteydessa.html,False
+Huoneisto Nokia Areenan yhteydessä,405.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/huoneisto-nokia-areenan-yhteydessa.html,False
+Huoneisto Nokia Areenan yhteydessä,405.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/huoneisto-nokia-areenan-yhteydessa.html,False
+Huoneisto Nokia Areenan yhteydessä,405.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/huoneisto-nokia-areenan-yhteydessa.html,False
+Apartment in the heart of Tampere - free parking - free wifi,112.5,2025-10-16,2025-10-16,tampere,1,1,morning,9.3,Tampere,300 m from map center,https://www.booking.com/hotel/fi/huoneisto-tampereen-ytimessa-tampere.html,False
+Apartment in the heart of Tampere - free parking - free wifi,112.5,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,300 m from map center,https://www.booking.com/hotel/fi/huoneisto-tampereen-ytimessa-tampere.html,False
+Apartment in the heart of Tampere - free parking - free wifi,112.5,2025-10-20,2025-10-16,tampere,1,1,morning,9.3,Tampere,300 m from map center,https://www.booking.com/hotel/fi/huoneisto-tampereen-ytimessa-tampere.html,False
+Apartment in the heart of Tampere - free parking - free wifi,112.5,2025-10-21,2025-10-16,tampere,1,1,morning,9.3,Tampere,300 m from map center,https://www.booking.com/hotel/fi/huoneisto-tampereen-ytimessa-tampere.html,False
+Ihana asunto lähellä luontoa!,51.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,6.3 km from map center,https://www.booking.com/hotel/fi/ihana-asunto-lahella-luontoa.html,False
+Ihana asunto lähellä luontoa!,53.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,6.3 km from map center,https://www.booking.com/hotel/fi/ihana-asunto-lahella-luontoa.html,False
+Lovely Studio in Pispala,56.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.2 km from map center,https://www.booking.com/hotel/fi/ihana-puutaloyksio-pispalassa.html,False
+Lovely Studio in Pispala,56.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.2 km from map center,https://www.booking.com/hotel/fi/ihana-puutaloyksio-pispalassa.html,False
+Ihana yksiö Kangasalan Harjunsalossa,64.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.5,Kangasala,14.7 km from map center,https://www.booking.com/hotel/fi/ihana-yksio-kangasalan-harjunsalossa.html,False
+Ihana yksiö Kangasalan Harjunsalossa,73.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.5,Kangasala,14.7 km from map center,https://www.booking.com/hotel/fi/ihana-yksio-kangasalan-harjunsalossa.html,False
+Ihana yksiö Kangasalan Harjunsalossa,73.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Kangasala,14.7 km from map center,https://www.booking.com/hotel/fi/ihana-yksio-kangasalan-harjunsalossa.html,False
+Ilmarin Helmi,80.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,2 km from map center,https://www.booking.com/hotel/fi/ilmarin-helmi.html,False
+Ilmarin Helmi,80.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,2 km from map center,https://www.booking.com/hotel/fi/ilmarin-helmi.html,False
+Upea Skandinaavinen Luksushuoneisto Nokia-Areenan vieressä,139.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,1 km from map center,https://www.booking.com/hotel/fi/iso-skandinaavinen-luksushuoneisto-ratinassa.html,False
+Upea Skandinaavinen Luksushuoneisto Nokia-Areenan vieressä,139.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,1 km from map center,https://www.booking.com/hotel/fi/iso-skandinaavinen-luksushuoneisto-ratinassa.html,False
+Upea Skandinaavinen Luksushuoneisto Nokia-Areenan vieressä,139.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,1 km from map center,https://www.booking.com/hotel/fi/iso-skandinaavinen-luksushuoneisto-ratinassa.html,False
+Central Gem with Sauna - Big two-room apartment FREE PARKING,142.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,1 km from map center,https://www.booking.com/hotel/fi/itsepalvelusisaankirjautuminen-tampere-city-huoneisto-60-m2.html,False
+"Best location in Tampere! Modern city apartment, 2rooms, kitchen and balcony",80.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.3,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/kaksio-parveke-parhaalla-paikalla.html,False
+"Best location in Tampere! Modern city apartment, 2rooms, kitchen and balcony",80.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.3,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/kaksio-parveke-parhaalla-paikalla.html,False
+Kaleva City Loft - Ilmainen Wifi,94.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/kaleva-ilmainen-wifi.html,False
+Kaleva City Loft - Ilmainen Wifi,94.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/kaleva-ilmainen-wifi.html,False
+Kaunis ydinkeskustan huoneisto,93.5,2025-10-16,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/kaunis-ydinkeskustan-huoneisto.html,False
+Kaunis ydinkeskustan huoneisto,102.5,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/kaunis-ydinkeskustan-huoneisto.html,False
+Kaunis ydinkeskustan huoneisto,93.5,2025-10-20,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/kaunis-ydinkeskustan-huoneisto.html,False
+Kaunis ydinkeskustan huoneisto,93.5,2025-10-21,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/kaunis-ydinkeskustan-huoneisto.html,False
+Hotel Kauppi,115.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,False
+Hotel Kauppi,115.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,False
+Hotel Kauppi,115.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,False
+Hotel Kauppi,115.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,False
+Hotel Kauppi,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,False
+Hotel Kauppi,110.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,False
+Hotel Kauppi,115.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,True
+Hotel Kauppi,115.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,True
+Hotel Kauppi,115.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,True
+Hotel Kauppi,115.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,True
+Hotel Kauppi,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,True
+Hotel Kauppi,110.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/kauppi.html,True
+Koivistonpiha farmstay,71.2,2025-10-18,2025-10-16,tampere,1,1,morning,0.0,Valkeakoski,33.7 km from map center,https://www.booking.com/hotel/fi/koivistonpiha-farmstay.html,False
+Koivistonpiha farmstay,71.2,2025-10-19,2025-10-16,tampere,1,1,morning,0.0,Valkeakoski,33.7 km from map center,https://www.booking.com/hotel/fi/koivistonpiha-farmstay.html,False
+Koivistonpiha farmstay,71.2,2025-10-20,2025-10-16,tampere,1,1,morning,0.0,Valkeakoski,33.7 km from map center,https://www.booking.com/hotel/fi/koivistonpiha-farmstay.html,False
+Koivistonpiha farmstay,71.2,2025-10-21,2025-10-16,tampere,1,1,morning,0.0,Valkeakoski,33.7 km from map center,https://www.booking.com/hotel/fi/koivistonpiha-farmstay.html,False
+Kotoisa & Tyylikäs Keskusta-asunto Neljälle!,105.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.1,Tampere,250 m from map center,https://www.booking.com/hotel/fi/kotoisa-amp-tyylikas-keskusta-asunto-neljalle-tampere.html,False
+Kotoisa & Tyylikäs Keskusta-asunto Neljälle!,105.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,250 m from map center,https://www.booking.com/hotel/fi/kotoisa-amp-tyylikas-keskusta-asunto-neljalle-tampere.html,False
+Kotoisa & Tyylikäs Keskusta-asunto Neljälle!,105.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,250 m from map center,https://www.booking.com/hotel/fi/kotoisa-amp-tyylikas-keskusta-asunto-neljalle-tampere.html,False
+Kotoisa & Tyylikäs Keskusta-asunto Neljälle!,105.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,250 m from map center,https://www.booking.com/hotel/fi/kotoisa-amp-tyylikas-keskusta-asunto-neljalle-tampere.html,False
+Hotel Lamminpää,55.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.2,Tampere,7.1 km from map center,https://www.booking.com/hotel/fi/lamminpaa.html,False
+Hotel Lamminpää,55.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.2,Tampere,7.1 km from map center,https://www.booking.com/hotel/fi/lamminpaa.html,False
+Hotel Lamminpää,55.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.2,Tampere,7.1 km from map center,https://www.booking.com/hotel/fi/lamminpaa.html,False
+Hotel Lamminpää,55.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.2,Tampere,7.1 km from map center,https://www.booking.com/hotel/fi/lamminpaa.html,False
+Hotel Lamminpää,55.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.2,Tampere,7.1 km from map center,https://www.booking.com/hotel/fi/lamminpaa.html,False
+Hotel Lamminpää,55.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.2,Tampere,7.1 km from map center,https://www.booking.com/hotel/fi/lamminpaa.html,False
+Lapinniemen kattohuoneistot Tampereella,194.4,2025-10-17,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/lapinniemen-kattohuoneistot-tampereella.html,False
+Lapinniemen kattohuoneistot Tampereella,194.4,2025-10-18,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/lapinniemen-kattohuoneistot-tampereella.html,False
+Lapinniemen kattohuoneistot Tampereella,170.1,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/lapinniemen-kattohuoneistot-tampereella.html,False
+Lapinniemen kattohuoneistot Tampereella,170.1,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/lapinniemen-kattohuoneistot-tampereella.html,False
+Lapinniemen kattohuoneistot Tampereella,170.1,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/lapinniemen-kattohuoneistot-tampereella.html,False
+Lapland Hotels Tampere,161.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,False
+Lapland Hotels Tampere,182.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,False
+Lapland Hotels Tampere,241.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,False
+Lapland Hotels Tampere,144.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,False
+Lapland Hotels Tampere,151.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,False
+Lapland Hotels Tampere,174.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,False
+Lapland Hotels Tampere,161.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,True
+Lapland Hotels Tampere,182.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,True
+Lapland Hotels Tampere,241.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,True
+Lapland Hotels Tampere,144.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,True
+Lapland Hotels Tampere,151.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,True
+Lapland Hotels Tampere,174.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,1.4 km from map center,https://www.booking.com/hotel/fi/lapland-hotel-tampere.html,True
+Lapland Hotels Arena,153.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,False
+Lapland Hotels Arena,164.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,False
+Lapland Hotels Arena,286.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,False
+Lapland Hotels Arena,133.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,False
+Lapland Hotels Arena,146.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,False
+Lapland Hotels Arena,141.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,False
+Lapland Hotels Arena,153.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,True
+Lapland Hotels Arena,164.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,True
+Lapland Hotels Arena,286.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,True
+Lapland Hotels Arena,133.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,True
+Lapland Hotels Arena,146.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,True
+Lapland Hotels Arena,141.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/lapland-hotels-arena.html,True
+"Large apartment with 4 bedrooms, central location",259.7,2025-10-16,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/large-apartment-with-4-bedrooms-central-location.html,False
+"Large apartment with 4 bedrooms, central location",259.7,2025-10-19,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/large-apartment-with-4-bedrooms-central-location.html,False
+"Large apartment with 4 bedrooms, central location",224.6,2025-10-20,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/large-apartment-with-4-bedrooms-central-location.html,False
+"Large apartment with 4 bedrooms, central location",224.6,2025-10-21,2025-10-16,tampere,1,1,morning,9.6,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/large-apartment-with-4-bedrooms-central-location.html,False
+Lillan Hotel & Kök,146.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,False
+Lillan Hotel & Kök,146.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,False
+Lillan Hotel & Kök,114.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,False
+Lillan Hotel & Kök,114.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,False
+Lillan Hotel & Kök,198.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,False
+Lillan Hotel & Kök,146.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,True
+Lillan Hotel & Kök,146.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,True
+Lillan Hotel & Kök,114.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,True
+Lillan Hotel & Kök,114.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,True
+Lillan Hotel & Kök,198.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/lillan.html,True
+"Arena Apartment - Own Sauna, In the Heart of Tampere Near to Nokia Arena",119.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/linja-autoasema-apartments.html,False
+"Arena Apartment - Own Sauna, In the Heart of Tampere Near to Nokia Arena",119.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/linja-autoasema-apartments.html,False
+"Arena Apartment - Own Sauna, In the Heart of Tampere Near to Nokia Arena",119.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/linja-autoasema-apartments.html,False
+"Arena Apartment - Own Sauna, In the Heart of Tampere Near to Nokia Arena",119.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/linja-autoasema-apartments.html,False
+"Arena Apartment - Own Sauna, In the Heart of Tampere Near to Nokia Arena",119.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/linja-autoasema-apartments.html,False
+Loft Ketunleipä - Free Wifi,94.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,5.7 km from map center,https://www.booking.com/hotel/fi/loft-ketunleipa-free-wifi.html,False
+Loft Ketunleipä - Free Wifi,84.5,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,5.7 km from map center,https://www.booking.com/hotel/fi/loft-ketunleipa-free-wifi.html,False
+Loft Ketunleipä - Free Wifi,84.5,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,5.7 km from map center,https://www.booking.com/hotel/fi/loft-ketunleipa-free-wifi.html,False
+Lovely 1BR Apartment in a Calm Neighborhood,139.2,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/lovely-1br-apartment-in-calm-neighbourhood.html,False
+"Lovely 7th floor studio full of color, enjoy!",106.3,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/lovely-7th-floor-studio-full-of-color-enjoy.html,False
+Luminary 21,169.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/luminary-21.html,False
+New Homes II,56.7,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,3 km from map center,https://www.booking.com/hotel/fi/lux-homes.html,False
+New Homes II,56.7,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,3 km from map center,https://www.booking.com/hotel/fi/lux-homes.html,False
+Luxurious 1BR Penthouse with Private Balcony,171.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.4,Tampere,200 m from map center,https://www.booking.com/hotel/fi/luxurious-1br-penthouse-with-private-balcony.html,False
+Luxurious 1BR Penthouse with Private Balcony,200.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,200 m from map center,https://www.booking.com/hotel/fi/luxurious-1br-penthouse-with-private-balcony.html,False
+Luxurious 1BR Penthouse with Private Balcony,177.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,200 m from map center,https://www.booking.com/hotel/fi/luxurious-1br-penthouse-with-private-balcony.html,False
+"Luxury apartment with sauna, grill and garage",182.3,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/luxury-apartment-with-sauna-grill-and-garage.html,False
+"City Home Finland Tampella - City View, Own SAUNA, One Bedroom, Furnished Balcony and Great Location",135.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,1 km from map center,https://www.booking.com/hotel/fi/luxury-city-home-tampella-private-sauna-41-5m2.html,False
+"City Home Finland Tampella - City View, Own SAUNA, One Bedroom, Furnished Balcony and Great Location",135.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,1 km from map center,https://www.booking.com/hotel/fi/luxury-city-home-tampella-private-sauna-41-5m2.html,False
+"City Home Finland Tampella - City View, Own SAUNA, One Bedroom, Furnished Balcony and Great Location",135.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.7,Tampere,1 km from map center,https://www.booking.com/hotel/fi/luxury-city-home-tampella-private-sauna-41-5m2.html,False
+Luxury in Kaleva centrum,167.5,2025-10-18,2025-10-16,tampere,1,1,morning,8.1,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/luxury-in-kaleva-centrum.html,False
+Luxury in Kaleva centrum,148.1,2025-10-19,2025-10-16,tampere,1,1,morning,8.1,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/luxury-in-kaleva-centrum.html,False
+Luxury in Kaleva centrum,148.1,2025-10-20,2025-10-16,tampere,1,1,morning,8.1,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/luxury-in-kaleva-centrum.html,False
+Luxury in Kaleva centrum,148.1,2025-10-21,2025-10-16,tampere,1,1,morning,8.1,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/luxury-in-kaleva-centrum.html,False
+Brand-new City Home 2,99.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/luxus-city-apartments.html,False
+Brand-new City Home 2,89.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/luxus-city-apartments.html,False
+Brand-new City Home 2,90.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/luxus-city-apartments.html,False
+Brand-new City Home 2,90.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.3,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/luxus-city-apartments.html,False
+M Apartments Jurvalankatu,55.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,6 km from map center,https://www.booking.com/hotel/fi/m-apartments-jurvalankatu.html,False
+M Apartments Lamminpää,56.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,7 km from map center,https://www.booking.com/hotel/fi/m-apartments-lamminpaa.html,False
+M Apartments Lamminpää,58.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,7 km from map center,https://www.booking.com/hotel/fi/m-apartments-lamminpaa.html,False
+M Apartments Lamminpää,50.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,7 km from map center,https://www.booking.com/hotel/fi/m-apartments-lamminpaa.html,False
+M Apartments Vuorentaustantie,58.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.4,Tampere,7 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere-lamminpaa.html,False
+M Apartments Vuorentaustantie,62.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.4,Tampere,7 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere-lamminpaa.html,False
+M Apartments Vuorentaustantie,53.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.4,Tampere,7 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere-lamminpaa.html,False
+M Apartments Tuularinkatu,61.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Tampere,6 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere.html,False
+M Apartments Tuularinkatu,55.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,6 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere.html,False
+M Apartments Tuularinkatu,58.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,6 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere.html,False
+M Apartments Tuularinkatu,58.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,6 km from map center,https://www.booking.com/hotel/fi/m-apartments-tampere.html,False
+M Apartments Tesomankuja,65.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/m-apartments-tesomankuja.html,False
+M Apartments Tesomankuja,62.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/m-apartments-tesomankuja.html,False
+M Apartments Tesomankuja,73.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/m-apartments-tesomankuja.html,False
+M Apartments Tesomankuja,73.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/m-apartments-tesomankuja.html,False
+Mango Hotel,64.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,False
+Mango Hotel,89.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,False
+Mango Hotel,64.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,False
+Mango Hotel,64.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,False
+Mango Hotel,64.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,False
+Mango Hotel,64.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,False
+Mango Hotel,64.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,True
+Mango Hotel,89.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,True
+Mango Hotel,64.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,True
+Mango Hotel,64.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,True
+Mango Hotel,64.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,True
+Mango Hotel,64.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.9,Tampere,1.7 km from map center,https://www.booking.com/hotel/fi/mango.html,True
+Matilda Apartment with Peaceful environment and Barbecue facilities,144.5,2025-10-17,2025-10-16,tampere,1,1,morning,10.0,Tampere,4.5 km from map center,https://www.booking.com/hotel/fi/matilda-apartment-with-peaceful-environment-and-barbecue-facilities.html,False
+Matilda Apartment with Peaceful environment and Barbecue facilities,144.5,2025-10-18,2025-10-16,tampere,1,1,morning,10.0,Tampere,4.5 km from map center,https://www.booking.com/hotel/fi/matilda-apartment-with-peaceful-environment-and-barbecue-facilities.html,False
+Matilda Apartment with Peaceful environment and Barbecue facilities,144.5,2025-10-19,2025-10-16,tampere,1,1,morning,10.0,Tampere,4.5 km from map center,https://www.booking.com/hotel/fi/matilda-apartment-with-peaceful-environment-and-barbecue-facilities.html,False
+Matilda Apartment with Peaceful environment and Barbecue facilities,136.0,2025-10-20,2025-10-16,tampere,1,1,morning,10.0,Tampere,4.5 km from map center,https://www.booking.com/hotel/fi/matilda-apartment-with-peaceful-environment-and-barbecue-facilities.html,False
+Matilda Apartment with Peaceful environment and Barbecue facilities,136.0,2025-10-21,2025-10-16,tampere,1,1,morning,10.0,Tampere,4.5 km from map center,https://www.booking.com/hotel/fi/matilda-apartment-with-peaceful-environment-and-barbecue-facilities.html,False
+"Modern 1BR Apt with Amazing Views, Balcony & Sauna",143.6,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/modern-1br-apt-with-amazing-views-balcony-amp-sauna-hosted-by-2ndhomes.html,False
+"Modern 1BR Apt with Amazing Views, Balcony & Sauna",143.6,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/modern-1br-apt-with-amazing-views-balcony-amp-sauna-hosted-by-2ndhomes.html,False
+"Modern 1BR Apt with Amazing Views, Balcony & Sauna",143.6,2025-10-21,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/modern-1br-apt-with-amazing-views-balcony-amp-sauna-hosted-by-2ndhomes.html,False
+"Great location, quiet and new with balcony&cafe",178.7,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,250 m from map center,https://www.booking.com/hotel/fi/modern-amp-brand-new-w-balcony-amp-cafe.html,False
+"Great location, quiet and new with balcony&cafe",188.9,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,250 m from map center,https://www.booking.com/hotel/fi/modern-amp-brand-new-w-balcony-amp-cafe.html,False
+"Great location, quiet and new with balcony&cafe",196.2,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Tampere,250 m from map center,https://www.booking.com/hotel/fi/modern-amp-brand-new-w-balcony-amp-cafe.html,False
+Modern apartment with free parking & sauna,78.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Ylöjärvi,10.6 km from map center,https://www.booking.com/hotel/fi/modern-apartment-with-free-parking-amp-netflix.html,False
+Modern Rustic Stay,99.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/modern-rustic-stay.html,False
+Modern Rustic Stay,95.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/modern-rustic-stay.html,False
+"Moderni yksiö, parveke, parkki, palvelut",92.5,2025-10-18,2025-10-16,tampere,1,1,morning,9.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/moderni-studio-keskella-palveluita-lahella-juna-asemaa-ja-busseja.html,False
+"Moderni yksiö, parveke, parkki, palvelut",93.7,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/moderni-studio-keskella-palveluita-lahella-juna-asemaa-ja-busseja.html,False
+"Moderni yksiö, parveke, parkki, palvelut",59.9,2025-10-20,2025-10-16,tampere,1,1,morning,9.3,Tampere,6.8 km from map center,https://www.booking.com/hotel/fi/moderni-studio-keskella-palveluita-lahella-juna-asemaa-ja-busseja.html,False
+Kotoisa Parkkipaikallinen Kaksio Kangasalan Keskustassa,79.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.6,Kangasala,17 km from map center,https://www.booking.com/hotel/fi/naantalissa-idyllinen-merenrantatalo-onnenpoukama.html,False
+Kotoisa Parkkipaikallinen Kaksio Kangasalan Keskustassa,79.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.6,Kangasala,17 km from map center,https://www.booking.com/hotel/fi/naantalissa-idyllinen-merenrantatalo-onnenpoukama.html,False
+Kotoisa Parkkipaikallinen Kaksio Kangasalan Keskustassa,79.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.6,Kangasala,17 km from map center,https://www.booking.com/hotel/fi/naantalissa-idyllinen-merenrantatalo-onnenpoukama.html,False
+Lovely Studio in Härmälänranta,80.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/natti-yksio-harmalanrannassa.html,False
+Lovely Studio in Härmälänranta,69.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/natti-yksio-harmalanrannassa.html,False
+"Near center w/ smart-TV, tram stop and gym visit",95.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.2,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/near-center-w-smart-tv-tram-stop-and-gym-visit.html,False
+"Near center w/ smart-TV, tram stop and gym visit",56.7,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,3.5 km from map center,https://www.booking.com/hotel/fi/near-center-w-smart-tv-tram-stop-and-gym-visit.html,False
+"New apartment with sauna, lake and beach",128.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,3 km from map center,https://www.booking.com/hotel/fi/new-apartment-with-sauna-lake-and-beach.html,False
+"New apartment with sauna, lake and beach",128.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,3 km from map center,https://www.booking.com/hotel/fi/new-apartment-with-sauna-lake-and-beach.html,False
+New gorgeous semi-detached house,136.0,2025-10-19,2025-10-16,tampere,1,1,morning,0.0,Lempäälä,20.9 km from map center,https://www.booking.com/hotel/fi/new-gorgeous-semi-detached-house.html,False
+New gorgeous semi-detached house,136.0,2025-10-20,2025-10-16,tampere,1,1,morning,0.0,Lempäälä,20.9 km from map center,https://www.booking.com/hotel/fi/new-gorgeous-semi-detached-house.html,False
+New gorgeous semi-detached house,136.0,2025-10-21,2025-10-16,tampere,1,1,morning,0.0,Lempäälä,20.9 km from map center,https://www.booking.com/hotel/fi/new-gorgeous-semi-detached-house.html,False
+Cozy Central Studio Tampere,89.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/new-studio-47-uudehko-tasokas-suite-32-5m2.html,False
+Cozy Central Studio Tampere,89.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/new-studio-47-uudehko-tasokas-suite-32-5m2.html,False
+Cozy Central Studio Tampere,90.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/new-studio-47-uudehko-tasokas-suite-32-5m2.html,False
+Cozy Central Studio Tampere,90.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,400 m from map center,https://www.booking.com/hotel/fi/new-studio-47-uudehko-tasokas-suite-32-5m2.html,False
+Nice city studio in Tampere,71.1,2025-10-20,2025-10-16,tampere,1,1,morning,0.0,Tampere,450 m from map center,https://www.booking.com/hotel/fi/nice-city-studio-in-tampere.html,False
+Nice city studio in Tampere,71.1,2025-10-21,2025-10-16,tampere,1,1,morning,0.0,Tampere,450 m from map center,https://www.booking.com/hotel/fi/nice-city-studio-in-tampere.html,False
+15th floor apartment on top of Nokia Areena w Wifi,71.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/nokia-areena-15-kerros-wifi.html,False
+Nokia-areenan näköalayksiö,108.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.9,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/nokia-areenan-nakoalayksio.html,False
+Nokia-areenan näköalayksiö,108.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.9,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/nokia-areenan-nakoalayksio.html,False
+ARENA Studio 2,89.1,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/nokia-arena-studio-2.html,False
+ARENA Studio 2,89.1,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/nokia-arena-studio-2.html,False
+Norlandia Tampere Hotel,117.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,False
+Norlandia Tampere Hotel,99.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,False
+Norlandia Tampere Hotel,99.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,False
+Norlandia Tampere Hotel,99.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,False
+Norlandia Tampere Hotel,99.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,False
+Norlandia Tampere Hotel,99.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,False
+Norlandia Tampere Hotel,117.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,True
+Norlandia Tampere Hotel,99.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,True
+Norlandia Tampere Hotel,99.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,True
+Norlandia Tampere Hotel,99.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,True
+Norlandia Tampere Hotel,99.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,True
+Norlandia Tampere Hotel,99.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,3.4 km from map center,https://www.booking.com/hotel/fi/norlandia-care-tampere.html,True
+Oma Hotelli,110.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Ylöjärvi,10.3 km from map center,https://www.booking.com/hotel/fi/oma-hotelli.html,False
+Oma Hotelli,110.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Ylöjärvi,10.3 km from map center,https://www.booking.com/hotel/fi/oma-hotelli.html,False
+Oma Hotelli,110.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Ylöjärvi,10.3 km from map center,https://www.booking.com/hotel/fi/oma-hotelli.html,False
+Oma Hotelli,110.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Ylöjärvi,10.3 km from map center,https://www.booking.com/hotel/fi/oma-hotelli.html,False
+Oma Hotelli,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Ylöjärvi,10.3 km from map center,https://www.booking.com/hotel/fi/oma-hotelli.html,False
+Oma Hotelli,110.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Ylöjärvi,10.3 km from map center,https://www.booking.com/hotel/fi/oma-hotelli.html,False
+Omena Hotel Tampere,82.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/omenahotelli-tampere.html,False
+Omena Hotel Tampere,85.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/omenahotelli-tampere.html,False
+Omena Hotel Tampere,93.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/omenahotelli-tampere.html,False
+Omena Hotel Tampere,73.7,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/omenahotelli-tampere.html,False
+Omena Hotel Tampere,77.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/omenahotelli-tampere.html,False
+Omena Hotel Tampere,85.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/omenahotelli-tampere.html,False
+"Best location, cozy and peaceful",180.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,250 m from map center,https://www.booking.com/hotel/fi/oodin-hehku.html,False
+"Best location, cozy and peaceful",189.8,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,250 m from map center,https://www.booking.com/hotel/fi/oodin-hehku.html,False
+"Best location, cozy and peaceful",196.8,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,250 m from map center,https://www.booking.com/hotel/fi/oodin-hehku.html,False
+Cozy Room x Aurora Lights,110.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,9 km from map center,https://www.booking.com/hotel/fi/opal-oasis-with-sauna.html,False
+Orivesi keskusta,97.9,2025-10-16,2025-10-16,tampere,1,1,morning,8.2,Orivesi,38.2 km from map center,https://www.booking.com/hotel/fi/orivesi-keskusta.html,False
+Orivesi keskusta,97.9,2025-10-17,2025-10-16,tampere,1,1,morning,8.2,Orivesi,38.2 km from map center,https://www.booking.com/hotel/fi/orivesi-keskusta.html,False
+Orivesi keskusta,97.9,2025-10-18,2025-10-16,tampere,1,1,morning,8.2,Orivesi,38.2 km from map center,https://www.booking.com/hotel/fi/orivesi-keskusta.html,False
+Hotel Ackas,70.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.1,Toijala,37 km from map center,https://www.booking.com/hotel/fi/otel-ckas.html,False
+Hotel Ackas,70.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.1,Toijala,37 km from map center,https://www.booking.com/hotel/fi/otel-ckas.html,False
+Hotel Ackas,68.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.1,Toijala,37 km from map center,https://www.booking.com/hotel/fi/otel-ckas.html,False
+PIKNIK - 2,70.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/piknik-2.html,False
+PIKNIK - 2,70.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/piknik-2.html,False
+PIKNIK - 2,70.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/piknik-2.html,False
+Pirkkala keskusta rauhallinen kolmio,60.1,2025-10-20,2025-10-16,tampere,1,1,morning,8.0,Tampere,6.4 km from map center,https://www.booking.com/hotel/fi/pirkkala-keskusta-rauhallinen-kolmio.html,False
+Pirkkala keskusta rauhallinen kolmio,60.1,2025-10-21,2025-10-16,tampere,1,1,morning,8.0,Tampere,6.4 km from map center,https://www.booking.com/hotel/fi/pirkkala-keskusta-rauhallinen-kolmio.html,False
+Pispalan Helmi - Koti Näköalalla,92.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,2 km from map center,https://www.booking.com/hotel/fi/pispalan-helmi-koti-nakoalalla.html,False
+Pispalan Helmi - Koti Näköalalla,92.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,2 km from map center,https://www.booking.com/hotel/fi/pispalan-helmi-koti-nakoalalla.html,False
+PitStop 6,71.1,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,2.9 km from map center,https://www.booking.com/hotel/fi/pitstop-6.html,False
+PitStop 6,71.1,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,2.9 km from map center,https://www.booking.com/hotel/fi/pitstop-6.html,False
+PitStop 6,71.1,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,2.9 km from map center,https://www.booking.com/hotel/fi/pitstop-6.html,False
+Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA,95.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Kangasala,17.4 km from map center,https://www.booking.com/hotel/fi/place-to-sleep-kangasala.html,False
+Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA,95.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Kangasala,17.4 km from map center,https://www.booking.com/hotel/fi/place-to-sleep-kangasala.html,False
+Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA,95.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Kangasala,17.4 km from map center,https://www.booking.com/hotel/fi/place-to-sleep-kangasala.html,False
+Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA,95.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Kangasala,17.4 km from map center,https://www.booking.com/hotel/fi/place-to-sleep-kangasala.html,False
+Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA,115.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Kangasala,17.4 km from map center,https://www.booking.com/hotel/fi/place-to-sleep-kangasala.html,False
+Hotelli Kuohu Kangasala - Hotel and Apartments by UHANDA,115.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Kangasala,17.4 km from map center,https://www.booking.com/hotel/fi/place-to-sleep-kangasala.html,False
+"""Ketlari""- Homelike 1BR Apartment with Sauna in Historic Area, Hosted by 2ndhomes",143.6,2025-10-17,2025-10-16,tampere,1,1,morning,7.3,Tampere,400 m from map center,https://www.booking.com/hotel/fi/pyynikinportti-homelike-1br-apartment-with-sauna-in-historic-area-hosted-by-2ndh.html,False
+"""Ketlari""- Homelike 1BR Apartment with Sauna in Historic Area, Hosted by 2ndhomes",143.6,2025-10-18,2025-10-16,tampere,1,1,morning,7.3,Tampere,400 m from map center,https://www.booking.com/hotel/fi/pyynikinportti-homelike-1br-apartment-with-sauna-in-historic-area-hosted-by-2ndh.html,False
+"""Ketlari""- Homelike 1BR Apartment with Sauna in Historic Area, Hosted by 2ndhomes",129.2,2025-10-19,2025-10-16,tampere,1,1,morning,7.3,Tampere,400 m from map center,https://www.booking.com/hotel/fi/pyynikinportti-homelike-1br-apartment-with-sauna-in-historic-area-hosted-by-2ndh.html,False
+"""Ketlari""- Homelike 1BR Apartment with Sauna in Historic Area, Hosted by 2ndhomes",129.2,2025-10-20,2025-10-16,tampere,1,1,morning,7.3,Tampere,400 m from map center,https://www.booking.com/hotel/fi/pyynikinportti-homelike-1br-apartment-with-sauna-in-historic-area-hosted-by-2ndh.html,False
+"""Ketlari""- Homelike 1BR Apartment with Sauna in Historic Area, Hosted by 2ndhomes",129.2,2025-10-21,2025-10-16,tampere,1,1,morning,7.3,Tampere,400 m from map center,https://www.booking.com/hotel/fi/pyynikinportti-homelike-1br-apartment-with-sauna-in-historic-area-hosted-by-2ndh.html,False
+Radisson Blu Grand Hotel Tammer,200.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,False
+Radisson Blu Grand Hotel Tammer,185.3,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,False
+Radisson Blu Grand Hotel Tammer,113.4,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,False
+Radisson Blu Grand Hotel Tammer,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,False
+Radisson Blu Grand Hotel Tammer,151.2,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,False
+Radisson Blu Grand Hotel Tammer,209.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,True
+Radisson Blu Grand Hotel Tammer,194.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,True
+Radisson Blu Grand Hotel Tammer,121.5,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,True
+Radisson Blu Grand Hotel Tammer,143.1,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,True
+Radisson Blu Grand Hotel Tammer,159.3,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/radisson-tammer.html,True
+RANTA,75.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/ranta-tampere.html,False
+RANTA,80.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/ranta-tampere.html,False
+RANTA,80.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,4.6 km from map center,https://www.booking.com/hotel/fi/ranta-tampere.html,False
+Peaceful Premium Apartment with Sauna and Balcony - Perfect Downtown Location,121.4,2025-10-16,2025-10-16,tampere,1,1,morning,9.5,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/rauhallinen-2h-sauna-keskustassa.html,False
+Peaceful Premium Apartment with Sauna and Balcony - Perfect Downtown Location,130.7,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/rauhallinen-2h-sauna-keskustassa.html,False
+RD Apartments - Mustanlahden Helmi - Moderni asunto Tampereen keskustassa,75.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,250 m from map center,https://www.booking.com/hotel/fi/rd-apartments-mustanlahden-helmi-moderni-asunto-tampereen-keskustassa.html,False
+RD Apartments Oy - Areenan Sydän,55.1,2025-10-19,2025-10-16,tampere,1,1,morning,7.2,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/rd-apartments-oy-areenan-sydan.html,False
+RD Apartments - Pispalan Aarre,70.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,2 km from map center,https://www.booking.com/hotel/fi/rd-apartments-pispalan-aarre.html,False
+Real deal apartments Tampere,142.6,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,1 km from map center,https://www.booking.com/hotel/fi/real-deal-apartments-tampere.html,False
+Real deal apartments Tampere,142.6,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,1 km from map center,https://www.booking.com/hotel/fi/real-deal-apartments-tampere.html,False
+Real deal apartments Tampere,142.6,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,1 km from map center,https://www.booking.com/hotel/fi/real-deal-apartments-tampere.html,False
+"Top, cozy, lakeside, sauna and free indoor parking",151.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/saunallinen-kaksio-jarven-rannalla.html,False
+"Top, cozy, lakeside, sauna and free indoor parking",151.2,2025-10-21,2025-10-16,tampere,1,1,morning,9.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/saunallinen-kaksio-jarven-rannalla.html,False
+Saunallinen kolmio Tampereen ydinkeskustassa,168.8,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/saunallinen-kolmio-tampereen-ydinkeskustassa-tampere.html,False
+Saunallinen kolmio Tampereen ydinkeskustassa,114.8,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/saunallinen-kolmio-tampereen-ydinkeskustassa-tampere.html,False
+Scandic Eden Nokia,162.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Nokia,12.2 km from map center,https://www.booking.com/hotel/fi/scandic-eden.html,False
+Scandic Eden Nokia,172.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Nokia,12.2 km from map center,https://www.booking.com/hotel/fi/scandic-eden.html,False
+Scandic Eden Nokia,162.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Nokia,12.2 km from map center,https://www.booking.com/hotel/fi/scandic-eden.html,False
+Scandic Eden Nokia,172.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Nokia,12.2 km from map center,https://www.booking.com/hotel/fi/scandic-eden.html,True
+Scandic Eden Nokia,182.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Nokia,12.2 km from map center,https://www.booking.com/hotel/fi/scandic-eden.html,True
+Scandic Eden Nokia,172.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Nokia,12.2 km from map center,https://www.booking.com/hotel/fi/scandic-eden.html,True
+Scandic Rosendahl,138.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,False
+Scandic Rosendahl,133.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,False
+Scandic Rosendahl,214.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,False
+Scandic Rosendahl,129.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,False
+Scandic Rosendahl,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,False
+Scandic Rosendahl,121.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,False
+Scandic Rosendahl,148.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,True
+Scandic Rosendahl,143.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,True
+Scandic Rosendahl,224.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,True
+Scandic Rosendahl,139.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,True
+Scandic Rosendahl,120.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,True
+Scandic Rosendahl,131.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-rosendahl.html,True
+Scandic Tampere City,123.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,False
+Scandic Tampere City,138.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,False
+Scandic Tampere City,158.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,False
+Scandic Tampere City,114.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,False
+Scandic Tampere City,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,False
+Scandic Tampere City,128.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,False
+Scandic Tampere City,135.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,True
+Scandic Tampere City,150.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,True
+Scandic Tampere City,170.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,True
+Scandic Tampere City,126.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,True
+Scandic Tampere City,122.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,True
+Scandic Tampere City,140.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-city.html,True
+Scandic Tampere Koskipuisto,119.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,False
+Scandic Tampere Koskipuisto,131.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,False
+Scandic Tampere Koskipuisto,148.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,False
+Scandic Tampere Koskipuisto,120.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,False
+Scandic Tampere Koskipuisto,98.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,False
+Scandic Tampere Koskipuisto,106.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,False
+Scandic Tampere Koskipuisto,129.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,True
+Scandic Tampere Koskipuisto,141.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,True
+Scandic Tampere Koskipuisto,158.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,True
+Scandic Tampere Koskipuisto,130.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,True
+Scandic Tampere Koskipuisto,108.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,True
+Scandic Tampere Koskipuisto,116.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.8,Tampere,0.7 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-koskikatu.html,True
+Scandic Tampere Station,118.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,False
+Scandic Tampere Station,124.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,False
+Scandic Tampere Station,157.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,False
+Scandic Tampere Station,128.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,False
+Scandic Tampere Station,106.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,False
+Scandic Tampere Station,133.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,False
+Scandic Tampere Station,130.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,True
+Scandic Tampere Station,136.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,True
+Scandic Tampere Station,169.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,True
+Scandic Tampere Station,140.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,True
+Scandic Tampere Station,118.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,True
+Scandic Tampere Station,145.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/scandic-tampere-station.html,True
+Original Sokos Hotel Ilves Tampere,144.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,False
+Original Sokos Hotel Ilves Tampere,143.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,False
+Original Sokos Hotel Ilves Tampere,130.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,False
+Original Sokos Hotel Ilves Tampere,121.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,False
+Original Sokos Hotel Ilves Tampere,169.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,False
+Original Sokos Hotel Ilves Tampere,144.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,True
+Original Sokos Hotel Ilves Tampere,143.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,True
+Original Sokos Hotel Ilves Tampere,130.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,True
+Original Sokos Hotel Ilves Tampere,121.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,True
+Original Sokos Hotel Ilves Tampere,169.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/sokos-ilves.html,True
+Original Sokos Hotel Villa Tampere,133.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,False
+Original Sokos Hotel Villa Tampere,139.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,False
+Original Sokos Hotel Villa Tampere,148.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,False
+Original Sokos Hotel Villa Tampere,118.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,False
+Original Sokos Hotel Villa Tampere,122.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,False
+Original Sokos Hotel Villa Tampere,141.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,False
+Original Sokos Hotel Villa Tampere,133.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,True
+Original Sokos Hotel Villa Tampere,139.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,True
+Original Sokos Hotel Villa Tampere,148.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,True
+Original Sokos Hotel Villa Tampere,118.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,True
+Original Sokos Hotel Villa Tampere,122.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,True
+Original Sokos Hotel Villa Tampere,141.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.7,Tampere,1.3 km from map center,https://www.booking.com/hotel/fi/sokos-villa.html,True
+Solo Sokos Hotel Torni Tampere,153.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,False
+Solo Sokos Hotel Torni Tampere,164.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,False
+Solo Sokos Hotel Torni Tampere,245.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,False
+Solo Sokos Hotel Torni Tampere,127.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,False
+Solo Sokos Hotel Torni Tampere,143.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,False
+Solo Sokos Hotel Torni Tampere,179.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,False
+Solo Sokos Hotel Torni Tampere,153.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,True
+Solo Sokos Hotel Torni Tampere,164.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,True
+Solo Sokos Hotel Torni Tampere,245.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,True
+Solo Sokos Hotel Torni Tampere,127.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,True
+Solo Sokos Hotel Torni Tampere,143.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,True
+Solo Sokos Hotel Torni Tampere,179.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/solo-sokos-torni-tampere.html,True
+Sorin Helmi,704.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/sorin-helmi.html,False
+Sorin Helmi,704.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/sorin-helmi.html,False
+Sorin Helmi,704.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/sorin-helmi.html,False
+Sorinsilta 4 A 50 11 kerros Upea huippuasunto,136.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/sorinsilta-4-a-50-11-kerros-upea-huippuasunto-tampere.html,False
+Sorinsilta 4 A 50 11 kerros Upea huippuasunto,139.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/sorinsilta-4-a-50-11-kerros-upea-huippuasunto-tampere.html,False
+Sorinsilta 4 A 50 11 kerros Upea huippuasunto,108.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/sorinsilta-4-a-50-11-kerros-upea-huippuasunto-tampere.html,False
+Sorinsilta 4 A 50 11 kerros Upea huippuasunto,108.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/sorinsilta-4-a-50-11-kerros-upea-huippuasunto-tampere.html,False
+Sorinsilta 4 A 50 11 kerros Upea huippuasunto,108.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/sorinsilta-4-a-50-11-kerros-upea-huippuasunto-tampere.html,False
+Spacious loft apartment with a lake view,80.8,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,2.3 km from map center,https://www.booking.com/hotel/fi/spacious-apartment-with-a-lake-view.html,False
+Spacious loft apartment with a lake view,80.8,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,2.3 km from map center,https://www.booking.com/hotel/fi/spacious-apartment-with-a-lake-view.html,False
+Studio apartment in lake views,99.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.9,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/studio-apartment-in-lake-views.html,False
+Studio apartment in lake views,99.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.9,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/studio-apartment-in-lake-views.html,False
+Studio Lumilinna,200.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.6,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/studio-lumilinna.html,False
+Studio Lumilinna,200.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.6,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/studio-lumilinna.html,False
+StyleStudio Areena1,68.4,2025-10-16,2025-10-16,tampere,1,1,morning,6.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena1.html,False
+StyleStudio Areena1,144.0,2025-10-17,2025-10-16,tampere,1,1,morning,6.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena1.html,False
+StyleStudio Areena1,144.0,2025-10-18,2025-10-16,tampere,1,1,morning,6.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena1.html,False
+StyleStudio Areena1,68.4,2025-10-19,2025-10-16,tampere,1,1,morning,6.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena1.html,False
+StyleStudio Areena1,72.0,2025-10-20,2025-10-16,tampere,1,1,morning,6.6,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena1.html,False
+StyleStudio Areena2,176.4,2025-10-17,2025-10-16,tampere,1,1,morning,7.3,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena2.html,False
+StyleStudio Areena2,176.4,2025-10-18,2025-10-16,tampere,1,1,morning,7.3,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena2.html,False
+StyleStudio Areena2,144.3,2025-10-19,2025-10-16,tampere,1,1,morning,7.3,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena2.html,False
+StyleStudio Areena2,144.3,2025-10-20,2025-10-16,tampere,1,1,morning,7.3,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena2.html,False
+StyleStudio Areena2,144.3,2025-10-21,2025-10-16,tampere,1,1,morning,7.3,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/stylestudio-areena2.html,False
+"Stylish top floor ap, with private parking, next to a tram stop",85.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.9,Tampere,8.9 km from map center,https://www.booking.com/hotel/fi/stylish-top-floor-ap-with-private-parking.html,False
+Suuri huoneisto isommalle ryhmälle / Large apartment for bigger group,55.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.7,Tampere,7 km from map center,https://www.booking.com/hotel/fi/suuri-huoneisto-isommalle-ryhmalle-large-apartment-for-bigger-group.html,False
+Tammela Apartment,130.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/tammela-apartment.html,False
+Tammela Apartment,130.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/tammela-apartment.html,False
+Tammela Apartment,130.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,1.6 km from map center,https://www.booking.com/hotel/fi/tammela-apartment.html,False
+Tammela Suites - Free Parking,81.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/tammela-suites.html,False
+Tammela Suites - Free Parking,98.4,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/tammela-suites.html,False
+Tammela Suites - Free Parking,98.4,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/tammela-suites.html,False
+"Tammer Huoneistot - City Suite 3 - Public Sauna, Gym & Pool",110.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,400 m from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-apartment-good-location-public-swimming-pool-saunas-gym-a.html,False
+Tammer Huoneistot - City Suite 4 - Perfect Location & Great Amenities,110.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-4.html,False
+Tammer Huoneistot - City Suite 4 - Perfect Location & Great Amenities,110.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-4.html,False
+Tammer Huoneistot - City Suite 4 - Perfect Location & Great Amenities,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-4.html,False
+Tammer Huoneistot - City Suite 4 - Perfect Location & Great Amenities,126.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-4.html,False
+"Tammer Huoneistot - City Suite 5 - Own Sauna, Air conditioning, Balcony & Best Location",135.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-5-own-sauna-balcony-amp-best-location.html,False
+"Tammer Huoneistot - City Suite 5 - Own Sauna, Air conditioning, Balcony & Best Location",135.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-5-own-sauna-balcony-amp-best-location.html,False
+"Tammer Huoneistot - City Suite 5 - Own Sauna, Air conditioning, Balcony & Best Location",135.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-5-own-sauna-balcony-amp-best-location.html,False
+Tammer Huoneistot - City Suite 6 - Best Location & Great Amenities,110.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-6.html,False
+Tammer Huoneistot - City Suite 6 - Best Location & Great Amenities,110.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-6.html,False
+Tammer Huoneistot - City Suite 6 - Best Location & Great Amenities,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-6.html,False
+Tammer Huoneistot - City Suite 6 - Best Location & Great Amenities,122.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.6,Tampere,1.2 km from map center,https://www.booking.com/hotel/fi/tammer-huoneistot-city-suite-6.html,False
+"Tampere city center one bedroom apartment - train station, Nokia Arena, Netflix",113.4,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,1 km from map center,https://www.booking.com/hotel/fi/tampere-city-center-one-bedroom-apartment-train-station-nokia-arena-netflix.html,False
+Vapari - Tampere Soccer Stadium by Come in!,130.7,2025-10-19,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/tampere-football-stadium-studio.html,False
+Vapari - Tampere Soccer Stadium by Come in!,137.9,2025-10-20,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/tampere-football-stadium-studio.html,False
+Vapari - Tampere Soccer Stadium by Come in!,190.3,2025-10-21,2025-10-16,tampere,1,1,morning,9.1,Tampere,1.8 km from map center,https://www.booking.com/hotel/fi/tampere-football-stadium-studio.html,False
+Scandic Tampere Hämeenpuisto,119.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,False
+Scandic Tampere Hämeenpuisto,133.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,False
+Scandic Tampere Hämeenpuisto,140.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,False
+Scandic Tampere Hämeenpuisto,123.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,False
+Scandic Tampere Hämeenpuisto,110.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,False
+Scandic Tampere Hämeenpuisto,118.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,False
+Scandic Tampere Hämeenpuisto,129.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,True
+Scandic Tampere Hämeenpuisto,143.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,True
+Scandic Tampere Hämeenpuisto,150.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,True
+Scandic Tampere Hämeenpuisto,133.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,True
+Scandic Tampere Hämeenpuisto,120.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,True
+Scandic Tampere Hämeenpuisto,128.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.4,Tampere,450 m from map center,https://www.booking.com/hotel/fi/tampere-hameenpuisto.html,True
+TAMPERE PENTHOUSE-tasokas moderni kaupunki huoneisto huipulla -ISO JACUZZI omalla KATTOTERASSILLA - AURINKOTUOLIT ja Aurinko odottaa Sinua - huikea maisema- - 10 HLÖ - free parking,359.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.3 km from map center,https://www.booking.com/hotel/fi/tampere-penthouse.html,False
+TAMPERE PENTHOUSE-tasokas moderni kaupunki huoneisto huipulla -ISO JACUZZI omalla KATTOTERASSILLA - AURINKOTUOLIT ja Aurinko odottaa Sinua - huikea maisema- - 10 HLÖ - free parking,284.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.3 km from map center,https://www.booking.com/hotel/fi/tampere-penthouse.html,False
+TAMPERE PENTHOUSE-tasokas moderni kaupunki huoneisto huipulla -ISO JACUZZI omalla KATTOTERASSILLA - AURINKOTUOLIT ja Aurinko odottaa Sinua - huikea maisema- - 10 HLÖ - free parking,291.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.3 km from map center,https://www.booking.com/hotel/fi/tampere-penthouse.html,False
+TAMPERE PENTHOUSE-tasokas moderni kaupunki huoneisto huipulla -ISO JACUZZI omalla KATTOTERASSILLA - AURINKOTUOLIT ja Aurinko odottaa Sinua - huikea maisema- - 10 HLÖ - free parking,433.8,2025-10-21,2025-10-16,tampere,1,1,morning,9.4,Tampere,2.3 km from map center,https://www.booking.com/hotel/fi/tampere-penthouse.html,False
+Apartment Hotel Tampere MN,149.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/tampereen-huoneistohotelli-mn.html,False
+Apartment Hotel Tampere MN,134.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/tampereen-huoneistohotelli-mn.html,False
+Apartment Hotel Tampere MN,99.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/tampereen-huoneistohotelli-mn.html,False
+Apartment Hotel Tampere MN,99.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/tampereen-huoneistohotelli-mn.html,False
+Apartment Hotel Tampere MN,99.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/tampereen-huoneistohotelli-mn.html,False
+Tampereen kunkku,113.4,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,350 m from map center,https://www.booking.com/hotel/fi/tampereen-kunkku.html,False
+Tampereen kunkku,113.4,2025-10-21,2025-10-16,tampere,1,1,morning,9.2,Tampere,350 m from map center,https://www.booking.com/hotel/fi/tampereen-kunkku.html,False
+"3h,k,p - Keskellä Tamperetta kaunis parvekkeellinen uusittu kolmio",165.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.9,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tampereen-parhaalla-paikalla-upea-kolmio-parveke.html,False
+"3h,k,p - Keskellä Tamperetta kaunis parvekkeellinen uusittu kolmio",165.0,2025-10-18,2025-10-16,tampere,1,1,morning,7.9,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tampereen-parhaalla-paikalla-upea-kolmio-parveke.html,False
+"3h,k,p - Keskellä Tamperetta kaunis parvekkeellinen uusittu kolmio",97.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.9,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tampereen-parhaalla-paikalla-upea-kolmio-parveke.html,False
+"3h,k,p - Keskellä Tamperetta kaunis parvekkeellinen uusittu kolmio",97.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.9,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tampereen-parhaalla-paikalla-upea-kolmio-parveke.html,False
+"3h,k,p - Keskellä Tamperetta kaunis parvekkeellinen uusittu kolmio",97.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.9,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/tampereen-parhaalla-paikalla-upea-kolmio-parveke.html,False
+Tehdassaari Nokia HQ - Pääkonttori,100.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.1,Nokia,13.5 km from map center,https://www.booking.com/hotel/fi/tehdassaari.html,False
+The Cutest Studio in Central Tampere,88.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/the-cutest-studio-in-central-tampere.html,False
+The Cutest Studio in Central Tampere,88.2,2025-10-20,2025-10-16,tampere,1,1,morning,9.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/the-cutest-studio-in-central-tampere.html,False
+The Cutest Studio in Central Tampere,88.2,2025-10-21,2025-10-16,tampere,1,1,morning,9.7,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/the-cutest-studio-in-central-tampere.html,False
+"Kaski, three-room condo in a prime location, free parking",195.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.7,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/three-room-condo-in-a-prime-location-free-parking.html,False
+"Kaski, three-room condo in a prime location, free parking",195.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.7,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/three-room-condo-in-a-prime-location-free-parking.html,False
+"Kaski, three-room condo in a prime location, free parking",163.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.7,Tampere,2.2 km from map center,https://www.booking.com/hotel/fi/three-room-condo-in-a-prime-location-free-parking.html,False
+"Top of the Lake - two bedrooms, free parking",154.5,2025-10-18,2025-10-16,tampere,1,1,morning,10.0,Tampella,1.1 km from map center,https://www.booking.com/hotel/fi/top-of-the-lake.html,False
+Topaasi,180.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/topaasi.html,False
+Topaasi,135.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/topaasi.html,False
+Topaasi,135.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/topaasi.html,False
+Topaasi,135.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/topaasi.html,False
+Tower Cabin,115.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.7,Tampere,6.7 km from map center,https://www.booking.com/hotel/fi/tower-cabin.html,False
+Tower Cabin,115.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.7,Tampere,6.7 km from map center,https://www.booking.com/hotel/fi/tower-cabin.html,False
+Tyylikas Cityasunto Tampereen keskustassa pysakoinnilla,85.7,2025-10-21,2025-10-16,tampere,1,1,morning,7.6,Tampere,100 m from map center,https://www.booking.com/hotel/fi/tyylikas-cityasunto-tampereen-keskustassa-pysakoinnilla.html,False
+Tyylikkäästi Retroa ja modernia Tampere Hervanta Atomikatu 5,92.5,2025-10-18,2025-10-16,tampere,1,1,morning,9.0,Tampere,7.7 km from map center,https://www.booking.com/hotel/fi/tyylikkaasti-retroa-ja-modernia-tampere-hervanta.html,False
+Unique Studio in a Historical Building in Tampere Downtown,153.6,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,400 m from map center,https://www.booking.com/hotel/fi/unique-48-m2-free-wifi.html,False
+Unique Studio in a Historical Building in Tampere Downtown,153.6,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,400 m from map center,https://www.booking.com/hotel/fi/unique-48-m2-free-wifi.html,False
+Unique Studio in a Historical Building in Tampere Downtown,153.6,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,400 m from map center,https://www.booking.com/hotel/fi/unique-48-m2-free-wifi.html,False
+Stylish Loft next to City Center & Lake Pyhäjärvi,153.6,2025-10-18,2025-10-16,tampere,1,1,morning,8.3,Tampere,500 m from map center,https://www.booking.com/hotel/fi/unique-loft-apartment-next-to-lake-pyhajarvi-and-city-center-hosted-by-2ndhomes.html,False
+Stylish Loft next to City Center & Lake Pyhäjärvi,148.8,2025-10-19,2025-10-16,tampere,1,1,morning,8.3,Tampere,500 m from map center,https://www.booking.com/hotel/fi/unique-loft-apartment-next-to-lake-pyhajarvi-and-city-center-hosted-by-2ndhomes.html,False
+Stylish Loft next to City Center & Lake Pyhäjärvi,148.8,2025-10-20,2025-10-16,tampere,1,1,morning,8.3,Tampere,500 m from map center,https://www.booking.com/hotel/fi/unique-loft-apartment-next-to-lake-pyhajarvi-and-city-center-hosted-by-2ndhomes.html,False
+Stylish Loft next to City Center & Lake Pyhäjärvi,148.8,2025-10-21,2025-10-16,tampere,1,1,morning,8.3,Tampere,500 m from map center,https://www.booking.com/hotel/fi/unique-loft-apartment-next-to-lake-pyhajarvi-and-city-center-hosted-by-2ndhomes.html,False
+Unique two-room apartment with parking space,261.0,2025-10-19,2025-10-16,tampere,1,1,morning,0.0,Tampere,350 m from map center,https://www.booking.com/hotel/fi/unique-two-room-apartment-with-parking-space.html,False
+Unique two-room apartment with parking space,261.0,2025-10-20,2025-10-16,tampere,1,1,morning,0.0,Tampere,350 m from map center,https://www.booking.com/hotel/fi/unique-two-room-apartment-with-parking-space.html,False
+Unique two-room apartment with parking space,261.0,2025-10-21,2025-10-16,tampere,1,1,morning,0.0,Tampere,350 m from map center,https://www.booking.com/hotel/fi/unique-two-room-apartment-with-parking-space.html,False
+Unity Tampere - A Studio Hotel,116.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,False
+Unity Tampere - A Studio Hotel,105.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,False
+Unity Tampere - A Studio Hotel,95.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,False
+Unity Tampere - A Studio Hotel,95.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,False
+Unity Tampere - A Studio Hotel,95.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,False
+Unity Tampere - A Studio Hotel,100.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,False
+Unity Tampere - A Studio Hotel,132.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,True
+Unity Tampere - A Studio Hotel,121.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,True
+Unity Tampere - A Studio Hotel,121.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,True
+Unity Tampere - A Studio Hotel,121.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,True
+Unity Tampere - A Studio Hotel,121.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,True
+Unity Tampere - A Studio Hotel,126.5,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Tampere,1.5 km from map center,https://www.booking.com/hotel/fi/unity-tampere.html,True
+Upea kaksio Näsijärven rannalla,152.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.8,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/upea-kaksio-nasijarven-rannalla.html,False
+Upea kolmio+sauna parhaalla paikalla!,185.0,2025-10-17,2025-10-16,tampere,1,1,morning,8.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-kolmio-sauna-parhaalla-paikalla.html,False
+Upea kolmio+sauna parhaalla paikalla!,185.0,2025-10-18,2025-10-16,tampere,1,1,morning,8.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-kolmio-sauna-parhaalla-paikalla.html,False
+Upea kolmio+sauna parhaalla paikalla!,116.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-kolmio-sauna-parhaalla-paikalla.html,False
+Upea kolmio+sauna parhaalla paikalla!,116.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-kolmio-sauna-parhaalla-paikalla.html,False
+Upea saunallinen kolmio,109.2,2025-10-19,2025-10-16,tampere,1,1,morning,9.0,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/upea-saunallinen-kolmio.html,False
+Upea saunallinen kolmio,109.2,2025-10-20,2025-10-16,tampere,1,1,morning,9.0,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/upea-saunallinen-kolmio.html,False
+Upea saunallinen kolmio,109.2,2025-10-21,2025-10-16,tampere,1,1,morning,9.0,Nokia,12.8 km from map center,https://www.booking.com/hotel/fi/upea-saunallinen-kolmio.html,False
+"Excellent location! In the city centre, stylish apartment 1 room, kitchen and balcony",70.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-sijainti-tampereen-keskustassa-1h-terassi.html,False
+"Excellent location! In the city centre, stylish apartment 1 room, kitchen and balcony",91.0,2025-10-17,2025-10-16,tampere,1,1,morning,7.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-sijainti-tampereen-keskustassa-1h-terassi.html,False
+"Excellent location! In the city centre, stylish apartment 1 room, kitchen and balcony",73.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-sijainti-tampereen-keskustassa-1h-terassi.html,False
+"Excellent location! In the city centre, stylish apartment 1 room, kitchen and balcony",73.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-sijainti-tampereen-keskustassa-1h-terassi.html,False
+"Excellent location! In the city centre, stylish apartment 1 room, kitchen and balcony",73.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.4,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-sijainti-tampereen-keskustassa-1h-terassi.html,False
+"Upea yksiö+parveke. Ihastu, parhaalla paikalla.",70.0,2025-10-16,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-yksio-parveke-ihastu-parhaalla-paikalla.html,False
+"Upea yksiö+parveke. Ihastu, parhaalla paikalla.",77.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-yksio-parveke-ihastu-parhaalla-paikalla.html,False
+"Upea yksiö+parveke. Ihastu, parhaalla paikalla.",77.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,0.9 km from map center,https://www.booking.com/hotel/fi/upea-yksio-parveke-ihastu-parhaalla-paikalla.html,False
+Hotel Urkin Piilopirtti,103.0,2025-10-16,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,False
+Hotel Urkin Piilopirtti,103.0,2025-10-17,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,False
+Hotel Urkin Piilopirtti,123.0,2025-10-18,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,False
+Hotel Urkin Piilopirtti,103.0,2025-10-19,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,False
+Hotel Urkin Piilopirtti,103.0,2025-10-20,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,False
+Hotel Urkin Piilopirtti,103.0,2025-10-21,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,False
+Hotel Urkin Piilopirtti,103.0,2025-10-16,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,True
+Hotel Urkin Piilopirtti,103.0,2025-10-17,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,True
+Hotel Urkin Piilopirtti,123.0,2025-10-18,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,True
+Hotel Urkin Piilopirtti,103.0,2025-10-19,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,True
+Hotel Urkin Piilopirtti,103.0,2025-10-20,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,True
+Hotel Urkin Piilopirtti,103.0,2025-10-21,2025-10-16,tampere,1,1,morning,6.4,Pinsiö,20.1 km from map center,https://www.booking.com/hotel/fi/urkin-piilopirtti.html,True
+"Uumen Hotels - Tampere, Finlayson",81.2,2025-10-16,2025-10-16,tampere,1,1,morning,8.8,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/uumen-hotels-tampere-finlayson.html,False
+"Uumen Hotels - Tampere, Finlayson",85.6,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/uumen-hotels-tampere-finlayson.html,False
+"Uumen Hotels - Tampere, Finlayson",85.6,2025-10-18,2025-10-16,tampere,1,1,morning,8.8,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/uumen-hotels-tampere-finlayson.html,False
+"Uumen Hotels - Tampere, Finlayson",56.5,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/uumen-hotels-tampere-finlayson.html,False
+"Uumen Hotels - Tampere, Finlayson",66.7,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/uumen-hotels-tampere-finlayson.html,False
+"Uumen Hotels - Tampere, Finlayson",71.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Tampere,0.6 km from map center,https://www.booking.com/hotel/fi/uumen-hotels-tampere-finlayson.html,False
+ARENA Junior Suite,90.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/uusi-47-new-junior-suite-center.html,False
+ARENA Junior Suite,95.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.2,Tampere,1.1 km from map center,https://www.booking.com/hotel/fi/uusi-47-new-junior-suite-center.html,False
+Vaihmalan Hovi,123.2,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,False
+Vaihmalan Hovi,123.2,2025-10-18,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,False
+Vaihmalan Hovi,156.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,False
+Vaihmalan Hovi,156.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,False
+Vaihmalan Hovi,156.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,False
+Vaihmalan Hovi,123.2,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,True
+Vaihmalan Hovi,123.2,2025-10-18,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,True
+Vaihmalan Hovi,156.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,True
+Vaihmalan Hovi,156.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,True
+Vaihmalan Hovi,156.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.8,Lempäälä,22.3 km from map center,https://www.booking.com/hotel/fi/vaihmalan-hovi.html,True
+Varala Sports & Nature Hotel,77.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.0,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/varalan-urheiluopisto.html,False
+Varala Sports & Nature Hotel,77.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.0,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/varalan-urheiluopisto.html,False
+Varala Sports & Nature Hotel,77.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.0,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/varalan-urheiluopisto.html,False
+Varala Sports & Nature Hotel,77.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.0,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/varalan-urheiluopisto.html,True
+Varala Sports & Nature Hotel,77.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.0,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/varalan-urheiluopisto.html,True
+Varala Sports & Nature Hotel,77.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.0,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/varalan-urheiluopisto.html,True
+Viihtyisä & Varusteltu Keskusta-asunto Neljälle!,105.0,2025-10-16,2025-10-16,tampere,1,1,morning,8.5,Tampere,250 m from map center,https://www.booking.com/hotel/fi/viihtyisa-amp-varusteltu-keskusta-asunto-neljalle.html,False
+Viihtyisä & Varusteltu Keskusta-asunto Neljälle!,105.0,2025-10-19,2025-10-16,tampere,1,1,morning,8.5,Tampere,250 m from map center,https://www.booking.com/hotel/fi/viihtyisa-amp-varusteltu-keskusta-asunto-neljalle.html,False
+Viihtyisä & Varusteltu Keskusta-asunto Neljälle!,105.0,2025-10-20,2025-10-16,tampere,1,1,morning,8.5,Tampere,250 m from map center,https://www.booking.com/hotel/fi/viihtyisa-amp-varusteltu-keskusta-asunto-neljalle.html,False
+Viihtyisä & Varusteltu Keskusta-asunto Neljälle!,105.0,2025-10-21,2025-10-16,tampere,1,1,morning,8.5,Tampere,250 m from map center,https://www.booking.com/hotel/fi/viihtyisa-amp-varusteltu-keskusta-asunto-neljalle.html,False
+"Sastamala, Ellivuori, viihtyisä saunallinen lomahuoneisto",153.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Sastamala,38.8 km from map center,https://www.booking.com/hotel/fi/viihtyisa-lomahuoneisto-ellivuoressa.html,False
+Idyllinen 1937 vuoden puutalon kaksio,49.5,2025-10-19,2025-10-16,tampere,1,1,morning,5.3,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/viiihtyisa-puutalon-kaksio.html,False
+Idyllinen 1937 vuoden puutalon kaksio,49.5,2025-10-20,2025-10-16,tampere,1,1,morning,5.3,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/viiihtyisa-puutalon-kaksio.html,False
+Idyllinen 1937 vuoden puutalon kaksio,49.5,2025-10-21,2025-10-16,tampere,1,1,morning,5.3,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/viiihtyisa-puutalon-kaksio.html,False
+Viinikan Helmi,140.0,2025-10-19,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/viinikan-helmi-tampere.html,False
+Viinikan Helmi,140.0,2025-10-20,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/viinikan-helmi-tampere.html,False
+Viinikan Helmi,140.0,2025-10-21,2025-10-16,tampere,1,1,morning,7.7,Tampere,1.9 km from map center,https://www.booking.com/hotel/fi/viinikan-helmi-tampere.html,False
+Villa Härmälä,95.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.5,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/villa-harmala.html,False
+Villa Härmälä,95.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.5,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/villa-harmala.html,False
+Villa Härmälä,95.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.5,Tampere,3.1 km from map center,https://www.booking.com/hotel/fi/villa-harmala.html,False
+Lehtiniemi Resort - Villa,86.5,2025-10-16,2025-10-16,tampere,1,1,morning,7.8,Pirkkala,12.3 km from map center,https://www.booking.com/hotel/fi/villa-lehtiniemi.html,False
+Lehtiniemi Resort - Villa,86.5,2025-10-19,2025-10-16,tampere,1,1,morning,7.8,Pirkkala,12.3 km from map center,https://www.booking.com/hotel/fi/villa-lehtiniemi.html,False
+Lehtiniemi Resort - Villa,86.5,2025-10-20,2025-10-16,tampere,1,1,morning,7.8,Pirkkala,12.3 km from map center,https://www.booking.com/hotel/fi/villa-lehtiniemi.html,False
+Lehtiniemi Resort - Villa,86.5,2025-10-21,2025-10-16,tampere,1,1,morning,7.8,Pirkkala,12.3 km from map center,https://www.booking.com/hotel/fi/villa-lehtiniemi.html,False
+Villa Nurmenhelmi järven rannalla,591.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.7,Lempäälä,18.9 km from map center,https://www.booking.com/hotel/fi/villa-nurmenhelmi-jarven-rannalla-lahdenkyla10.html,False
+Villa Nurmenhelmi järven rannalla,591.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.7,Lempäälä,18.9 km from map center,https://www.booking.com/hotel/fi/villa-nurmenhelmi-jarven-rannalla-lahdenkyla10.html,False
+Vinkku Charming Wooden House near to City Centre,116.3,2025-10-17,2025-10-16,tampere,1,1,morning,8.8,Tampere,2.1 km from map center,https://www.booking.com/hotel/fi/vinkku-charming-wooden-house-near-to-city-centre.html,False
+XoXo Apartments Tampere,215.0,2025-10-16,2025-10-16,tampere,1,1,morning,9.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/xoxo-apartments-tampere.html,False
+XoXo Apartments Tampere,215.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/xoxo-apartments-tampere.html,False
+XoXo Apartments Tampere,215.0,2025-10-20,2025-10-16,tampere,1,1,morning,9.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/xoxo-apartments-tampere.html,False
+XoXo Apartments Tampere,215.0,2025-10-21,2025-10-16,tampere,1,1,morning,9.3,Tampere,0.8 km from map center,https://www.booking.com/hotel/fi/xoxo-apartments-tampere.html,False
+"Ydinkeskustassa, uusi yksiö+ autohallipaikka",101.0,2025-10-17,2025-10-16,tampere,1,1,morning,9.4,Tampere,250 m from map center,https://www.booking.com/hotel/fi/ydinkeskustassa-uusi-yksio-autohallipaikka.html,False
+"Ydinkeskustassa, uusi yksiö+ autohallipaikka",122.0,2025-10-18,2025-10-16,tampere,1,1,morning,9.4,Tampere,250 m from map center,https://www.booking.com/hotel/fi/ydinkeskustassa-uusi-yksio-autohallipaikka.html,False
+"Ydinkeskustassa, uusi yksiö+ autohallipaikka",87.0,2025-10-19,2025-10-16,tampere,1,1,morning,9.4,Tampere,250 m from map center,https://www.booking.com/hotel/fi/ydinkeskustassa-uusi-yksio-autohallipaikka.html,False
+Yksiö Pispalassa,59.5,2025-10-21,2025-10-16,tampere,1,1,morning,8.2,Tampere,2 km from map center,https://www.booking.com/hotel/fi/yksio-pispalassa.html,False

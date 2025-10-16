@@ -436,16 +436,17 @@ if 'results' in st.session_state and st.session_state.results:
     df = pd.DataFrame(st.session_state.results)
     df['price'] = pd.to_numeric(df['price'], errors='coerce')
     df = df.dropna(subset=['price'])
+    # breakpoint()
 
     if breakfast_filter:
         df = df[df['breakfast_included'] == True]
         st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
-    # else:
-    #     df = df.sort_values(
-    #         by=['name', 'price', 'breakfast_included'],
-    #         ascending=[True, True, False]
-    #     )
-    #     df = df.drop_duplicates(subset=['name'], keep='first')
+    else:
+        df = df.sort_values(
+            by=['price_date', 'name', 'price', 'breakfast_included'],
+            ascending=[True, True, True, False]
+        )
+        df = df.groupby(['price_date', 'name'], as_index=False).first()
     
     if not df.empty:
         # Hotel selection section
