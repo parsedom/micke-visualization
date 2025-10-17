@@ -200,7 +200,7 @@ Alert_Comparison = [
     "Scandic Rosendahl",
     "Original Sokos Hotel Villa Tampere",
     "Lillan Hotel & Kök",
-    "Hotelli Vaakko - Hotel and Apartments by UHNDA",
+    "Hotelli Vaakko - Hotel and Apartments by UHANDA",
     "Hotel Kauppi",
     "Holiday Inn Tampere - Central Station by IHG",
     "Holiday Club Tampereen Kehräämö",
@@ -442,11 +442,12 @@ if 'results' in st.session_state and st.session_state.results:
         df = df[df['breakfast_included'] == True]
         st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
     else:
-        df = df.sort_values(
-            by=['price_date', 'name', 'price', 'breakfast_included'],
-            ascending=[True, True, True, False]
-        )
-        df = df.groupby(['price_date', 'name'], as_index=False).first()
+        df = df[df['breakfast_included'] == False]
+        # df = df.sort_values(
+        #     by=['price_date', 'name', 'price', 'breakfast_included'],
+        #     ascending=[True, True, True, False]
+        # )
+        # df = df.groupby(['price_date', 'name'], as_index=False).first()
     
     if not df.empty:
         # Hotel selection section
