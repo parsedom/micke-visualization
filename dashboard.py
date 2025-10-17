@@ -646,7 +646,7 @@ if 'results' in st.session_state and st.session_state.results:
 
             # Create pivot
             pivot = filtered_df.pivot_table(
-                index=['scrape_date', 'name', 'breakfast_included'], 
+                index=['scrape_date', 'name'], 
                 columns='price_date',
                 values='price', 
                 aggfunc='mean'
@@ -680,7 +680,7 @@ if 'results' in st.session_state and st.session_state.results:
                 empty_df = pd.DataFrame([empty_row])
                 pivot = pd.concat([pivot, empty_df], ignore_index=True)
 
-                avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE', 'breakfast_included': None}
+                avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE'}
 
                 for col in numeric_cols:
                     if not pd.isna(averages[col]):
@@ -690,13 +690,13 @@ if 'results' in st.session_state and st.session_state.results:
                 avg_df = pd.DataFrame([avg_row])
                 pivot = pd.concat([pivot, avg_df], ignore_index=True)
             
-            pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
+            # pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
 
             # Build AgGrid
             gb = GridOptionsBuilder.from_dataframe(pivot)
 
             # Pin first 3 columns
-            gb.configure_columns(['scrape_date', 'name', 'breakfast_included'], pinned='left', minWidth=150)
+            gb.configure_columns(['scrape_date', 'name'], pinned='left', minWidth=150)
 
             # Numeric columns - same width, 2 decimal precision
             gb.configure_columns(
