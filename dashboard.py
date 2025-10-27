@@ -213,7 +213,6 @@ aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
 
-
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -622,9 +621,9 @@ if 'results' in st.session_state and st.session_state.results:
                 # Line/Scatter trace
                 fig.add_scatter(
                     x=line_avg['date_label'], y=line_avg['price'],
-                    mode='lines+markers',
+                    mode='markers',
                     name='Trend',
-                    line=dict(color='red', width=3)
+                    marker=dict(color='red', size=14),
                 )
 
                 fig.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
