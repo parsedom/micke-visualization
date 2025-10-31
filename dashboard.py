@@ -10,7 +10,7 @@ import hashlib
 import hmac
 from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Configure page - must be first Streamlit command
+
 st.set_page_config(
     page_title="Hotel Booking Dashboard",
     page_icon="🏨",
@@ -18,7 +18,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Authentication configuration
 USERS = {
     "micke": "micke@vis",  
 }
@@ -31,16 +30,14 @@ def check_password():
         if hmac.compare_digest(st.session_state["password"], USERS.get(st.session_state["username"], "")):
             st.session_state["password_correct"] = True
             st.session_state["authenticated_user"] = st.session_state["username"]
-            del st.session_state["password"]  # Don't store password
-            del st.session_state["username"]  # Don't store username in session state
+            del st.session_state["password"]  
+            del st.session_state["username"]  
         else:
             st.session_state["password_correct"] = False
 
-    # Return True if password is validated
     if st.session_state.get("password_correct", False):
         return True
 
-    # Show login form
     st.markdown("""
     <div style="max-width: 400px; margin: 5rem auto; padding: 2rem; 
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
@@ -51,7 +48,6 @@ def check_password():
     </div>
     """, unsafe_allow_html=True)
 
-    # Login form in centered container
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
@@ -70,8 +66,7 @@ def check_password():
                 st.error("😞 User not known or password incorrect")
             
             st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Add some info about the dashboard
+
             st.markdown("""
             <div style="text-align: center; margin-top: 2rem; color: #666;">
                 <p><strong>Hotel Price Analytics Dashboard</strong></p>
@@ -88,7 +83,6 @@ def logout():
         del st.session_state[key]
     st.rerun()
 
-# Check authentication
 if not check_password():
     st.stop()
 
@@ -253,7 +247,6 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     
     try:
         # Use between condition for the sort key range
-        # The '~' character is a good choice as it's ASCII value is higher than '#'
         key_condition = (
             Key('location#persons#nights#time').eq(partition_key) &
             Key('scraped_date#hotel_id#checkin_date#checkout_date')
@@ -294,7 +287,8 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
                 'city': item.get('city', ''),
                 'distance': item.get('distance', ''),
                 'hotel_url': item.get('hotel_url', ''),
-                'breakfast_included': item.get('breakfast_included', False)
+                'breakfast_included': item.get('breakfast_included', False),
+                'free_cancellation': item.get('free_cancellation', False)
             })
         
         return transformed_items
@@ -369,11 +363,11 @@ with st.sidebar:
         location = st.selectbox("Location", ["tampere", "oulu","rauma","turku","jyvaskyla"], index=0)
         persons = st.selectbox("Persons", [1, 2])
         nights = st.selectbox("Nights", [1,2,3, 7])
-        time_of_day = st.selectbox("Time", ["evening", "morning"])
+        time_of_day = st.selectbox("Time", ["morning", "evening"])
         breakfast_filter = st.checkbox("🍳 Include Breakfast Only", value=False)
+        cancellation_filter = st.checkbox("✅ Free Cancellation", value=False)
     
     with st.expander("📅 Date Ranges", expanded=True):
-        # Use unique keys for each date input to prevent caching issues
         scraped_date_range = st.date_input(
             "Scrape Dates", 
             value=[], 
@@ -437,16 +431,17 @@ if 'results' in st.session_state and st.session_state.results:
     df = df.dropna(subset=['price'])
     # breakpoint()
 
-    if breakfast_filter:
+    if breakfast_filter and cancellation_filter:
+        df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == True)]
+        st.success(f"🍳✅ Filtered to {len(df)} records with breakfast included and free cancellation")
+    elif breakfast_filter:
         df = df[df['breakfast_included'] == True]
         st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
+    elif cancellation_filter:
+        df = df[df['free_cancellation'] == True]
+        st.success(f"✅ Filtered to {len(df)} records with free cancellation")
     else:
-        df = df[df['breakfast_included'] == False]
-        # df = df.sort_values(
-        #     by=['price_date', 'name', 'price', 'breakfast_included'],
-        #     ascending=[True, True, True, False]
-        # )
-        # df = df.groupby(['price_date', 'name'], as_index=False).first()
+        df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
     
     if not df.empty:
         # Hotel selection section
