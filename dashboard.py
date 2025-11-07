@@ -207,6 +207,8 @@ aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
 
+
+
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -434,11 +436,12 @@ if 'results' in st.session_state and st.session_state.results:
     if breakfast_filter and cancellation_filter:
         df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == True)]
         st.success(f"🍳✅ Filtered to {len(df)} records with breakfast included and free cancellation")
-    elif breakfast_filter:
-        df = df[df['breakfast_included'] == True]
+    elif breakfast_filter and not cancellation_filter:
+        # df = df[df['breakfast_included'] == True]
+        df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == False)]
         st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
-    elif cancellation_filter:
-        df = df[df['free_cancellation'] == True]
+    elif cancellation_filter and not breakfast_filter:
+        df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == True)]
         st.success(f"✅ Filtered to {len(df)} records with free cancellation")
     else:
         df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
