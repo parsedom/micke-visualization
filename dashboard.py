@@ -275,6 +275,7 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         font-size: 12px;
+        color: #000;
     }
     .day-label {
         text-align: center;
@@ -284,6 +285,7 @@ st.markdown("""
         border: 1px solid #000;
         min-height: 30px;
         flex: 1;
+        color: #000;
     }
     .cell-content {
         width: 100%;
@@ -297,6 +299,7 @@ st.markdown("""
         text-align: center;
         padding: 10px;
         box-sizing: border-box;
+        color: #000;
     }
     .cell-date {
         font-size: 12px;
