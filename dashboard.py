@@ -314,6 +314,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+def get_color_from_price_ranges(value, price_ranges):
+    """Generate color based on price value and defined ranges."""
+    if not price_ranges:
+        return "rgb(150, 150, 150)"
+    
+    # Sort ranges by min value
+    sorted_ranges = sorted(price_ranges, key=lambda x: x['min'])
+    
+    for range_item in sorted_ranges:
+        if range_item['min'] <= value <= range_item['max']:
+            return range_item['color']
+    
+    # If value is outside all ranges, use the closest range color
+    if value < sorted_ranges[0]['min']:
+        return sorted_ranges[0]['color']
+    else:
+        return sorted_ranges[-1]['color']
+    
 # ==================== QUERY FUNCTIONS ====================
 def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     """Query DynamoDB for hotel prices based on filters and date ranges."""
@@ -996,6 +1014,72 @@ with tab2:
             calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
             calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
         
+        # ========== ADD THIS: COLOR PICKER SECTION ==========
+        with st.expander("🎨 Colour Setup", expanded=False):
+            st.markdown("##### Configure Price Range Colors")
+            
+            # Initialize color ranges in session state
+            if 'color_ranges' not in st.session_state:
+                st.session_state.color_ranges = [
+                    {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
+                    {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
+                    {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
+                    {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
+                    {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
+                    {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
+                    {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
+                    {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
+                ]
+            
+            # Display and edit color ranges
+            ranges_to_remove = []
+            for idx, color_range in enumerate(st.session_state.color_ranges):
+                col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 0.5])
+                
+                with col1:
+                    color_range['min'] = st.number_input(
+                        f"Min Price {idx+1}", 
+                        value=float(color_range['min']),
+                        min_value=0.0,
+                        step=0.01,
+                        key=f"min_{idx}"
+                    )
+                
+                with col2:
+                    color_range['max'] = st.number_input(
+                        f"Max Price {idx+1}", 
+                        value=float(color_range['max']),
+                        min_value=0.0,
+                        step=0.01,
+                        key=f"max_{idx}"
+                    )
+                
+                with col3:
+                    color_range['color'] = st.color_picker(
+                        f"Colour {idx+1}", 
+                        value=color_range['color'],
+                        key=f"color_{idx}"
+                    )
+                
+                with col4:
+                    if st.button("✕", key=f"remove_{idx}", use_container_width=True):
+                        ranges_to_remove.append(idx)
+            
+            # Remove marked ranges
+            for idx in sorted(ranges_to_remove, reverse=True):
+                st.session_state.color_ranges.pop(idx)
+            
+            # Add new color range button
+            if st.button("➕ Add Colour Range", use_container_width=True, key="add_range_btn"):
+                new_range = {
+                    'min': 0.0,
+                    'max': 100.0,
+                    'color': '#667eea'
+                }
+                st.session_state.color_ranges.append(new_range)
+                st.rerun()
+        # ========== END COLOR SETUP SECTION ==========
+            
         st.markdown("---")
         calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
 
@@ -1083,31 +1167,15 @@ with tab2:
             }
             df_cal_display = metric_map[color_metric].copy()
             
-            # ALWAYS use availability for COLORING, regardless of displayed metric
-            df_cal_color = df_cal_availability.copy()
-            
             # Filter by selected years and weeks
             filtered_cal_display = df_cal_display[
                 (df_cal_display['year'].isin(selected_years)) & 
                 (df_cal_display['week'].isin(selected_weeks))
             ].copy()
             
-            filtered_cal_color = df_cal_color[
-                (df_cal_color['year'].isin(selected_years)) & 
-                (df_cal_color['week'].isin(selected_weeks))
-            ].copy()
-            
             if filtered_cal_display.empty:
                 st.warning("No data available for selected filters")
             else:
-                # Color range based on availability
-                min_val_color = filtered_cal_color['value'].min()
-                max_val_color = filtered_cal_color['value'].max()
-                
-                # Display value range based on selected metric
-                min_val_display = filtered_cal_display['value'].min()
-                max_val_display = filtered_cal_display['value'].max()
-                
                 day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
                 
                 html = '<table class="calendar-table"><tr>'
@@ -1127,27 +1195,19 @@ with tab2:
                         (filtered_cal_display['year'] == year)
                     ].copy()
                     
-                    week_data_color = filtered_cal_color[
-                        (filtered_cal_color['week'] == week) & 
-                        (filtered_cal_color['year'] == year)
-                    ].copy()
-                    
                     html += '<tr>'
                     html += f'<td class="week-label">Week {week} - {year}</td>'
                     
                     for day in day_order:
                         day_data_display = week_data_display[week_data_display['day_name'] == day]
-                        day_data_color = week_data_color[week_data_color['day_name'] == day]
                         
-                        if not day_data_display.empty and not day_data_color.empty:
+                        if not day_data_display.empty:
                             row_display = day_data_display.iloc[0]
-                            row_color = day_data_color.iloc[0]
-                            
                             display_value = row_display['value']
-                            color_value = row_color['value']
-                            
                             date_str = datetime.strptime(row_display['date_str'], "%m/%d/%Y").strftime("%d/%m/%Y")
-                            color = get_color_from_availability(color_value, min_val_color, max_val_color)
+                            
+                            # ========== USE COLOR RANGES HERE ==========
+                            color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
                             
                             if color_metric == "availability":
                                 display_text = f"{display_value:.1f}%"
@@ -1175,7 +1235,7 @@ with tab2:
                 with col2:
                     st.info(f"**Display:** {color_metric.replace('_', ' ').title()}")
                 with col3:
-                    st.info(f"**Color Range (Availability):** {min_val_color:.1f}% - {max_val_color:.1f}%")
+                    st.info(f"**Color Range (Availability):** {filtered_cal_display['value'].min():.1f} - {filtered_cal_display['value'].max():.1f}")
     
     else:
         st.info("👈 Configure settings and click 'Load Calendar Data' to begin")
