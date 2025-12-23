@@ -208,6 +208,8 @@ aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
 
+
+
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -313,6 +315,35 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+def get_text_color_from_background(hex_color):
+    """
+    Determine if text should be white or black based on background color brightness.
+    Uses relative luminance calculation (WCAG standard).
+    """
+    # Remove '#' if present
+    hex_color = hex_color.lstrip('#')
+    
+    # Convert hex to RGB
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    
+    # Calculate relative luminance using WCAG formula
+    def adjust_color(c):
+        c = c / 255.0
+        if c <= 0.03928:
+            return c / 12.92
+        else:
+            return ((c + 0.055) / 1.055) ** 2.4
+    
+    r_adjusted = adjust_color(r)
+    g_adjusted = adjust_color(g)
+    b_adjusted = adjust_color(b)
+    
+    luminance = 0.2126 * r_adjusted + 0.7152 * g_adjusted + 0.0722 * b_adjusted
+    
+    # If luminance is high (light background), use dark text; otherwise use white text
+    return "#000000" if luminance > 0.5 else "#FFFFFF"
+
 
 def get_color_from_price_ranges(value, price_ranges):
     """Generate color based on price value and defined ranges."""
@@ -541,8 +572,8 @@ def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1"):
         wo_unique_hotels = sorted(wo_df['name'].unique())
         fc_unique_hotels = sorted(fc_df['name'].unique())
 
-        wo_available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in wo_unique_hotels]
-        fc_available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in fc_unique_hotels]
+        wo_available_zone1 = [hotel for hotel in selected_zone if hotel in wo_unique_hotels]
+        fc_available_zone1 = [hotel for hotel in selected_zone if hotel in fc_unique_hotels]
 
         wo_df_zone1 = wo_df[wo_df['name'].isin(wo_available_zone1)]
         fc_df_zone1 = fc_df[fc_df['name'].isin(fc_available_zone1)]
@@ -566,13 +597,13 @@ def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1"):
             df_avail = df_avail.dropna(subset=['price'])
             df_avail = df_avail[(df_avail['breakfast_included'] == False)]
             unique_hotels_avail = sorted(df_avail['name'].unique())
-            available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in unique_hotels_avail]
+            available_zone1 = [hotel for hotel in selected_zone if hotel in unique_hotels_avail]
         else:
             available_zone1 = []
         
         num_zone1_available = len(available_zone1)
 
-        TOTAL_ZONE1 = len(ZONE1_HOTELS)
+        TOTAL_ZONE1 = len(selected_zone)
         zone1_avail_pct = round((num_zone1_available / TOTAL_ZONE1) * 100, 1) if TOTAL_ZONE1 > 0 else 0
 
         metrics['free_cancel_avg'][pdate] = fc_avg
@@ -1018,19 +1049,34 @@ with tab2:
         with st.expander("🎨 Colour Setup", expanded=False):
             st.markdown("##### Configure Price Range Colors")
             
-            # Initialize color ranges in session state
-            if 'color_ranges' not in st.session_state:
-                st.session_state.color_ranges = [
-                    {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
-                    {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
-                    {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
-                    {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
-                    {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
-                    {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
-                    {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
-                    {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
-                ]
+            # Initialize or update color_ranges based on zone_selection
+            if 'prev_zone' not in st.session_state or st.session_state.prev_zone != zone_selection:
+                if zone_selection == "zone1":
+                    st.session_state.color_ranges = [
+                        {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
+                        {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
+                        {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
+                        {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
+                        {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
+                        {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
+                        {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
+                        {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
+                    ]
+                elif zone_selection == "alert":
+                    st.session_state.color_ranges = [
+                        {'min': 0.0, 'max': 114.99, 'color': '#08306b'},
+                        {'min': 115.0, 'max': 124.99, 'color': '#2171b5'},
+                        {'min': 125.0, 'max': 134.99, 'color': '#a2cff8'},
+                        {'min': 135.0, 'max': 144.99, 'color': '#ffffff'},
+                        {'min': 145.0, 'max': 154.99, 'color': '#ffa0a0'},
+                        {'min': 155.0, 'max': 189.99, 'color': '#f86868'},
+                        {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
+                        {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
+                    ]
+                st.session_state.prev_zone = zone_selection
+
             
+
             # Display and edit color ranges
             ranges_to_remove = []
             for idx, color_range in enumerate(st.session_state.color_ranges):
@@ -1206,16 +1252,19 @@ with tab2:
                             display_value = row_display['value']
                             date_str = datetime.strptime(row_display['date_str'], "%m/%d/%Y").strftime("%d/%m/%Y")
                             
-                            # ========== USE COLOR RANGES HERE ==========
-                            color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
+                            # Get background color
+                            bg_color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
+                            
+                            # Get text color based on background brightness
+                            text_color = get_text_color_from_background(bg_color)
                             
                             if color_metric == "availability":
                                 display_text = f"{display_value:.1f}%"
                             else:
                                 display_text = f"€{display_value:.2f}"
                             
-                            html += f'''<td style="background-color: {color};">
-                                <div class="cell-content">
+                            html += f'''<td style="background-color: {bg_color};">
+                                <div class="cell-content" style="color: {text_color};">
                                     <div class="cell-date">{date_str}</div>
                                     <div class="cell-value">{display_text}</div>
                                 </div>
@@ -1227,6 +1276,7 @@ with tab2:
                 
                 html += '</table>'
                 st.markdown(html, unsafe_allow_html=True)
+                
                 
                 st.markdown("---")
                 col1, col2, col3 = st.columns(3)
