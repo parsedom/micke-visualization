@@ -1051,6 +1051,7 @@ with tab2:
             
             # Initialize or update color_ranges based on zone_selection
             if 'prev_zone' not in st.session_state or st.session_state.prev_zone != zone_selection:
+                st.session_state.prev_zone = zone_selection
                 if zone_selection == "zone1":
                     st.session_state.color_ranges = [
                         {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
@@ -1073,7 +1074,7 @@ with tab2:
                         {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
                         {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
                     ]
-                st.session_state.prev_zone = zone_selection
+
 
             
 
