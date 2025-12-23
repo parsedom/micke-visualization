@@ -209,7 +209,6 @@ region = st.secrets["AWS_DEFAULT_REGION"]
 
 
 
-
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
@@ -1049,31 +1048,39 @@ with tab2:
         with st.expander("🎨 Colour Setup", expanded=False):
             st.markdown("##### Configure Price Range Colors")
             
-            # Initialize or update color_ranges based on zone_selection
-            if 'prev_zone' not in st.session_state or st.session_state.prev_zone != zone_selection:
-                st.session_state.prev_zone = zone_selection
-                if zone_selection == "zone1":
-                    st.session_state.color_ranges = [
-                        {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
-                        {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
-                        {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
-                        {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
-                        {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
-                        {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
-                        {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
-                        {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
-                    ]
-                elif zone_selection == "alert":
-                    st.session_state.color_ranges = [
-                        {'min': 0.0, 'max': 114.99, 'color': '#08306b'},
-                        {'min': 115.0, 'max': 124.99, 'color': '#2171b5'},
-                        {'min': 125.0, 'max': 134.99, 'color': '#a2cff8'},
-                        {'min': 135.0, 'max': 144.99, 'color': '#ffffff'},
-                        {'min': 145.0, 'max': 154.99, 'color': '#ffa0a0'},
-                        {'min': 155.0, 'max': 189.99, 'color': '#f86868'},
-                        {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
-                        {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
-                    ]
+            default_color_ranges = {
+                "zone1": [
+                    {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
+                    {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
+                    {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
+                    {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
+                    {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
+                    {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
+                    {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
+                    {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
+                ],
+                "alert": [
+                    {'min': 0.0, 'max': 114.99, 'color': '#08306b'},
+                    {'min': 115.0, 'max': 124.99, 'color': '#2171b5'},
+                    {'min': 125.0, 'max': 134.99, 'color': '#a2cff8'},
+                    {'min': 135.0, 'max': 144.99, 'color': '#ffffff'},
+                    {'min': 145.0, 'max': 154.99, 'color': '#ffa0a0'},
+                    {'min': 155.0, 'max': 189.99, 'color': '#f86868'},
+                    {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
+                    {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
+                ]
+            }
+
+            # Initialize storage for all zones if not exists
+            if 'all_color_ranges' not in st.session_state:
+                st.session_state.all_color_ranges = {}
+
+            # Load or initialize color_ranges for current zone
+            if zone_selection not in st.session_state.all_color_ranges:
+                st.session_state.all_color_ranges[zone_selection] = default_color_ranges.get(zone_selection, [])
+
+            st.session_state.color_ranges = st.session_state.all_color_ranges[zone_selection]
+
 
 
             
