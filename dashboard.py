@@ -87,6 +87,8 @@ def logout():
 if not check_password():
     st.stop()
 
+
+
 # ==================== CONFIGURATION & CONSTANTS ====================
 ZONE1_HOTELS = [
     "Courtyard Tampere City",
@@ -314,6 +316,52 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+def get_default_color_ranges():
+    """Get default color ranges for all zones"""
+    return {
+        "zone1": [
+            {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
+            {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
+            {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
+            {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
+            {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
+            {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
+            {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
+            {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
+        ],
+        "zone2": [
+            {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
+            {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
+            {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
+            {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
+            {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
+            {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
+            {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
+            {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
+        ],
+        "zone3": [
+            {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
+            {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
+            {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
+            {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
+            {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
+            {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
+            {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
+            {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
+        ],
+        "alert": [
+            {'min': 0.0, 'max': 114.99, 'color': '#08306b'},
+            {'min': 115.0, 'max': 124.99, 'color': '#2171b5'},
+            {'min': 125.0, 'max': 134.99, 'color': '#a2cff8'},
+            {'min': 135.0, 'max': 144.99, 'color': '#ffffff'},
+            {'min': 145.0, 'max': 154.99, 'color': '#ffa0a0'},
+            {'min': 155.0, 'max': 189.99, 'color': '#f86868'},
+            {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
+            {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
+        ]
+    }
+
 
 def get_text_color_from_background(hex_color):
     """
@@ -629,6 +677,8 @@ def get_color_from_availability(value, min_val, max_val):
 
 # ==================== PAGE NAVIGATION ====================
 tab1, tab2 = st.tabs(["📊 Price Dashboard", "📅 Calendar Heatmap"])
+# Initialize color ranges in session state (do this near the top of your app)
+
 
 # ==================== TAB 1: PRICE DASHBOARD ====================
 with tab1:
@@ -1048,42 +1098,17 @@ with tab2:
         with st.expander("🎨 Colour Setup", expanded=False):
             st.markdown("##### Configure Price Range Colors")
             
-            default_color_ranges = {
-                "zone1": [
-                    {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
-                    {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
-                    {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
-                    {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
-                    {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
-                    {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
-                    {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
-                    {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
-                ],
-                "alert": [
-                    {'min': 0.0, 'max': 114.99, 'color': '#08306b'},
-                    {'min': 115.0, 'max': 124.99, 'color': '#2171b5'},
-                    {'min': 125.0, 'max': 134.99, 'color': '#a2cff8'},
-                    {'min': 135.0, 'max': 144.99, 'color': '#ffffff'},
-                    {'min': 145.0, 'max': 154.99, 'color': '#ffa0a0'},
-                    {'min': 155.0, 'max': 189.99, 'color': '#f86868'},
-                    {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
-                    {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
-                ]
-            }
-
-            # Initialize storage for all zones if not exists
+            current_zone = zone_selection
             if 'all_color_ranges' not in st.session_state:
-                st.session_state.all_color_ranges = {}
-
-            # Load or initialize color_ranges for current zone
-            if zone_selection not in st.session_state.all_color_ranges:
-                st.session_state.all_color_ranges[zone_selection] = default_color_ranges.get(zone_selection, [])
-
-            st.session_state.color_ranges = st.session_state.all_color_ranges[zone_selection]
-
-
-
+                # Try to load from storage, otherwise use defaults
+                st.session_state.all_color_ranges = get_default_color_ranges()
             
+            # Initialize color_ranges for current zone if it doesn't exist
+            if current_zone not in st.session_state.all_color_ranges:
+                st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
+            
+            # Reference the current zone's color ranges
+            st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
 
             # Display and edit color ranges
             ranges_to_remove = []
@@ -1096,7 +1121,7 @@ with tab2:
                         value=float(color_range['min']),
                         min_value=0.0,
                         step=0.01,
-                        key=f"min_{idx}"
+                        key=f"min_{idx}_{current_zone}"
                     )
                 
                 with col2:
@@ -1105,33 +1130,47 @@ with tab2:
                         value=float(color_range['max']),
                         min_value=0.0,
                         step=0.01,
-                        key=f"max_{idx}"
+                        key=f"max_{idx}_{current_zone}"
                     )
                 
                 with col3:
                     color_range['color'] = st.color_picker(
                         f"Colour {idx+1}", 
                         value=color_range['color'],
-                        key=f"color_{idx}"
+                        key=f"color_{idx}_{current_zone}"
                     )
                 
                 with col4:
-                    if st.button("✕", key=f"remove_{idx}", use_container_width=True):
+                    if st.button("✕", key=f"remove_{idx}_{current_zone}", use_container_width=True):
                         ranges_to_remove.append(idx)
             
-            # Remove marked ranges
+            # Remove marked ranges and update session state
             for idx in sorted(ranges_to_remove, reverse=True):
                 st.session_state.color_ranges.pop(idx)
             
+            # Update all_color_ranges with current changes
+            st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
+            
+            col_reset, col_add = st.columns(2)
+            
+            # Reset to defaults button
+            with col_reset:
+                if st.button("🔄 Reset to Defaults", use_container_width=True, key=f"reset_defaults_btn_{current_zone}"):
+                    st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
+                    st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
+                    st.rerun()
+            
             # Add new color range button
-            if st.button("➕ Add Colour Range", use_container_width=True, key="add_range_btn"):
-                new_range = {
-                    'min': 0.0,
-                    'max': 100.0,
-                    'color': '#667eea'
-                }
-                st.session_state.color_ranges.append(new_range)
-                st.rerun()
+            with col_add:
+                if st.button("➕ Add Colour Range", use_container_width=True, key=f"add_range_btn_{current_zone}"):
+                    new_range = {
+                        'min': 0.0,
+                        'max': 100.0,
+                        'color': '#667eea'
+                    }
+                    st.session_state.color_ranges.append(new_range)
+                    st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
+                    st.rerun()
         # ========== END COLOR SETUP SECTION ==========
             
         st.markdown("---")
