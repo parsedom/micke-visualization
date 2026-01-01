@@ -217,7 +217,10 @@ dynamodb = boto3.resource(
     aws_secret_access_key=aws_secret,
     region_name=region
 )
+
 table = dynamodb.Table('HotelPrices')
+table_calender = dynamodb.Table('HotelPricesCalendar')
+
 
 # ==================== STYLING ====================
 st.markdown("""
@@ -486,177 +489,36 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     except Exception as e:
         st.error(f"Error querying DynamoDB: {str(e)}")
         return []
-    
-def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
-    location = "tampere"
-    time = "morning"
-    persons = 2
-    nights = 1
 
-    if date_range:
-        dates = date_range.split(' - ')
-        day, month, year = dates[0].split('-')
-        checkin_date = f"{year}-{month}-{day}"
-    else:
-        return []
-
-    partition_key = f"{location}#{persons}#{nights}#{time}"
-
-    all_items = []
-
-    try:
-        key_condition = (
-            Key('location#persons#nights#time').eq(partition_key) &
-            Key('checkin_date#scraped_date').between(
-                f"{checkin_date}#{scraped_date_start}",
-                f"{checkin_date}#{scraped_date_end}~"
-            )
-        )
-
-        response = table.query(
-            IndexName='hotel_prices_by_checkin_scraped',
-            KeyConditionExpression=key_condition
-        )
-
-        items = response['Items']
-
-        while 'LastEvaluatedKey' in response:
-            response = table.query(
-                IndexName='hotel_prices_by_checkin_scraped',
-                KeyConditionExpression=key_condition,
-                ExclusiveStartKey=response['LastEvaluatedKey']
-            )
-            items.extend(response['Items'])
-
-        all_items.extend(items)
-
-        transformed_items = []
-        for item in all_items:
-            transformed_items.append({
-                'name': item.get('hotel_name', ''),
-                'price': item.get('price', 0),
-                'price_date': item.get('checkin_date', ''),
-                'scrape_date': item.get('scraped_date', ''),
-                'location': item.get('location', ''),
-                'persons': item.get('persons', 0),
-                'nights': item.get('nights', 0),
-                'time': item.get('time', ''),
-                'review_score': item.get('review_score', 0),
-                'city': item.get('city', ''),
-                'distance': item.get('distance', ''),
-                'hotel_url': item.get('hotel_url', ''),
-                'breakfast_included': item.get('breakfast_included', False),
-                'free_cancellation': item.get('free_cancellation', False)
-            })
-
-        return transformed_items
-
-    except Exception:
-        return []
-
-def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1"):
+def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
     """Query data for calendar heatmap."""
     price_dates = []
     d = price_start_date
     while d <= price_end_date:
-        price_dates.append(d.strftime("%Y-%m-%d"))  # YYYY-MM-DD (DB format)
+        price_dates.append(d.strftime("%Y-%m-%d"))
         d += timedelta(days=1)
-    
-    location = "tampere"
-    time = "morning"
-    persons = 2
-    nights = 1
-    partition_key = f"{location}#{persons}#{nights}#{time}"
     
     metrics = {
         'availability': {},
         'price_avg': {},
         'free_cancel_avg': {}
     }
-    
-    zone_mapping = {
-        'zone1': ZONE1_HOTELS,
-        'zone2': ZONE2_HOTELS,
-        'zone3': ZONE3_HOTELS,
-        'alert': Alert_Comparison
-    }
-    
-    selected_zone = zone_mapping.get(zone_filter, ZONE1_HOTELS)
-    
+
     for idx, pdate in enumerate(price_dates, 1):
-        # For this price date, scrape window is 30 days before it
-        price_dt = datetime.strptime(pdate, "%Y-%m-%d")
-        scrape_start_dt = price_dt - timedelta(days=30)
-        
-        scraped_start = scrape_start_dt.strftime("%Y-%m-%d")
-        scraped_end = pdate
+        partition_key = f"{location}#{zone_filter}#{pdate}"
+        try:
+            response = table_calender.get_item(
+                Key={'location#zone#checkin_date': partition_key}
+            )
+            item = response.get('Item')
+            if item:
+                metrics["availability"][pdate] = item.get("availability")
+                metrics["free_cancel_avg"][pdate] = item.get("free_cancel_avg")
+                metrics["price_avg"][pdate] = item.get("price_avg")
+        except Exception as e:
+            st.error(f"Error querying DynamoDB: {str(e)}")
+            return metrics
 
-        price_ddmmyyyy = price_dt.strftime("%d-%m-%Y")
-        date_range_for_query = f"{price_ddmmyyyy} - {price_ddmmyyyy}"
-
-
-        results = query_calendar_hotels(
-            date_range=date_range_for_query,
-            scraped_date_start=scraped_start,
-            scraped_date_end=scraped_end
-        )
-
-        # Query for price averages (30-day scrape window)
-        if not results:
-            metrics['free_cancel_avg'][pdate] = 0
-            metrics['price_avg'][pdate] = 0
-            metrics['availability'][pdate] = 0
-            continue
-
-        df = pd.DataFrame(results)
-        df['price'] = pd.to_numeric(df['price'], errors='coerce')
-        df = df.dropna(subset=['price'])
-        fc_df = df.copy()
-        wo_df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
-
-        fc_df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == True)]
-
-        wo_unique_hotels = sorted(wo_df['name'].unique())
-        fc_unique_hotels = sorted(fc_df['name'].unique())
-
-        wo_available_zone1 = [hotel for hotel in selected_zone if hotel in wo_unique_hotels]
-        fc_available_zone1 = [hotel for hotel in selected_zone if hotel in fc_unique_hotels]
-
-        wo_df_zone1 = wo_df[wo_df['name'].isin(wo_available_zone1)]
-        fc_df_zone1 = fc_df[fc_df['name'].isin(fc_available_zone1)]
-
-        wo_avg = round(wo_df_zone1['price'].mean(),2) if not wo_df_zone1.empty else 0
-        fc_avg = round(fc_df_zone1['price'].mean(),2) if not fc_df_zone1.empty else 0
-
-        total_records = len(df)
-        price_ddmmyyyy_avail = price_dt.strftime("%d-%m-%Y")
-        date_range_for_avail = f"{price_ddmmyyyy_avail} - {price_ddmmyyyy_avail}"
-        
-        results_avail = query_calendar_hotels(
-            date_range=date_range_for_avail,
-            scraped_date_start=pdate,
-            scraped_date_end=pdate
-        )
-        
-        if results_avail:
-            df_avail = pd.DataFrame(results_avail)
-            df_avail['price'] = pd.to_numeric(df_avail['price'], errors='coerce')
-            df_avail = df_avail.dropna(subset=['price'])
-            df_avail = df_avail[(df_avail['breakfast_included'] == False)]
-            unique_hotels_avail = sorted(df_avail['name'].unique())
-            available_zone1 = [hotel for hotel in selected_zone if hotel in unique_hotels_avail]
-        else:
-            available_zone1 = []
-        
-        num_zone1_available = len(available_zone1)
-
-        TOTAL_ZONE1 = len(selected_zone)
-        zone1_avail_pct = round((num_zone1_available / TOTAL_ZONE1) * 100, 1) if TOTAL_ZONE1 > 0 else 0
-
-        metrics['free_cancel_avg'][pdate] = fc_avg
-        metrics['price_avg'][pdate] = wo_avg
-        metrics['availability'][pdate] = zone1_avail_pct
-    
     return metrics
 
 def get_color_from_availability(value, min_val, max_val):
@@ -1093,6 +955,14 @@ with tab2:
         with st.expander("📅 Date Range", expanded=True):
             calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
             calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
+
+        with st.expander("📍 Location Selection", expanded=True):
+            calendar_location = st.selectbox(
+                "Select Location",
+                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
+                index=0,
+                key="calendar_location_key"
+            )
         
         # ========== ADD THIS: COLOR PICKER SECTION ==========
         with st.expander("🎨 Colour Setup", expanded=False):
@@ -1179,9 +1049,15 @@ with tab2:
     # Load data only when button is clicked or data hasn't been loaded for current date range
     if calendar_query_button:
         with st.spinner("📊 Generating calendar data..."):
-            st.session_state.calendar_data = query_calendar_data(calendar_start, calendar_end, zone_selection)
+            st.session_state.calendar_data = query_calendar_data(
+                price_start_date=calendar_start,
+                price_end_date=calendar_end,
+                zone_filter=zone_selection,
+                location=calendar_location
+            )
             st.session_state.calendar_date_range = (calendar_start, calendar_end)
             st.session_state.calendar_zone = zone_selection
+            st.session_state.calendar_location = calendar_location
     
     if 'calendar_data' in st.session_state:
         metrics = st.session_state.calendar_data
@@ -1326,12 +1202,14 @@ with tab2:
                 
                 
                 st.markdown("---")
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
                     st.info(f"**Zone:** {zone_selection.replace('_', ' ').title()}")
                 with col2:
                     st.info(f"**Display:** {color_metric.replace('_', ' ').title()}")
                 with col3:
+                    st.info(f"**Location:** {st.session_state.calendar_location.title()}")
+                with col4:
                     st.info(f"**Color Range (Availability):** {filtered_cal_display['value'].min():.1f} - {filtered_cal_display['value'].max():.1f}")
     
     else:
