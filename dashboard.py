@@ -3,6 +3,7 @@ import boto3
 import pandas as pd
 from datetime import datetime, timedelta
 import json
+import pytz
 import plotly.express as px
 from boto3.dynamodb.conditions import Key, Attr
 import os
@@ -22,6 +23,11 @@ AVAILABLE_BOARDS = [
     "price_dashboard",
     "historical_calendar"
 ]
+
+BOARD_LABELS = {
+    "price_dashboard": "📊 Price Dashboard",
+    "historical_calendar": "📅 Historical Price Calender",
+}
 
 # ==================== CONFIGURATION & CONSTANTS ====================
 ZONE1_HOTELS = [
@@ -185,11 +191,14 @@ def check_password():
                     st.session_state["boards"] = user.get("boards", [])
                     st.session_state["locations"] = user.get("locations", [])
 
+                helsinki_tz = pytz.timezone('Europe/Helsinki')
+                finland_now = datetime.now(helsinki_tz)
+
                 table_user.update_item(
                     Key={"username": user["username"]},
                     UpdateExpression="SET last_login = :l",
                     ExpressionAttributeValues={
-                        ":l": datetime.now().strftime("%d/%m/%Y")
+                        ":l": finland_now.strftime("%d/%m/%Y")
                     }
                 )
 
@@ -197,8 +206,8 @@ def check_password():
                     table_logs.put_item(
                         Item={
                             "username": user["username"],
-                            "login_ts": datetime.utcnow().isoformat(),
-                            "login_date": datetime.utcnow().strftime("%Y-%m-%d")
+                            "login_ts": finland_now.isoformat(),
+                            "login_date": finland_now.strftime("%Y-%m-%d")
                         }
                     )
                 except Exception as e:
@@ -563,25 +572,22 @@ def get_color_from_availability(value, min_val, max_val):
     return f"rgb({int(r)}, {int(g)}, {int(b)})"
 
 # ==================== PAGE NAVIGATION ====================
-tabs = []
-
 boards = st.session_state.get("boards", [])
 
-if "price_dashboard" in boards:
-    tabs.append("📊 Price Dashboard")
-
-if "historical_calendar" in boards:
-    tabs.append("📅 Historical Price Calender")
+tabs = [
+    BOARD_LABELS[b]
+    for b in AVAILABLE_BOARDS
+    if b in boards
+]
 
 if st.session_state.get("access") == "admin":
     tabs.append("🛠️ Admin Panel")
 
 created_tabs = st.tabs(tabs)
-admin_panel = None
-tab1 = None
-tab2 = None
 
+tab1 = tab2 = admin_panel = None
 tab_index = 0
+
 if "price_dashboard" in boards:
     tab1 = created_tabs[tab_index]
     tab_index += 1
@@ -1000,7 +1006,7 @@ if tab2:
             <p>Hotel availability and pricing trends by week</p>
         </div>
         """, unsafe_allow_html=True)
-
+        
         with st.sidebar:
             st.markdown("### 📅 Calendar Configuration")
             
@@ -1182,7 +1188,7 @@ if tab2:
                 selected_weeks = st.multiselect(
                     "Select Weeks",
                     all_weeks,
-                    default=all_weeks[:4] if len(all_weeks) >= 4 else all_weeks,
+                    default=all_weeks,
                     key="selected_weeks_key"
                 )
             if not selected_years or not selected_weeks:
@@ -1349,7 +1355,7 @@ if admin_panel:
 
         # ================= ADD STAFF ACCOUNT =================
         st.divider()
-        st.markdown("### ➕ Add Staff Account")
+        st.markdown("### ➕ Add Member Account")
 
         with st.form("add_staff_form"):
             new_username = st.text_input("User name")
@@ -1391,7 +1397,7 @@ if admin_panel:
                                 "boards": new_boards
                             }
                         )
-                        st.success("Staff account created")
+                        st.success("Member account created")
                         st.rerun()
 
                 except Exception as e:
@@ -1399,7 +1405,7 @@ if admin_panel:
 
         # ================= EXISTING USERS =================
         st.divider()
-        st.markdown("## 👥 Staff Accounts")
+        st.markdown("## 👥 Member Accounts")
 
         for user in users:
             col1, col2, col3, col4, col5, col6 = st.columns([3, 3, 3, 3, 3, 2])
