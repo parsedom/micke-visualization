@@ -1016,7 +1016,7 @@ if tab1:
                     bar_avg['day_name'] = bar_avg['price_date'].dt.strftime('%a')
                     bar_avg['week_num'] = bar_avg['price_date'].dt.isocalendar().week
                     # Create combined label with day and week on separate lines
-                    bar_avg['x_label'] = bar_avg['date_label'] + '<br>'+ '<br>' + '<br>'+ bar_avg['day_name'] + '<br>'+ '<br>Week ' + bar_avg['week_num'].astype(str)
+                    bar_avg['x_label'] = bar_avg['date_label'] + '<br>' + bar_avg['day_name'] + '<br>Week ' + bar_avg['week_num'].astype(str)
 
                     if hotels and line_hotels:
                         # Line over bar chart
@@ -1078,7 +1078,7 @@ if tab1:
                             height=500, 
                             xaxis_title="Date", 
                             yaxis_title="Average Price (€)",
-                            xaxis=dict(tickangle=-30)
+                            xaxis=dict(tickangle=0)
                         )
                         st.plotly_chart(fig_bar, use_container_width=True)
                     
