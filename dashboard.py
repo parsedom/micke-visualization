@@ -3,6 +3,7 @@ import boto3
 import pandas as pd
 from datetime import datetime, timedelta
 import json
+import pytz
 import plotly.express as px
 from boto3.dynamodb.conditions import Key, Attr
 import os
@@ -18,76 +19,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==================== AUTHENTICATION ====================
-USERS = {
-    "micke": "micke@vis",  
+AVAILABLE_BOARDS = [
+    "price_dashboard",
+    "historical_calendar"
+]
+
+BOARD_LABELS = {
+    "price_dashboard": "📊 Price Dashboard",
+    "historical_calendar": "📅 Historical Price Calender",
 }
-
-def check_password():
-    """Returns `True` if the user had the correct password."""
-    
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], USERS.get(st.session_state["username"], "")):
-            st.session_state["password_correct"] = True
-            st.session_state["authenticated_user"] = st.session_state["username"]
-            del st.session_state["password"]  
-            del st.session_state["username"]  
-        else:
-            st.session_state["password_correct"] = False
-
-    if st.session_state.get("password_correct", False):
-        return True
-
-    st.markdown("""
-    <div style="max-width: 400px; margin: 5rem auto; padding: 2rem; 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-        <h1 style="color: white; text-align: center; margin-bottom: 2rem;">
-            🏨 Hotel Dashboard Login
-        </h1>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        with st.container():
-            st.markdown("""
-            <div style="background: white; padding: 2rem; border-radius: 10px; 
-                        box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-top: 2rem;">
-            """, unsafe_allow_html=True)
-            
-            st.markdown("### 🔐 Please Login")
-            st.text_input("Username", key="username", placeholder="Enter your username")
-            st.text_input("Password", type="password", key="password", placeholder="Enter your password")
-            st.button("Login", on_click=password_entered, type="primary", use_container_width=True)
-            
-            if "password_correct" in st.session_state and not st.session_state["password_correct"]:
-                st.error("😞 User not known or password incorrect")
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            st.markdown("""
-            <div style="text-align: center; margin-top: 2rem; color: #666;">
-                <p><strong>Hotel Price Analytics Dashboard</strong></p>
-                <p>Analyze hotel prices across different dates and locations</p>
-                <p><small>Contact your administrator for login credentials</small></p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    return False
-
-def logout():
-    """Clear session state for logout"""
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.rerun()
-
-if not check_password():
-    st.stop()
-
-
 
 # ==================== CONFIGURATION & CONSTANTS ====================
 ZONE1_HOTELS = [
@@ -210,14 +150,111 @@ aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
 
-
 dynamodb = boto3.resource(
     'dynamodb',
     aws_access_key_id=aws_key,
     aws_secret_access_key=aws_secret,
     region_name=region
 )
+
 table = dynamodb.Table('HotelPrices')
+table_calender = dynamodb.Table('HotelPricesCalendar')
+table_user = dynamodb.Table('MickeUser')
+table_logs = dynamodb.Table('MickeLoginLogs')
+
+
+def check_password():
+    """Returns True if the user has the correct password using DynamoDB."""
+
+    def password_entered():
+        username = st.session_state.get("username")
+        password = st.session_state.get("password")
+
+        if not username or not password:
+            st.session_state["password_correct"] = False
+            return
+
+        try:
+            response = table_user.get_item(
+                Key={"username": username}
+            )
+            user = response.get("Item")
+
+            if user and hmac.compare_digest(password, user.get("password", "")):
+                st.session_state["password_correct"] = True
+                st.session_state["authenticated_user"] = user["username"]
+                st.session_state["access"] = user.get("access", "user")
+                if user.get("access") == "admin":
+                    st.session_state["boards"] = AVAILABLE_BOARDS
+                    st.session_state["locations"] = ["tampere", "oulu", "rauma", "turku", "jyvaskyla"]
+                else:
+                    st.session_state["boards"] = user.get("boards", [])
+                    st.session_state["locations"] = user.get("locations", [])
+
+                helsinki_tz = pytz.timezone('Europe/Helsinki')
+                finland_now = datetime.now(helsinki_tz)
+
+                table_user.update_item(
+                    Key={"username": user["username"]},
+                    UpdateExpression="SET last_login = :l",
+                    ExpressionAttributeValues={
+                        ":l": finland_now.strftime("%d/%m/%Y")
+                    }
+                )
+
+                try:
+                    table_logs.put_item(
+                        Item={
+                            "username": user["username"],
+                            "login_ts": finland_now.isoformat(),
+                            "login_date": finland_now.strftime("%Y-%m-%d")
+                        }
+                    )
+                except Exception as e:
+                    st.warning("Login logged with warning")
+                    print(e)
+
+                del st.session_state["password"]
+                del st.session_state["username"]
+            else:
+                st.session_state["password_correct"] = False
+
+        except Exception as e:
+            st.session_state["password_correct"] = False
+            st.error(f"Login error: {e}")
+
+    if st.session_state.get("password_correct", False):
+        return True
+
+    st.markdown("""
+    <div style="max-width: 400px; margin: 5rem auto; padding: 2rem; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                border-radius: 15px;">
+        <h1 style="color: white; text-align: center;">🏨 Hotel Dashboard Login</h1>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.text_input("Username", key="username")
+        st.text_input("Password", type="password", key="password")
+        st.button("Login", on_click=password_entered, type="primary", use_container_width=True)
+
+        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+            st.error("😞 User not known or password incorrect")
+
+    return False
+
+def logout():
+    """Clear session state for logout"""
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
+
+if not check_password():
+    st.stop()
+
 
 # ==================== STYLING ====================
 st.markdown("""
@@ -486,7 +523,38 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     except Exception as e:
         st.error(f"Error querying DynamoDB: {str(e)}")
         return []
+
+# def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
+#     """Query data for calendar heatmap."""
+#     price_dates = []
+#     d = price_start_date
+#     while d <= price_end_date:
+#         price_dates.append(d.strftime("%Y-%m-%d"))
+#         d += timedelta(days=1)
     
+#     metrics = {
+#         'availability': {},
+#         'price_avg': {},
+#         'free_cancel_avg': {}
+#     }
+
+#     for idx, pdate in enumerate(price_dates, 1):
+#         partition_key = f"{location}#{zone_filter}#{pdate}"
+#         try:
+#             response = table_calender.get_item(
+#                 Key={'location#zone#checkin_date': partition_key}
+#             )
+#             item = response.get('Item')
+#             if item:
+#                 metrics["availability"][pdate] = item.get("availability")
+#                 metrics["free_cancel_avg"][pdate] = item.get("free_cancel_avg")
+#                 metrics["price_avg"][pdate] = item.get("price_avg")
+#         except Exception as e:
+#             st.error(f"Error querying DynamoDB: {str(e)}")
+#             return metrics
+
+#     return metrics
+
 def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
     location = "tampere"
     time = "morning"
@@ -554,7 +622,7 @@ def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
     except Exception:
         return []
 
-def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1"):
+def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
     """Query data for calendar heatmap."""
     price_dates = []
     d = price_start_date
@@ -562,7 +630,6 @@ def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1"):
         price_dates.append(d.strftime("%Y-%m-%d"))  # YYYY-MM-DD (DB format)
         d += timedelta(days=1)
     
-    location = "tampere"
     time = "morning"
     persons = 2
     nights = 1
@@ -658,7 +725,7 @@ def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1"):
         metrics['availability'][pdate] = zone1_avail_pct
     
     return metrics
-
+    
 def get_color_from_availability(value, min_val, max_val):
     """Generate color based on value (green for high, red for low)."""
     if max_val == min_val:
@@ -676,663 +743,901 @@ def get_color_from_availability(value, min_val, max_val):
     return f"rgb({int(r)}, {int(g)}, {int(b)})"
 
 # ==================== PAGE NAVIGATION ====================
-tab1, tab2 = st.tabs(["📊 Price Dashboard", "📅 Calendar Heatmap"])
+boards = st.session_state.get("boards", [])
+
+tabs = [
+    BOARD_LABELS[b]
+    for b in AVAILABLE_BOARDS
+    if b in boards
+]
+
+if st.session_state.get("access") == "admin":
+    tabs.append("🛠️ Admin Panel")
+
+created_tabs = st.tabs(tabs)
+
+tab1 = tab2 = admin_panel = None
+tab_index = 0
+
+if "price_dashboard" in boards:
+    tab1 = created_tabs[tab_index]
+    tab_index += 1
+
+if "historical_calendar" in boards:
+    tab2 = created_tabs[tab_index]
+    tab_index += 1
+
+if st.session_state.get("access") == "admin":
+    admin_panel = created_tabs[tab_index]
+
 # Initialize color ranges in session state (do this near the top of your app)
 
-
 # ==================== TAB 1: PRICE DASHBOARD ====================
-with tab1:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown("""
-        <div class="main-header">
-            <h1>🏨 Hotel Booking Price Dashboard</h1>
-            <p>Analyze hotel prices across different dates and locations</p>
-        </div>
-        """, unsafe_allow_html=True)
+if tab1:
+    with tab1:
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("""
+            <div class="main-header">
+                <h1>🏨 Hotel Booking Price Dashboard</h1>
+                <p>Analyze hotel prices across different dates and locations</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-    with col2:
-        st.markdown(f"""
-        <div class="user-info">
-            <p><strong>👤 Logged in as:</strong><br>{st.session_state.get('authenticated_user', 'Unknown')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("🚪 Logout", type="secondary", use_container_width=True):
-            logout()
-
-    with st.sidebar:
-        st.markdown("### 🔧 Configuration")
-        
-        with st.expander("📍 Location & Booking Details", expanded=True):
-            location = st.selectbox("Location", ["tampere", "oulu","rauma","turku","jyvaskyla"], index=0)
-            persons = st.selectbox("Persons", [1, 2])
-            nights = st.selectbox("Nights", [1,2,3, 7])
-            time_of_day = st.selectbox("Time", ["morning", "evening"])
-            breakfast_filter = st.checkbox("🍳 Include Breakfast Only", value=False)
-            cancellation_filter = st.checkbox("✅ Free Cancellation", value=False)
-        
-        with st.expander("📅 Date Ranges", expanded=True):
-            scraped_date_range = st.date_input(
-                "Scrape Dates", 
-                value=[], 
-                key="scrape_dates_unique"
-            )
-            price_date_range = st.date_input(
-                "Stay Dates", 
-                value=[], 
-                key="price_dates_unique"
-            )
-        
-        st.markdown("---")
-        query_button = st.button("🚀 Execute Query", type="primary", use_container_width=True)
-
-    if query_button:
-        if len(scraped_date_range) != 2:
-            st.error("⚠️ Please select both scrape dates")
-            st.stop()
-        if len(price_date_range) != 2:
-            st.error("⚠️ Please select both stay dates")
-            st.stop()
-
-        scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
-        scraped_end = scraped_date_range[1].strftime("%Y-%m-%d")
-        
-        try:
-            price_start = price_date_range[0].strftime("%d-%m-%Y")
-            price_end = price_date_range[1].strftime("%d-%m-%Y")
-        except ValueError:
-            price_start = price_date_range[0].strftime("%d-%m-%Y")
-            price_end = price_date_range[1].strftime("%d-%m-%Y")
-
-        with st.spinner("🔍 Searching hotels..."):
-            filters = {
-                "location": location,
-                "time": time_of_day,
-                "persons": str(persons),
-                "nights": str(nights)
-            }
+        with col2:
+            st.markdown(f"""
+            <div class="user-info">
+                <p><strong>👤 Logged in as:</strong><br>{st.session_state.get('authenticated_user', 'Unknown')}</p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            date_range = f"{price_start} - {price_end}"
+            if st.button("🚪 Logout", type="secondary", use_container_width=True):
+                logout()
+
+        with st.sidebar:
+            st.markdown("### 🔧 Configuration")
             
-            results = query_hotels(
-                filters=filters,
-                date_range=date_range,
-                scraped_date_start=scraped_start,
-                scraped_date_end=scraped_end
-            )
-
-        if results:
-            st.session_state.results = results
-            st.success(f"✅ Found {len(results)} hotel records!")
-        else:
-            st.error("❌ No data found for your criteria")
-
-    if 'results' in st.session_state and st.session_state.results:
-        df = pd.DataFrame(st.session_state.results)
-        df['price'] = pd.to_numeric(df['price'], errors='coerce')
-        df = df.dropna(subset=['price'])
-
-        if breakfast_filter and cancellation_filter:
-            df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == True)]
-            st.success(f"🍳✅ Filtered to {len(df)} records with breakfast included and free cancellation")
-        elif breakfast_filter and not cancellation_filter:
-            df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == False)]
-            st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
-        elif cancellation_filter and not breakfast_filter:
-            df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == True)]
-            st.success(f"✅ Filtered to {len(df)} records with free cancellation")
-        else:
-            df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
-        
-        if not df.empty:
-            st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
-
-            col1, col2, col3 = st.columns([3, 1, 1])
-            with col1:
-                st.markdown("### 🏨 Hotel Selection")
-                
-                unique_hotels = sorted(df['name'].unique())
-                
-                if 'selected_hotels' not in st.session_state:
-                    st.session_state.selected_hotels = []
-                if 'multiselect_key' not in st.session_state:
-                    st.session_state.multiselect_key = 0
-                
-                st.markdown("**Quick Selection:**")
-                col_bt1, col_bt2, col_bt3, col_bt4, col_bt5, col_bt6 = st.columns(6)
-                
-                with col_bt1:
-                    if st.button("✅ Select All", key="select_all_btn", use_container_width=True):
-                        st.session_state.selected_hotels = unique_hotels
-                        st.session_state.multiselect_key += 1
-                
-                with col_bt2:
-                    if st.button("🌍 Zone 1", key="select_zone1_btn", use_container_width=True):
-                        available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in unique_hotels]
-                        st.session_state.selected_hotels = available_zone1
-                        st.session_state.multiselect_key += 1
-                
-                with col_bt3:
-                    if st.button("🏙️ Zone 2", key="select_zone2_btn", use_container_width=True):
-                        available_zone2 = [hotel for hotel in ZONE2_HOTELS if hotel in unique_hotels]
-                        st.session_state.selected_hotels = available_zone2
-                        st.session_state.multiselect_key += 1
-                
-                with col_bt4:
-                    if st.button("🚩 Zone 3", key="select_zone3_btn", use_container_width=True):
-                        available_zone3 = [hotel for hotel in ZONE3_HOTELS if hotel in unique_hotels]
-                        st.session_state.selected_hotels = available_zone3
-                        st.session_state.multiselect_key += 1
-                
-                with col_bt5:
-                    if st.button("🚨 Alerts", key="select_alert_comp_btn", use_container_width=True):
-                        available_comp = [hotel for hotel in Alert_Comparison if hotel in unique_hotels]
-                        st.session_state.selected_hotels = available_comp
-                        st.session_state.multiselect_key += 1
-                with col_bt6:
-                    if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True):
-                        st.session_state.selected_hotels = []
-                        st.session_state.multiselect_key += 1
-                
-                default_hotels = [h for h in st.session_state.selected_hotels if h in unique_hotels]
-
-                hotels = st.multiselect(
-                    "Select hotels to analyze:",
-                    unique_hotels,
-                    default=default_hotels,
-                    key=f"hotel_selector_{st.session_state.multiselect_key}"
+            with st.expander("📍 Location & Booking Details", expanded=True):
+                allowed_locations = st.session_state.get("locations", [])
+                location = st.selectbox(
+                    "Location",
+                    allowed_locations,
+                    index=0 if allowed_locations else None
                 )
+                persons = st.selectbox("Persons", [1, 2])
+                nights = st.selectbox("Nights", [1,2,3, 7])
+                time_of_day = st.selectbox("Time", ["morning", "evening"])
+                breakfast_filter = st.checkbox("🍳 Include Breakfast Only", value=False)
+                cancellation_filter = st.checkbox("✅ Free Cancellation", value=False)
+            
+            with st.expander("📅 Date Ranges", expanded=True):
+                scraped_date_range = st.date_input(
+                    "Scrape Dates", 
+                    value=[], 
+                    key="scrape_dates_unique"
+                )
+                price_date_range = st.date_input(
+                    "Stay Dates", 
+                    value=[], 
+                    key="price_dates_unique"
+                )
+            
+            st.markdown("---")
+            query_button = st.button("🚀 Execute Query", type="primary", use_container_width=True)
+
+        if query_button:
+            if len(scraped_date_range) != 2:
+                st.error("⚠️ Please select both scrape dates")
+                st.stop()
+            if len(price_date_range) != 2:
+                st.error("⚠️ Please select both stay dates")
+                st.stop()
+
+            scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
+            scraped_end = scraped_date_range[1].strftime("%Y-%m-%d")
+            
+            try:
+                price_start = price_date_range[0].strftime("%d-%m-%Y")
+                price_end = price_date_range[1].strftime("%d-%m-%Y")
+            except ValueError:
+                price_start = price_date_range[0].strftime("%d-%m-%Y")
+                price_end = price_date_range[1].strftime("%d-%m-%Y")
+
+            with st.spinner("🔍 Searching hotels..."):
+                filters = {
+                    "location": location,
+                    "time": time_of_day,
+                    "persons": str(persons),
+                    "nights": str(nights)
+                }
                 
-                st.session_state.selected_hotels = hotels
-
-            with col2:
-                total_hotels = len(unique_hotels)
-                st.metric("Total Hotels", total_hotels)
+                date_range = f"{price_start} - {price_end}"
                 
-                available_zone1 = len([h for h in ZONE1_HOTELS if h in unique_hotels])
-                if available_zone1 > 0:
-                    st.metric("🌍 Zone 1 Available", available_zone1)
+                results = query_hotels(
+                    filters=filters,
+                    date_range=date_range,
+                    scraped_date_start=scraped_start,
+                    scraped_date_end=scraped_end
+                )
 
-                available_zone2 = len([h for h in ZONE2_HOTELS if h in unique_hotels])
-                if available_zone2 > 0:
-                    st.metric("🏙️ Zone 2 Available", available_zone2)
+            if results:
+                st.session_state.results = results
+                st.success(f"✅ Found {len(results)} hotel records!")
+            else:
+                st.error("❌ No data found for your criteria")
 
-                available_zone3 = len([h for h in ZONE3_HOTELS if h in unique_hotels])
-                if available_zone3 > 0:
-                    st.metric("🚩 Zone 3 Available", available_zone3)
-                
-                available_comp = len([h for h in Alert_Comparison if h in unique_hotels])
-                if available_comp > 0:
-                    st.metric("🚨Alert Comparison hotels Available", available_comp)
+        if 'results' in st.session_state and st.session_state.results:
+            df = pd.DataFrame(st.session_state.results)
+            df['price'] = pd.to_numeric(df['price'], errors='coerce')
+            df = df.dropna(subset=['price'])
 
-            with col3:
+            if breakfast_filter and cancellation_filter:
+                df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == True)]
+                st.success(f"🍳✅ Filtered to {len(df)} records with breakfast included and free cancellation")
+            elif breakfast_filter and not cancellation_filter:
+                df = df[(df['breakfast_included'] == True) & (df['free_cancellation'] == False)]
+                st.success(f"🍳 Filtered to {len(df)} records with breakfast included")
+            elif cancellation_filter and not breakfast_filter:
+                df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == True)]
+                st.success(f"✅ Filtered to {len(df)} records with free cancellation")
+            else:
+                df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
+            
+            if not df.empty:
+                st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
+
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    st.markdown("### 🏨 Hotel Selection")
+                    
+                    unique_hotels = sorted(df['name'].unique())
+                    
+                    if 'selected_hotels' not in st.session_state:
+                        st.session_state.selected_hotels = []
+                    if 'multiselect_key' not in st.session_state:
+                        st.session_state.multiselect_key = 0
+                    
+                    st.markdown("**Quick Selection:**")
+                    col_bt1, col_bt2, col_bt3, col_bt4, col_bt5, col_bt6 = st.columns(6)
+                    
+                    with col_bt1:
+                        if st.button("✅ Select All", key="select_all_btn", use_container_width=True):
+                            st.session_state.selected_hotels = unique_hotels
+                            st.session_state.multiselect_key += 1
+                    
+                    with col_bt2:
+                        if st.button("🌍 Zone 1", key="select_zone1_btn", use_container_width=True):
+                            available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in unique_hotels]
+                            st.session_state.selected_hotels = available_zone1
+                            st.session_state.multiselect_key += 1
+                    
+                    with col_bt3:
+                        if st.button("🏙️ Zone 2", key="select_zone2_btn", use_container_width=True):
+                            available_zone2 = [hotel for hotel in ZONE2_HOTELS if hotel in unique_hotels]
+                            st.session_state.selected_hotels = available_zone2
+                            st.session_state.multiselect_key += 1
+                    
+                    with col_bt4:
+                        if st.button("🚩 Zone 3", key="select_zone3_btn", use_container_width=True):
+                            available_zone3 = [hotel for hotel in ZONE3_HOTELS if hotel in unique_hotels]
+                            st.session_state.selected_hotels = available_zone3
+                            st.session_state.multiselect_key += 1
+                    
+                    with col_bt5:
+                        if st.button("🚨 Alerts", key="select_alert_comp_btn", use_container_width=True):
+                            available_comp = [hotel for hotel in Alert_Comparison if hotel in unique_hotels]
+                            st.session_state.selected_hotels = available_comp
+                            st.session_state.multiselect_key += 1
+                    with col_bt6:
+                        if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True):
+                            st.session_state.selected_hotels = []
+                            st.session_state.multiselect_key += 1
+                    
+                    default_hotels = [h for h in st.session_state.selected_hotels if h in unique_hotels]
+
+                    hotels = st.multiselect(
+                        "Select hotels to analyze:",
+                        unique_hotels,
+                        default=default_hotels,
+                        key=f"hotel_selector_{st.session_state.multiselect_key}"
+                    )
+                    
+                    st.session_state.selected_hotels = hotels
+
+                with col2:
+                    total_hotels = len(unique_hotels)
+                    st.metric("Total Hotels", total_hotels)
+                    
+                    available_zone1 = len([h for h in ZONE1_HOTELS if h in unique_hotels])
+                    if available_zone1 > 0:
+                        st.metric("🌍 Zone 1 Available", available_zone1)
+
+                    available_zone2 = len([h for h in ZONE2_HOTELS if h in unique_hotels])
+                    if available_zone2 > 0:
+                        st.metric("🏙️ Zone 2 Available", available_zone2)
+
+                    available_zone3 = len([h for h in ZONE3_HOTELS if h in unique_hotels])
+                    if available_zone3 > 0:
+                        st.metric("🚩 Zone 3 Available", available_zone3)
+                    
+                    available_comp = len([h for h in Alert_Comparison if h in unique_hotels])
+                    if available_comp > 0:
+                        st.metric("🚨Alert Comparison hotels Available", available_comp)
+
+                with col3:
+                    if hotels:
+                        selected_count = len(hotels)
+                        st.metric("Selected", selected_count)
+                        
+                        zone1_selected = len([h for h in hotels if h in ZONE1_HOTELS])
+                        if zone1_selected > 0:
+                            st.metric("🌍 Zone 1 Selected", zone1_selected)
+
+                        zone2_selected = len([h for h in hotels if h in ZONE2_HOTELS])
+                        if zone2_selected > 0:
+                            st.metric("🏙️ Zone 2 Selected", zone2_selected)
+
+                        zone3_selected = len([h for h in hotels if h in ZONE3_HOTELS])
+                        if zone3_selected > 0:
+                            st.metric("🚩 Zone 3 Selected", zone3_selected)
+                        
+                        comp_selected = len([h for h in hotels if h in Alert_Comparison])
+                        if comp_selected > 0:
+                            st.metric("🚨Alert Comparison hotels Selected", comp_selected)
+
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
+                st.markdown("### 📈 Line Chart Hotel Selection (Optional)")
+
+                if 'line_hotels' not in st.session_state:
+                    st.session_state.line_hotels = []
+
+                all_hotels = sorted(df['name'].unique())
+                valid_defaults = [h for h in st.session_state.get('line_hotels', []) if h in all_hotels]
+
+                line_hotels = st.multiselect(
+                    "Select hotels for line chart trend:",
+                    options=all_hotels,
+                    default=valid_defaults,
+                    key="line_chart_selector"
+                )
+                st.session_state.line_hotels = line_hotels
+                st.markdown('</div>', unsafe_allow_html=True)
+
                 if hotels:
-                    selected_count = len(hotels)
-                    st.metric("Selected", selected_count)
+                    filtered_df = df[df['name'].isin(hotels)]
+                    filtered_df.to_csv("filtered_data.csv", index=False)
+                    filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
+
+                    # Bar chart for main selection
+                    bar_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
+                    bar_avg['date_label'] = bar_avg['price_date'].dt.strftime('%b %d')
+
+                    if hotels and line_hotels:
+                        # Line over bar chart
+                        line_df = df[df['name'].isin(line_hotels)].copy()
+                        line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
+
+                        # Pivot table like your detailed matrix
+                        pivot_line = line_df.pivot_table(
+                            index='scrape_date',
+                            columns='price_date',
+                            values='price',
+                            aggfunc='mean'
+                        )
+
+                        # If you want a single line chart across all scrape dates, take the mean across scrapes
+                        line_avg = pivot_line.mean(axis=0).reset_index()
+                        line_avg.columns = ['price_date', 'price']
+
+                        # Format date labels
+                        line_avg['date_label'] = pd.to_datetime(line_avg['price_date']).dt.strftime('%b %d')
+
+                        # Bar trace
+                        fig = px.bar(
+                            bar_avg, x='date_label', y='price',
+                            color_discrete_sequence=['#7dd3c0'], text='price',
+                            labels={'price': 'Average Price (€)', 'date_label': 'Date'},
+                            title='Average Prices with Trend Line'
+                        )
+
+                        # Update only the bar trace for text
+                        fig.data[0].texttemplate = '€%{text:.1f}'
+                        fig.data[0].textposition = 'outside'
+
+                        # Line/Scatter trace
+                        fig.add_scatter(
+                            x=line_avg['date_label'], y=line_avg['price'],
+                            mode='markers',
+                            name='Trend',
+                            marker=dict(color='red', size=14),
+                        )
+
+                        fig.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
+                        st.plotly_chart(fig, use_container_width=True)
+
+                    else:
+                        # Only bar chart if no line hotels selected
+                        fig_bar = px.bar(
+                            bar_avg, x='date_label', y='price',
+                            title='Average Prices Across Selected Hotels',
+                            color_discrete_sequence=['#7dd3c0'], text='price'
+                        )
+                        fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
+                        fig_bar.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
+                        st.plotly_chart(fig_bar, use_container_width=True)
                     
-                    zone1_selected = len([h for h in hotels if h in ZONE1_HOTELS])
-                    if zone1_selected > 0:
-                        st.metric("🌍 Zone 1 Selected", zone1_selected)
+                    # Detailed table section
+                    st.markdown("### 📋 Detailed Price Matrix")
 
-                    zone2_selected = len([h for h in hotels if h in ZONE2_HOTELS])
-                    if zone2_selected > 0:
-                        st.metric("🏙️ Zone 2 Selected", zone2_selected)
-
-                    zone3_selected = len([h for h in hotels if h in ZONE3_HOTELS])
-                    if zone3_selected > 0:
-                        st.metric("🚩 Zone 3 Selected", zone3_selected)
-                    
-                    comp_selected = len([h for h in hotels if h in Alert_Comparison])
-                    if comp_selected > 0:
-                        st.metric("🚨Alert Comparison hotels Selected", comp_selected)
-
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            st.markdown('<div class="hotel-selector">', unsafe_allow_html=True)
-            st.markdown("### 📈 Line Chart Hotel Selection (Optional)")
-
-            if 'line_hotels' not in st.session_state:
-                st.session_state.line_hotels = []
-
-            all_hotels = sorted(df['name'].unique())
-            valid_defaults = [h for h in st.session_state.get('line_hotels', []) if h in all_hotels]
-
-            line_hotels = st.multiselect(
-                "Select hotels for line chart trend:",
-                options=all_hotels,
-                default=valid_defaults,
-                key="line_chart_selector"
-            )
-            st.session_state.line_hotels = line_hotels
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            if hotels:
-                filtered_df = df[df['name'].isin(hotels)]
-                filtered_df.to_csv("filtered_data.csv", index=False)
-                filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
-
-                # Bar chart for main selection
-                bar_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
-                bar_avg['date_label'] = bar_avg['price_date'].dt.strftime('%b %d')
-
-                if hotels and line_hotels:
-                    # Line over bar chart
-                    line_df = df[df['name'].isin(line_hotels)].copy()
-                    line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
-
-                    # Pivot table like your detailed matrix
-                    pivot_line = line_df.pivot_table(
-                        index='scrape_date',
+                    # Create pivot
+                    pivot = filtered_df.pivot_table(
+                        index=['scrape_date', 'name'], 
                         columns='price_date',
-                        values='price',
+                        values='price', 
                         aggfunc='mean'
                     )
 
-                    # If you want a single line chart across all scrape dates, take the mean across scrapes
-                    line_avg = pivot_line.mean(axis=0).reset_index()
-                    line_avg.columns = ['price_date', 'price']
+                    # Format column names
+                    pivot.columns = [col.strftime('%Y-%m-%d') if isinstance(col, pd.Timestamp) else col for col in pivot.columns]
+                    pivot = pivot.reset_index()
 
-                    # Format date labels
-                    line_avg['date_label'] = pd.to_datetime(line_avg['price_date']).dt.strftime('%b %d')
+                    numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name', 'breakfast_included']]
 
-                    # Bar trace
-                    fig = px.bar(
-                        bar_avg, x='date_label', y='price',
-                        color_discrete_sequence=['#7dd3c0'], text='price',
-                        labels={'price': 'Average Price (€)', 'date_label': 'Date'},
-                        title='Average Prices with Trend Line'
+                    # Add group separators (use None for numeric/boolean)
+                    unique_dates = pivot['scrape_date'].unique()
+                    if len(unique_dates) > 1:
+                        final_pivot = pd.DataFrame()
+                        for i, date in enumerate(unique_dates):
+                            group = pivot[pivot['scrape_date'] == date]
+                            final_pivot = pd.concat([final_pivot, group], ignore_index=True)
+                            if i < len(unique_dates) - 1:
+                                empty_row = {col: None for col in pivot.columns}
+                                empty_df = pd.DataFrame([empty_row])
+                                final_pivot = pd.concat([final_pivot, empty_df], ignore_index=True)
+                        pivot = final_pivot
+
+                    # Add average row
+                    if numeric_cols:
+                        valid_data = pivot[pivot['scrape_date'].notnull()]
+                        averages = valid_data[numeric_cols].mean()
+
+                        empty_row = {col: None for col in pivot.columns}
+                        empty_df = pd.DataFrame([empty_row])
+                        pivot = pd.concat([pivot, empty_df], ignore_index=True)
+
+                        avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE'}
+
+                        for col in numeric_cols:
+                            if not pd.isna(averages[col]):
+                                avg_row[col] = round(averages[col], 2)  # round to 2 decimals
+                            else:
+                                avg_row[col] = None
+                        avg_df = pd.DataFrame([avg_row])
+                        pivot = pd.concat([pivot, avg_df], ignore_index=True)
+                    
+                    # pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
+
+                    # Build AgGrid
+                    gb = GridOptionsBuilder.from_dataframe(pivot)
+
+                    # Pin first 3 columns
+                    gb.configure_columns(['scrape_date', 'name'], pinned='left', minWidth=150)
+
+                    # Numeric columns - same width, 2 decimal precision
+                    gb.configure_columns(
+                        numeric_cols,
+                        type=['numericColumn'],
+                        precision=2,
+                        minWidth=100,
+                        maxWidth=100
                     )
 
-                    # Update only the bar trace for text
-                    fig.data[0].texttemplate = '€%{text:.1f}'
-                    fig.data[0].textposition = 'outside'
 
-                    # Line/Scatter trace
-                    fig.add_scatter(
-                        x=line_avg['date_label'], y=line_avg['price'],
-                        mode='markers',
-                        name='Trend',
-                        marker=dict(color='red', size=14),
+                    # Make columns resizable
+                    gb.configure_default_column(resizable=True)
+
+                    # Optional: set row height
+                    gb.configure_grid_options(rowHeight=35)
+
+                    gridOptions = gb.build()
+
+                    AgGrid(
+                        pivot,
+                        gridOptions=gridOptions,
+                        height=600,
+                        fit_columns_on_grid_load=False,  # important: don't shrink
+                        enable_enterprise_modules=False,
                     )
-
-                    fig.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
-                    st.plotly_chart(fig, use_container_width=True)
-
+                
                 else:
-                    # Only bar chart if no line hotels selected
-                    fig_bar = px.bar(
-                        bar_avg, x='date_label', y='price',
-                        title='Average Prices Across Selected Hotels',
-                        color_discrete_sequence=['#7dd3c0'], text='price'
-                    )
-                    fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
-                    fig_bar.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
-                    st.plotly_chart(fig_bar, use_container_width=True)
-                
-                # Detailed table section
-                st.markdown("### 📋 Detailed Price Matrix")
-
-                # Create pivot
-                pivot = filtered_df.pivot_table(
-                    index=['scrape_date', 'name'], 
-                    columns='price_date',
-                    values='price', 
-                    aggfunc='mean'
-                )
-
-                # Format column names
-                pivot.columns = [col.strftime('%Y-%m-%d') if isinstance(col, pd.Timestamp) else col for col in pivot.columns]
-                pivot = pivot.reset_index()
-
-                numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name', 'breakfast_included']]
-
-                # Add group separators (use None for numeric/boolean)
-                unique_dates = pivot['scrape_date'].unique()
-                if len(unique_dates) > 1:
-                    final_pivot = pd.DataFrame()
-                    for i, date in enumerate(unique_dates):
-                        group = pivot[pivot['scrape_date'] == date]
-                        final_pivot = pd.concat([final_pivot, group], ignore_index=True)
-                        if i < len(unique_dates) - 1:
-                            empty_row = {col: None for col in pivot.columns}
-                            empty_df = pd.DataFrame([empty_row])
-                            final_pivot = pd.concat([final_pivot, empty_df], ignore_index=True)
-                    pivot = final_pivot
-
-                # Add average row
-                if numeric_cols:
-                    valid_data = pivot[pivot['scrape_date'].notnull()]
-                    averages = valid_data[numeric_cols].mean()
-
-                    empty_row = {col: None for col in pivot.columns}
-                    empty_df = pd.DataFrame([empty_row])
-                    pivot = pd.concat([pivot, empty_df], ignore_index=True)
-
-                    avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE'}
-
-                    for col in numeric_cols:
-                        if not pd.isna(averages[col]):
-                            avg_row[col] = round(averages[col], 2)  # round to 2 decimals
-                        else:
-                            avg_row[col] = None
-                    avg_df = pd.DataFrame([avg_row])
-                    pivot = pd.concat([pivot, avg_df], ignore_index=True)
-                
-                # pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
-
-                # Build AgGrid
-                gb = GridOptionsBuilder.from_dataframe(pivot)
-
-                # Pin first 3 columns
-                gb.configure_columns(['scrape_date', 'name'], pinned='left', minWidth=150)
-
-                # Numeric columns - same width, 2 decimal precision
-                gb.configure_columns(
-                    numeric_cols,
-                    type=['numericColumn'],
-                    precision=2,
-                    minWidth=100,
-                    maxWidth=100
-                )
-
-
-                # Make columns resizable
-                gb.configure_default_column(resizable=True)
-
-                # Optional: set row height
-                gb.configure_grid_options(rowHeight=35)
-
-                gridOptions = gb.build()
-
-                AgGrid(
-                    pivot,
-                    gridOptions=gridOptions,
-                    height=600,
-                    fit_columns_on_grid_load=False,  # important: don't shrink
-                    enable_enterprise_modules=False,
-                )
+                    st.info("👆 Please select one or more hotels to view the analysis")
             
             else:
-                st.info("👆 Please select one or more hotels to view the analysis")
-        
-        else:
-            st.error("❌ No valid price data found")
+                st.error("❌ No valid price data found")
 
-    else:
-        # Welcome screen
+        else:
+            # Welcome screen
+            st.markdown("""
+            <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 15px; margin: 2rem 0;">
+                <h2>🎯 Welcome to Hotel Price Analytics</h2>
+                <p style="font-size: 1.2em; color: #666; margin-bottom: 2rem;">
+                    Configure your search parameters in the sidebar and click "Execute Query" to begin analysis
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+if tab2:
+# ==================== TAB 2: CALENDAR HEATMAP ====================
+    with tab2:
         st.markdown("""
-        <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 15px; margin: 2rem 0;">
-            <h2>🎯 Welcome to Hotel Price Analytics</h2>
-            <p style="font-size: 1.2em; color: #666; margin-bottom: 2rem;">
-                Configure your search parameters in the sidebar and click "Execute Query" to begin analysis
-            </p>
+        <div class="main-header">
+            <h1>📅 Weekly Calendar Heatmap</h1>
+            <p>Hotel availability and pricing trends by week</p>
         </div>
         """, unsafe_allow_html=True)
-
-# ==================== TAB 2: CALENDAR HEATMAP ====================
-with tab2:
-    st.markdown("""
-    <div class="main-header">
-        <h1>📅 Weekly Calendar Heatmap</h1>
-        <p>Hotel availability and pricing trends by week</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    with st.sidebar:
-        st.markdown("### 📅 Calendar Configuration")
         
-        with st.expander("📍 Zone Selection", expanded=True):
-            zone_selection = st.selectbox(
-                "Select Zone",
-                ["zone1", "zone2", "zone3", "alert"],
-                format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert Comparison"}.get(x),
-                key="zone_selection_key"
-            )
-        
-        with st.expander("📅 Date Range", expanded=True):
-            calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
-            calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
-        
-        # ========== ADD THIS: COLOR PICKER SECTION ==========
-        with st.expander("🎨 Colour Setup", expanded=False):
-            st.markdown("##### Configure Price Range Colors")
+        with st.sidebar:
+            st.markdown("### 📅 Calendar Configuration")
             
-            current_zone = zone_selection
-            if 'all_color_ranges' not in st.session_state:
-                # Try to load from storage, otherwise use defaults
-                st.session_state.all_color_ranges = get_default_color_ranges()
+            with st.expander("📍 Zone Selection", expanded=True):
+                zone_selection = st.selectbox(
+                    "Select Zone",
+                    ["zone1", "zone2", "zone3", "alert"],
+                    format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert Comparison"}.get(x),
+                    key="zone_selection_key"
+                )
             
-            # Initialize color_ranges for current zone if it doesn't exist
-            if current_zone not in st.session_state.all_color_ranges:
-                st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
-            
-            # Reference the current zone's color ranges
-            st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
+            with st.expander("📅 Date Range", expanded=True):
+                calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
+                calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
 
-            # Display and edit color ranges
-            ranges_to_remove = []
-            for idx, color_range in enumerate(st.session_state.color_ranges):
-                col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 0.5])
-                
-                with col1:
-                    color_range['min'] = st.number_input(
-                        f"Min Price {idx+1}", 
-                        value=float(color_range['min']),
-                        min_value=0.0,
-                        step=0.01,
-                        key=f"min_{idx}_{current_zone}"
-                    )
-                
-                with col2:
-                    color_range['max'] = st.number_input(
-                        f"Max Price {idx+1}", 
-                        value=float(color_range['max']),
-                        min_value=0.0,
-                        step=0.01,
-                        key=f"max_{idx}_{current_zone}"
-                    )
-                
-                with col3:
-                    color_range['color'] = st.color_picker(
-                        f"Colour {idx+1}", 
-                        value=color_range['color'],
-                        key=f"color_{idx}_{current_zone}"
-                    )
-                
-                with col4:
-                    if st.button("✕", key=f"remove_{idx}_{current_zone}", use_container_width=True):
-                        ranges_to_remove.append(idx)
+            with st.expander("📍 Location Selection", expanded=True):
+                allowed_locations = st.session_state.get("locations", [])
+                allowed_locations = ["tampere"] if "tampere" in allowed_locations else [] # limit to only tampere for now
+                calendar_location = st.selectbox(
+                    "Select Location",
+                    allowed_locations,
+                    index=0 if allowed_locations else None,
+                    key="calendar_location_key"
+                )
             
-            # Remove marked ranges and update session state
-            for idx in sorted(ranges_to_remove, reverse=True):
-                st.session_state.color_ranges.pop(idx)
-            
-            # Update all_color_ranges with current changes
-            st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
-            
-            col_reset, col_add = st.columns(2)
-            
-            # Reset to defaults button
-            with col_reset:
-                if st.button("🔄 Reset to Defaults", use_container_width=True, key=f"reset_defaults_btn_{current_zone}"):
+            # ========== ADD THIS: COLOR PICKER SECTION ==========
+            with st.expander("🎨 Colour Setup", expanded=False):
+                st.markdown("##### Configure Price Range Colors")
+                
+                current_zone = zone_selection
+                if 'all_color_ranges' not in st.session_state:
+                    # Try to load from storage, otherwise use defaults
+                    st.session_state.all_color_ranges = get_default_color_ranges()
+                
+                # Initialize color_ranges for current zone if it doesn't exist
+                if current_zone not in st.session_state.all_color_ranges:
                     st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
-                    st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
-                    st.rerun()
-            
-            # Add new color range button
-            with col_add:
-                if st.button("➕ Add Colour Range", use_container_width=True, key=f"add_range_btn_{current_zone}"):
-                    new_range = {
-                        'min': 0.0,
-                        'max': 100.0,
-                        'color': '#667eea'
-                    }
-                    st.session_state.color_ranges.append(new_range)
-                    st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
-                    st.rerun()
-        # ========== END COLOR SETUP SECTION ==========
-            
-        st.markdown("---")
-        calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
+                
+                # Reference the current zone's color ranges
+                st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
 
-    # Load data only when button is clicked or data hasn't been loaded for current date range
-    if calendar_query_button:
-        with st.spinner("📊 Generating calendar data..."):
-            st.session_state.calendar_data = query_calendar_data(calendar_start, calendar_end, zone_selection)
-            st.session_state.calendar_date_range = (calendar_start, calendar_end)
-            st.session_state.calendar_zone = zone_selection
-    
-    if 'calendar_data' in st.session_state:
-        metrics = st.session_state.calendar_data
+                # Display and edit color ranges
+                for idx, color_range in enumerate(st.session_state.color_ranges):
+                    col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 0.5])
+                    
+                    with col1:
+                        color_range['min'] = st.number_input(
+                            f"Min Price {idx+1}", 
+                            value=float(color_range['min']),
+                            min_value=0.0,
+                            step=0.01,
+                            key=f"min_{idx}_{current_zone}"
+                        )
+                    
+                    with col2:
+                        color_range['max'] = st.number_input(
+                            f"Max Price {idx+1}", 
+                            value=float(color_range['max']),
+                            min_value=0.0,
+                            step=0.01,
+                            key=f"max_{idx}_{current_zone}"
+                        )
+                    
+                    with col3:
+                        color_range['color'] = st.color_picker(
+                            f"Colour {idx+1}", 
+                            value=color_range['color'],
+                            key=f"color_{idx}_{current_zone}"
+                        )
+                    
+                    with col4:
+                        if st.button("✕", key=f"remove_{idx}_{current_zone}", use_container_width=True):
+                            st.session_state.color_ranges.pop(idx)
+                            st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
+                            st.rerun()
+
+                
+                # Update all_color_ranges with current changes
+                st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
+                
+                col_reset, col_add = st.columns(2)
+                
+                # Reset to defaults button
+                with col_reset:
+                    if st.button("🔄 Reset to Defaults", use_container_width=True, key=f"reset_defaults_btn_{current_zone}"):
+                        st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
+                        st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
+                        st.rerun()
+                
+                # Add new color range button
+                with col_add:
+                    if st.button("➕ Add Colour Range", use_container_width=True, key=f"add_range_btn_{current_zone}"):
+                        new_range = {
+                            'min': 0.0,
+                            'max': 100.0,
+                            'color': '#667eea'
+                        }
+                        st.session_state.color_ranges.append(new_range)
+                        st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
+                        st.rerun()
+            # ========== END COLOR SETUP SECTION ==========
+                
+            st.markdown("---")
+            calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
+
+        # Load data only when button is clicked or data hasn't been loaded for current date range
+        if calendar_query_button:
+            with st.spinner("📊 Generating calendar data..."):
+                st.session_state.calendar_data = query_calendar_data(
+                    price_start_date=calendar_start,
+                    price_end_date=calendar_end,
+                    zone_filter=zone_selection,
+                    location=calendar_location
+                )
+                st.session_state.calendar_date_range = (calendar_start, calendar_end)
+                st.session_state.calendar_zone = zone_selection
+                st.session_state.calendar_location = calendar_location
         
-        # Initialize with all three metrics
-        df_cal_availability = pd.DataFrame({
-            'date': list(metrics['availability'].keys()),
-            'value': list(metrics['availability'].values())
-        })
-        
-        df_cal_price = pd.DataFrame({
-            'date': list(metrics['price_avg'].keys()),
-            'value': list(metrics['price_avg'].values())
-        })
-        
-        df_cal_free_cancel = pd.DataFrame({
-            'date': list(metrics['free_cancel_avg'].keys()),
-            'value': list(metrics['free_cancel_avg'].values())
-        })
-        
-        # Process all data with common date fields
-        for df in [df_cal_availability, df_cal_price, df_cal_free_cancel]:
-            df['date'] = pd.to_datetime(df['date'])
-            df['year'] = df['date'].dt.year
-            df['week'] = df['date'].dt.isocalendar().week
-            df['day_name'] = df['date'].dt.strftime('%A')
-            df['date_str'] = df['date'].dt.strftime('%m/%d/%Y')
-            df['day_num'] = df['date'].dt.dayofweek
-        
-        # Get available years and weeks from ALL data
-        all_years = sorted(set(
-            list(df_cal_availability['year'].unique()) + 
-            list(df_cal_price['year'].unique()) + 
-            list(df_cal_free_cancel['year'].unique())
-        ))
-        all_weeks = sorted(set(
-            list(df_cal_availability['week'].unique()) + 
-            list(df_cal_price['week'].unique()) + 
-            list(df_cal_free_cancel['week'].unique())
-        ))
-        
-        # Display metric selection (no query triggered)
-        with st.expander("📊 Display Metric", expanded=True):
-            color_metric = st.selectbox(
-                "Display Metric By",
-                ["availability", "price_avg", "free_cancel_avg"],
-                format_func=lambda x: {"availability": "Hotel Availability %", "price_avg": "Average Price (€)", "free_cancel_avg": "Free Cancellation Avg (€)"}.get(x),
-                key="color_metric_key"
-            )
-        
-        # Filter selections (no query triggered)
-        col1, col2 = st.columns(2)
-        with col1:
-            selected_years = st.multiselect(
-                "Select Years",
-                all_years,
-                default=all_years,
-                key="selected_years_key"
-            )
-        
-        with col2:
-            selected_weeks = st.multiselect(
-                "Select Weeks",
-                all_weeks,
-                default=all_weeks[:4] if len(all_weeks) >= 4 else all_weeks,
-                key="selected_weeks_key"
-            )
-        if not selected_years or not selected_weeks:
-            st.error("Please select at least one year and one week")
-        else:
-            # Select the appropriate dataframe based on metric for DISPLAY
-            metric_map = {
-                'availability': df_cal_availability,
-                'price_avg': df_cal_price,
-                'free_cancel_avg': df_cal_free_cancel
-            }
-            df_cal_display = metric_map[color_metric].copy()
+        if 'calendar_data' in st.session_state:
+            metrics = st.session_state.calendar_data
             
-            # Filter by selected years and weeks
-            filtered_cal_display = df_cal_display[
-                (df_cal_display['year'].isin(selected_years)) & 
-                (df_cal_display['week'].isin(selected_weeks))
-            ].copy()
+            # Initialize with all three metrics
+            df_cal_availability = pd.DataFrame({
+                'date': list(metrics['availability'].keys()),
+                'value': list(metrics['availability'].values())
+            })
             
-            if filtered_cal_display.empty:
-                st.warning("No data available for selected filters")
+            df_cal_price = pd.DataFrame({
+                'date': list(metrics['price_avg'].keys()),
+                'value': list(metrics['price_avg'].values())
+            })
+            
+            df_cal_free_cancel = pd.DataFrame({
+                'date': list(metrics['free_cancel_avg'].keys()),
+                'value': list(metrics['free_cancel_avg'].values())
+            })
+            
+            # Process all data with common date fields
+            for df in [df_cal_availability, df_cal_price, df_cal_free_cancel]:
+                df['date'] = pd.to_datetime(df['date'])
+                df['year'] = df['date'].dt.year
+                df['week'] = df['date'].dt.isocalendar().week
+                df['day_name'] = df['date'].dt.strftime('%A')
+                df['date_str'] = df['date'].dt.strftime('%m/%d/%Y')
+                df['day_num'] = df['date'].dt.dayofweek
+            
+            # Get available years and weeks from ALL data
+            all_years = sorted(set(
+                list(df_cal_availability['year'].unique()) + 
+                list(df_cal_price['year'].unique()) + 
+                list(df_cal_free_cancel['year'].unique())
+            ))
+            all_weeks = sorted(set(
+                list(df_cal_availability['week'].unique()) + 
+                list(df_cal_price['week'].unique()) + 
+                list(df_cal_free_cancel['week'].unique())
+            ))
+            
+            # Display metric selection (no query triggered)
+            with st.expander("📊 Display Metric", expanded=True):
+                color_metric = st.selectbox(
+                    "Display Metric By",
+                    ["availability", "price_avg", "free_cancel_avg"],
+                    format_func=lambda x: {"availability": "Hotel Availability %", "price_avg": "Average Price (€)", "free_cancel_avg": "Free Cancellation Avg (€)"}.get(x),
+                    key="color_metric_key"
+                )
+            
+            # Filter selections (no query triggered)
+            col1, col2 = st.columns(2)
+            with col1:
+                selected_years = st.multiselect(
+                    "Select Years",
+                    all_years,
+                    default=all_years,
+                    key="selected_years_key"
+                )
+            
+            with col2:
+                selected_weeks = st.multiselect(
+                    "Select Weeks",
+                    all_weeks,
+                    default=all_weeks,
+                    key="selected_weeks_key"
+                )
+            if not selected_years or not selected_weeks:
+                st.error("Please select at least one year and one week")
             else:
-                day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                # Select the appropriate dataframe based on metric for DISPLAY
+                metric_map = {
+                    'availability': df_cal_availability,
+                    'price_avg': df_cal_price,
+                    'free_cancel_avg': df_cal_free_cancel
+                }
+                df_cal_display = metric_map[color_metric].copy()
                 
-                html = '<table class="calendar-table"><tr>'
-                html += '<td class="week-label"></td>'
-                for day in day_order:
-                    html += f'<td class="day-label">{day}</td>'
-                html += '</tr>'
+                # Filter by selected years and weeks
+                filtered_cal_display = df_cal_display[
+                    (df_cal_display['year'].isin(selected_years)) & 
+                    (df_cal_display['week'].isin(selected_weeks))
+                ].copy()
                 
-                week_year_pairs = []
-                for week in sorted(selected_weeks):
-                    for year in sorted(selected_years):
-                        week_year_pairs.append((week, year))
-                
-                for week, year in week_year_pairs:
-                    week_data_display = filtered_cal_display[
-                        (filtered_cal_display['week'] == week) & 
-                        (filtered_cal_display['year'] == year)
-                    ].copy()
+                if filtered_cal_display.empty:
+                    st.warning("No data available for selected filters")
+                else:
+                    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
                     
-                    html += '<tr>'
-                    html += f'<td class="week-label">Week {week} - {year}</td>'
-                    
+                    html = '<table class="calendar-table"><tr>'
+                    html += '<td class="week-label"></td>'
                     for day in day_order:
-                        day_data_display = week_data_display[week_data_display['day_name'] == day]
-                        
-                        if not day_data_display.empty:
-                            row_display = day_data_display.iloc[0]
-                            display_value = row_display['value']
-                            date_str = datetime.strptime(row_display['date_str'], "%m/%d/%Y").strftime("%d/%m/%Y")
-                            
-                            # Get background color
-                            bg_color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
-                            
-                            # Get text color based on background brightness
-                            text_color = get_text_color_from_background(bg_color)
-                            
-                            if color_metric == "availability":
-                                display_text = f"{display_value:.1f}%"
-                            else:
-                                display_text = f"€{display_value:.2f}"
-                            
-                            html += f'''<td style="background-color: {bg_color};">
-                                <div class="cell-content" style="color: {text_color};">
-                                    <div class="cell-date">{date_str}</div>
-                                    <div class="cell-value">{display_text}</div>
-                                </div>
-                            </td>'''
-                        else:
-                            html += '<td class="empty-cell"></td>'
-                    
+                        html += f'<td class="day-label">{day}</td>'
                     html += '</tr>'
+                    
+                    week_year_pairs = []
+                    for week in sorted(selected_weeks):
+                        for year in sorted(selected_years):
+                            week_year_pairs.append((week, year))
+                    
+                    for week, year in week_year_pairs:
+                        week_data_display = filtered_cal_display[
+                            (filtered_cal_display['week'] == week) & 
+                            (filtered_cal_display['year'] == year)
+                        ].copy()
+                        
+                        html += '<tr>'
+                        html += f'<td class="week-label">Week {week} - {year}</td>'
+                        
+                        for day in day_order:
+                            day_data_display = week_data_display[week_data_display['day_name'] == day]
+                            
+                            if not day_data_display.empty:
+                                row_display = day_data_display.iloc[0]
+                                display_value = row_display['value']
+                                date_str = datetime.strptime(row_display['date_str'], "%m/%d/%Y").strftime("%d/%m/%Y")
+                                
+                                # Get background color
+                                bg_color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
+                                
+                                # Get text color based on background brightness
+                                text_color = get_text_color_from_background(bg_color)
+                                
+                                if color_metric == "availability":
+                                    display_text = f"{display_value:.1f}%"
+                                else:
+                                    display_text = f"€{display_value:.2f}"
+                                
+                                html += f'''<td style="background-color: {bg_color};">
+                                    <div class="cell-content" style="color: {text_color};">
+                                        <div class="cell-date">{date_str}</div>
+                                        <div class="cell-value">{display_text}</div>
+                                    </div>
+                                </td>'''
+                            else:
+                                html += '<td class="empty-cell"></td>'
+                        
+                        html += '</tr>'
+                    
+                    html += '</table>'
+                    st.markdown(html, unsafe_allow_html=True)
+                    
+                    
+                    st.markdown("---")
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.info(f"**Zone:** {zone_selection.replace('_', ' ').title()}")
+                    with col2:
+                        st.info(f"**Display:** {color_metric.replace('_', ' ').title()}")
+                    with col3:
+                        st.info(f"**Location:** {st.session_state.calendar_location.title()}")
+                    with col4:
+                        st.info(f"**Color Range (Availability):** {filtered_cal_display['value'].min():.1f} - {filtered_cal_display['value'].max():.1f}")
+        
+        else:
+            st.info("👈 Configure settings and click 'Load Calendar Data' to begin")
+
+if admin_panel:
+    with admin_panel:
+
+        # Fetch all users
+        try:
+            users = table_user.scan().get("Items", [])
+        except Exception as e:
+            st.error(f"Failed to load users: {e}")
+            users = []
+
                 
-                html += '</table>'
-                st.markdown(html, unsafe_allow_html=True)
-                
-                
-                st.markdown("---")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.info(f"**Zone:** {zone_selection.replace('_', ' ').title()}")
-                with col2:
-                    st.info(f"**Display:** {color_metric.replace('_', ' ').title()}")
-                with col3:
-                    st.info(f"**Color Range (Availability):** {filtered_cal_display['value'].min():.1f} - {filtered_cal_display['value'].max():.1f}")
-    
-    else:
-        st.info("👈 Configure settings and click 'Load Calendar Data' to begin")
+        st.markdown("## 📥 Download Login Logs")
+        col1, col2, col3 = st.columns([2, 2, 1])
+        with col1:
+            log_start = st.date_input("Start Date", key="log_start")
+
+        with col2:
+            log_end = st.date_input("End Date", key="log_end")
+
+        with col3:
+            download_logs = st.button("⬇️ Download Excel", use_container_width=True)
+
+        if download_logs:
+            if log_start > log_end:
+                st.error("Start date must be before end date")
+            else:
+                with st.spinner("Preparing login logs..."):
+                    try:
+                        response = table_logs.scan(
+                            FilterExpression=Attr("login_date").between(
+                                log_start.strftime("%Y-%m-%d"),
+                                log_end.strftime("%Y-%m-%d")
+                            )
+                        )
+
+                        items = response.get("Items", [])
+
+                        while "LastEvaluatedKey" in response:
+                            response = table_logs.scan(
+                                FilterExpression=Attr("login_date").between(
+                                    log_start.strftime("%Y-%m-%d"),
+                                    log_end.strftime("%Y-%m-%d")
+                                ),
+                                ExclusiveStartKey=response["LastEvaluatedKey"]
+                            )
+                            items.extend(response.get("Items", []))
+
+                        if not items:
+                            st.warning("No login logs found for selected range")
+                        else:
+                            df_logs = pd.DataFrame(items).sort_values(
+                                "login_ts", ascending=False
+                            )
+
+                            buffer = io.BytesIO()
+                            with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+                                df_logs.to_excel(
+                                    writer,
+                                    index=False,
+                                    sheet_name="Login Logs"
+                                )
+
+                            st.download_button(
+                                label="📥 Download Login Logs",
+                                data=buffer.getvalue(),
+                                file_name=f"login_logs_{log_start}_{log_end}.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
+
+                    except Exception as e:
+                        st.error(f"Failed to generate logs: {e}")
+
+        # ================= ADD STAFF ACCOUNT =================
+        st.divider()
+        st.markdown("### ➕ Add Member Account")
+
+        with st.form("add_staff_form"):
+            new_username = st.text_input("User name")
+            new_password = st.text_input("Password", type="password")
+
+            new_locations = st.multiselect(
+                "Locations",
+                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"]
+            )
+            new_boards = st.multiselect(
+                "Boards Access",
+                AVAILABLE_BOARDS,
+                format_func=lambda x: {
+                    "price_dashboard": "📊 Price Dashboard",
+                    "historical_calendar": "📅 Historical Price Calendar"
+                }.get(x, x)
+            )
+            create_btn = st.form_submit_button("Create account")
+
+        if create_btn:
+            if not new_username or not new_password:
+                st.error("Username and password are required")
+            else:
+                try:
+                    existing = table_user.get_item(
+                        Key={"username": new_username}
+                    )
+
+                    if "Item" in existing:
+                        st.error("User already exists")
+                    else:
+                        table_user.put_item(
+                            Item={
+                                "username": new_username,
+                                "password": new_password,
+                                "access": "basic",
+                                "last_login": "",
+                                "locations": new_locations,
+                                "boards": new_boards
+                            }
+                        )
+                        st.success("Member account created")
+                        st.rerun()
+
+                except Exception as e:
+                    st.error(f"Failed to create user: {e}")
+
+        # ================= EXISTING USERS =================
+        st.divider()
+        st.markdown("## 👥 Member Accounts")
+
+        for user in users:
+            if user.get("access") == "admin":
+                continue  # skip admin accounts
+            col1, col2, col3, col4, col5, col6 = st.columns([3, 3, 3, 3, 3, 2])
+
+            with col1:
+                st.text_input(
+                    "User name",
+                    value=user["username"],
+                    disabled=True,
+                    key=f"username_{user['username']}"
+                )
+
+            with col2:
+                new_password = st.text_input(
+                    "Password",
+                    value=user.get("password", ""),
+                    key=f"password_{user['username']}"
+                )
+
+            with col3:
+                st.text_input(
+                    "Last log in",
+                    value=user.get("last_login", ""),
+                    disabled=True,
+                    key=f"last_login_{user['username']}"
+                )
+            
+            with col4:
+                edit_locations = st.multiselect(
+                    "Locations",
+                    ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
+                    default=user.get("locations", []),
+                    key=f"locations_{user['username']}"
+                )
+
+            with col5:
+                edit_boards = st.multiselect(
+                    "Boards",
+                    AVAILABLE_BOARDS,
+                    default=user.get("boards", []),
+                    format_func=lambda x: {
+                        "price_dashboard": "📊 Price Dashboard",
+                        "historical_calendar": "📅 Historical Price Calendar"
+                    }.get(x, x),
+                    key=f"boards_{user['username']}"
+                )
+
+            with col6:
+                if st.button("💾 Save", key=f"save_{user['username']}"):
+                    try:
+                        table_user.update_item(
+                            Key={"username": user["username"]},
+                            UpdateExpression="SET password = :p, locations = :l, boards = :b",
+                            ExpressionAttributeValues={
+                                ":p": new_password,
+                                ":l": edit_locations,
+                                ":b": edit_boards
+                            }
+                        )
+                        st.success(f"Updated {user['username']}")
+                    except Exception as e:
+                        st.error(f"Failed to update user: {e}")
