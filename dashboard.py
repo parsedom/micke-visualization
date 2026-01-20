@@ -136,7 +136,6 @@ Alert_Comparison = [
     "Scandic Tampere City",
     "Scandic Rosendahl",
     "Original Sokos Hotel Villa Tampere",
-    "Lillan Hotel & Kök",
     "Hotelli Vaakko - Hotel and Apartments by UHANDA",
     "Hotel Kauppi",
     "Holiday Inn Tampere - Central Station by IHG",
@@ -1013,6 +1012,11 @@ if tab1:
                     # Bar chart for main selection
                     bar_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
                     bar_avg['date_label'] = bar_avg['price_date'].dt.strftime('%b %d')
+                    
+                    bar_avg['day_name'] = bar_avg['price_date'].dt.strftime('%a')
+                    bar_avg['week_num'] = bar_avg['price_date'].dt.isocalendar().week
+                    # Create combined label with day and week on separate lines
+                    bar_avg['x_label'] = bar_avg['date_label'] + '<br>'+ '<br>' + '<br>'+ bar_avg['day_name'] + '<br>'+ '<br>Week ' + bar_avg['week_num'].astype(str)
 
                     if hotels and line_hotels:
                         # Line over bar chart
@@ -1034,11 +1038,11 @@ if tab1:
                         # Format date labels
                         line_avg['date_label'] = pd.to_datetime(line_avg['price_date']).dt.strftime('%b %d')
 
-                        # Bar trace
+                        # Bar trace - UPDATED with x_label
                         fig = px.bar(
-                            bar_avg, x='date_label', y='price',
+                            bar_avg, x='x_label', y='price',
                             color_discrete_sequence=['#7dd3c0'], text='price',
-                            labels={'price': 'Average Price (€)', 'date_label': 'Date'},
+                            labels={'price': 'Average Price (€)', 'x_label': 'Date'},
                             title='Average Prices with Trend Line'
                         )
 
@@ -1048,24 +1052,34 @@ if tab1:
 
                         # Line/Scatter trace
                         fig.add_scatter(
-                            x=line_avg['date_label'], y=line_avg['price'],
+                            x=bar_avg['x_label'], y=line_avg['price'],
                             mode='markers',
                             name='Trend',
                             marker=dict(color='red', size=14),
                         )
 
-                        fig.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
+                        fig.update_layout(
+                            height=500, 
+                            xaxis_title="Date", 
+                            yaxis_title="Average Price (€)",
+                            xaxis=dict(tickangle=0)
+                        )
                         st.plotly_chart(fig, use_container_width=True)
 
                     else:
-                        # Only bar chart if no line hotels selected
+                        # Only bar chart if no line hotels selected - UPDATED with x_label
                         fig_bar = px.bar(
-                            bar_avg, x='date_label', y='price',
+                            bar_avg, x='x_label', y='price',
                             title='Average Prices Across Selected Hotels',
                             color_discrete_sequence=['#7dd3c0'], text='price'
                         )
                         fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
-                        fig_bar.update_layout(height=500, xaxis_title="Date", yaxis_title="Average Price (€)")
+                        fig_bar.update_layout(
+                            height=500, 
+                            xaxis_title="Date", 
+                            yaxis_title="Average Price (€)",
+                            xaxis=dict(tickangle=-30)
+                        )
                         st.plotly_chart(fig_bar, use_container_width=True)
                     
                     # Detailed table section
