@@ -11,6 +11,7 @@ import hashlib
 import hmac
 from st_aggrid import AgGrid, GridOptionsBuilder
 import io
+import time
 
 st.set_page_config(
     page_title="Hotel Booking Dashboard",
@@ -811,7 +812,7 @@ if tab1:
             
             with st.expander("📅 Date Ranges", expanded=True):
                 scraped_date_range = st.date_input(
-                    "Scrape Dates", 
+                    "View Dates", 
                     value=[], 
                     key="scrape_dates_unique"
                 )
@@ -1595,7 +1596,7 @@ if admin_panel:
         for user in users:
             if user.get("access") == "admin":
                 continue  # skip admin accounts
-            col1, col2, col3, col4, col5, col6 = st.columns([3, 3, 3, 3, 3, 2])
+            col1, col2, col3, col4, col5, col6, col7 = st.columns([2.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5])
 
             with col1:
                 st.text_input(
@@ -1655,3 +1656,34 @@ if admin_panel:
                         st.success(f"Updated {user['username']}")
                     except Exception as e:
                         st.error(f"Failed to update user: {e}")
+
+            with col7:
+                if st.button("🗑️ Delete", key=f"delete_{user['username']}", use_container_width=True):
+                    # Show confirmation dialog
+                    st.session_state[f"delete_confirm_{user['username']}"] = True
+
+            # Confirmation dialog
+            if st.session_state.get(f"delete_confirm_{user['username']}", False):
+                st.warning(f"⚠️ Are you sure you want to delete user **{user['username']}**? This action cannot be undone.")
+                col_confirm1, col_confirm2, col_confirm3 = st.columns([1, 1, 2])
+                
+                with col_confirm1:
+                    if st.button("✅ Yes, Delete", key=f"confirm_delete_{user['username']}", use_container_width=True):
+                        try:
+                            table_user.delete_item(
+                                Key={"username": user["username"]}
+                            )
+                            st.success(f"User **{user['username']}** has been deleted")
+                            st.session_state[f"delete_confirm_{user['username']}"] = False
+                            time.sleep(1)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to delete user: {e}")
+                            st.session_state[f"delete_confirm_{user['username']}"] = False
+                
+                with col_confirm2:
+                    if st.button("❌ Cancel", key=f"cancel_delete_{user['username']}", use_container_width=True):
+                        st.session_state[f"delete_confirm_{user['username']}"] = False
+                        st.rerun()
+                
+                st.divider()
