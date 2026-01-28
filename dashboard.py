@@ -1007,7 +1007,6 @@ if tab1:
 
                 if hotels:
                     filtered_df = df[df['name'].isin(hotels)]
-                    filtered_df.to_csv("filtered_data.csv", index=False)
                     filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
 
                     # Bar chart for main selection
@@ -1024,7 +1023,7 @@ if tab1:
                         line_df = df[df['name'].isin(line_hotels)].copy()
                         line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
 
-                        # Pivot table like your detailed matrix
+                        # Pivot table
                         pivot_line = line_df.pivot_table(
                             index='scrape_date',
                             columns='price_date',
@@ -1032,14 +1031,21 @@ if tab1:
                             aggfunc='mean'
                         )
 
-                        # If you want a single line chart across all scrape dates, take the mean across scrapes
+                        # Get mean across scrape dates
                         line_avg = pivot_line.mean(axis=0).reset_index()
                         line_avg.columns = ['price_date', 'price']
+                        line_avg = line_avg.dropna(subset=['price'])
 
-                        # Format date labels
-                        line_avg['date_label'] = pd.to_datetime(line_avg['price_date']).dt.strftime('%b %d')
+                        # Convert to datetime
+                        line_avg['price_date'] = pd.to_datetime(line_avg['price_date'])
 
-                        # Bar trace - UPDATED with x_label
+                        # Create x_label for line data
+                        line_avg['date_label'] = line_avg['price_date'].dt.strftime('%b %d')
+                        line_avg['day_name'] = line_avg['price_date'].dt.strftime('%a')
+                        line_avg['week_num'] = line_avg['price_date'].dt.isocalendar().week
+                        line_avg['x_label'] = line_avg['date_label'] + '<br>' + line_avg['day_name'] + '<br>Week ' + line_avg['week_num'].astype(str)
+
+                        # Bar trace
                         fig = px.bar(
                             bar_avg, x='x_label', y='price',
                             color_discrete_sequence=['#7dd3c0'], text='price',
@@ -1047,17 +1053,23 @@ if tab1:
                             title='Average Prices with Trend Line'
                         )
 
-                        # Update only the bar trace for text
                         fig.data[0].texttemplate = '€%{text:.1f}'
                         fig.data[0].textposition = 'outside'
 
-                        # Line/Scatter trace
-                        fig.add_scatter(
-                            x=bar_avg['x_label'], y=line_avg['price'],
-                            mode='markers',
-                            name='Trend',
-                            marker=dict(color='red', size=14),
-                        )
+                        # Scatter trace - match line data to bar data by price_date value
+                        # For each line point, find the matching bar x_label
+                        for idx, line_row in line_avg.iterrows():
+                            matching_bar = bar_avg[bar_avg['price_date'] == line_row['price_date']]
+                            if not matching_bar.empty:
+                                x_pos = matching_bar.iloc[0]['x_label']
+                                fig.add_scatter(
+                                    x=[x_pos],
+                                    y=[line_row['price']],
+                                    mode='markers',
+                                    name='Trend',
+                                    marker=dict(color='red', size=14),
+                                    showlegend=(idx == 0)  # Only show legend for first point
+                                )
 
                         fig.update_layout(
                             height=500, 
