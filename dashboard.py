@@ -8,6 +8,7 @@ import plotly.express as px
 from boto3.dynamodb.conditions import Key, Attr
 import os
 import hashlib
+from decimal import Decimal
 import hmac
 from st_aggrid import AgGrid, GridOptionsBuilder
 import io
@@ -160,9 +161,46 @@ dynamodb = boto3.resource(
 table = dynamodb.Table('HotelPrices')
 table_calender = dynamodb.Table('HotelPricesCalendar')
 table_user = dynamodb.Table('MickeUser')
+table_color = dynamodb.Table('Micke_Color')
 table_logs = dynamodb.Table('MickeLoginLogs')
 
+def get_color_config(zone, location):
+    """Fetch color configuration from DynamoDB for a specific zone and location."""
+    try:
+        # Query using GSI with zone and location
+        response = table_color.query(
+            IndexName='zone-location-index',
+            KeyConditionExpression=Key('zone').eq(zone) & Key('location').eq(location),
+        )
+        
+        items = response.get('Items', [])
+        
+        if items:
+            # Get the first active config
+            config = items[0]
+            ranges = config.get('ranges', [])
+            
+            # Convert Decimal to float for use in the app
+            converted_ranges = []
+            for r in ranges:
+                converted_ranges.append({
+                    'min': float(r['min_value']),
+                    'max': float(r['max_value']),
+                    'color': r['color']
+                })
+            
+            return converted_ranges
+        else:
+            # Fallback to hardcoded defaults if not found
+            st.warning(f"No color config found for zone={zone}, location={location}, using defaults")
+            return get_default_color_ranges().get(zone, [])
+            
+    except Exception as e:
+        st.error(f"Error loading color config from database: {e}")
+        # Fallback to hardcoded defaults
+        return get_default_color_ranges().get(zone, [])
 
+    
 def check_password():
     """Returns True if the user has the correct password using DynamoDB."""
 
@@ -1222,7 +1260,7 @@ if tab2:
 
             with st.expander("📍 Location Selection", expanded=True):
                 allowed_locations = st.session_state.get("locations", [])
-                allowed_locations = ["tampere"] if "tampere" in allowed_locations else [] # limit to only tampere for now
+                allowed_locations = ["tampere"] if "tampere" in allowed_locations else []
                 calendar_location = st.selectbox(
                     "Select Location",
                     allowed_locations,
@@ -1230,89 +1268,22 @@ if tab2:
                     key="calendar_location_key"
                 )
             
-            # ========== ADD THIS: COLOR PICKER SECTION ==========
-            with st.expander("🎨 Colour Setup", expanded=False):
-                st.markdown("##### Configure Price Range Colors")
-                
-                current_zone = zone_selection
-                if 'all_color_ranges' not in st.session_state:
-                    # Try to load from storage, otherwise use defaults
-                    st.session_state.all_color_ranges = get_default_color_ranges()
-                
-                # Initialize color_ranges for current zone if it doesn't exist
-                if current_zone not in st.session_state.all_color_ranges:
-                    st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
-                
-                # Reference the current zone's color ranges
-                st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
-
-                # Display and edit color ranges
-                for idx, color_range in enumerate(st.session_state.color_ranges):
-                    col1, col2, col3, col4 = st.columns([1.5, 1.5, 1.5, 0.5])
-                    
-                    with col1:
-                        color_range['min'] = st.number_input(
-                            f"Min Price {idx+1}", 
-                            value=float(color_range['min']),
-                            min_value=0.0,
-                            step=0.01,
-                            key=f"min_{idx}_{current_zone}"
-                        )
-                    
-                    with col2:
-                        color_range['max'] = st.number_input(
-                            f"Max Price {idx+1}", 
-                            value=float(color_range['max']),
-                            min_value=0.0,
-                            step=0.01,
-                            key=f"max_{idx}_{current_zone}"
-                        )
-                    
-                    with col3:
-                        color_range['color'] = st.color_picker(
-                            f"Colour {idx+1}", 
-                            value=color_range['color'],
-                            key=f"color_{idx}_{current_zone}"
-                        )
-                    
-                    with col4:
-                        if st.button("✕", key=f"remove_{idx}_{current_zone}", use_container_width=True):
-                            st.session_state.color_ranges.pop(idx)
-                            st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
-                            st.rerun()
-
-                
-                # Update all_color_ranges with current changes
-                st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
-                
-                col_reset, col_add = st.columns(2)
-                
-                # Reset to defaults button
-                with col_reset:
-                    if st.button("🔄 Reset to Defaults", use_container_width=True, key=f"reset_defaults_btn_{current_zone}"):
-                        st.session_state.all_color_ranges[current_zone] = get_default_color_ranges()[current_zone]
-                        st.session_state.color_ranges = st.session_state.all_color_ranges[current_zone]
-                        st.rerun()
-                
-                # Add new color range button
-                with col_add:
-                    if st.button("➕ Add Colour Range", use_container_width=True, key=f"add_range_btn_{current_zone}"):
-                        new_range = {
-                            'min': 0.0,
-                            'max': 100.0,
-                            'color': '#667eea'
-                        }
-                        st.session_state.color_ranges.append(new_range)
-                        st.session_state.all_color_ranges[current_zone] = st.session_state.color_ranges
-                        st.rerun()
-            # ========== END COLOR SETUP SECTION ==========
+            # REMOVED COLOR SETUP SECTION - Will be in admin panel
                 
             st.markdown("---")
             calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
 
-        # Load data only when button is clicked or data hasn't been loaded for current date range
+        # Load color config from database when zone changes
+        if 'current_zone' not in st.session_state or st.session_state.current_zone != zone_selection:
+            st.session_state.current_zone = zone_selection
+            st.session_state.color_ranges = get_color_config(zone_selection, calendar_location)
+
+        # Load data only when button is clicked
         if calendar_query_button:
             with st.spinner("📊 Generating calendar data..."):
+                # Fetch color config from database for current zone
+                st.session_state.color_ranges = get_color_config(zone_selection, calendar_location)
+                
                 st.session_state.calendar_data = query_calendar_data(
                     price_start_date=calendar_start,
                     price_end_date=calendar_end,
@@ -1363,7 +1334,7 @@ if tab2:
                 list(df_cal_free_cancel['week'].unique())
             ))
             
-            # Display metric selection (no query triggered)
+            # Display metric selection
             with st.expander("📊 Display Metric", expanded=True):
                 color_metric = st.selectbox(
                     "Display Metric By",
@@ -1372,7 +1343,7 @@ if tab2:
                     key="color_metric_key"
                 )
             
-            # Filter selections (no query triggered)
+            # Filter selections
             col1, col2 = st.columns(2)
             with col1:
                 selected_years = st.multiselect(
@@ -1439,7 +1410,7 @@ if tab2:
                                 display_value = row_display['value']
                                 date_str = datetime.strptime(row_display['date_str'], "%m/%d/%Y").strftime("%d/%m/%Y")
                                 
-                                # Get background color
+                                # Get background color from database config
                                 bg_color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
                                 
                                 # Get text color based on background brightness
@@ -1464,7 +1435,6 @@ if tab2:
                     html += '</table>'
                     st.markdown(html, unsafe_allow_html=True)
                     
-                    
                     st.markdown("---")
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
@@ -1474,7 +1444,7 @@ if tab2:
                     with col3:
                         st.info(f"**Location:** {st.session_state.calendar_location.title()}")
                     with col4:
-                        st.info(f"**Color Range (Availability):** {filtered_cal_display['value'].min():.1f} - {filtered_cal_display['value'].max():.1f}")
+                        st.info(f"**Color Range:** {filtered_cal_display['value'].min():.1f} - {filtered_cal_display['value'].max():.1f}")
         
         else:
             st.info("👈 Configure settings and click 'Load Calendar Data' to begin")
@@ -1699,3 +1669,210 @@ if admin_panel:
                         st.rerun()
                 
                 st.divider()
+                
+# ================= COLOR CONFIGURATION MANAGER =================
+
+
+        st.divider()
+        st.markdown("## 🎨 Color Configuration for Zones")
+        
+        # Fetch existing color configs
+        try:
+            response = table_color.scan()
+            color_configs = response.get('Items', [])
+            
+            # Continue scanning if there are more items
+            while 'LastEvaluatedKey' in response:
+                response = table_color.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                color_configs.extend(response.get('Items', []))
+        except Exception as e:
+            st.error(f"Failed to load color configs: {e}")
+            color_configs = []
+        
+        # Display existing configurations
+        with st.expander("📋 View Existing Configurations", expanded=False):
+            if color_configs:
+                for config in color_configs:
+                    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+                    
+                    with col1:
+                        st.text(f"Config: {config.get('config_name', 'N/A')}")
+                    with col2:
+                        st.text(f"Zone: {config.get('zone', 'N/A')}")
+                    with col3:
+                        st.text(f"Location: {config.get('location', 'N/A')}")
+                    with col4:
+                        if st.button("🗑️", key=f"delete_config_{config['id']}", help="Delete this config"):
+                            try:
+                                table_color.delete_item(Key={'id': config['id'], 'config_name#zone': config['config_name#zone']})
+                                st.success(f"Deleted config")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Failed to delete: {e}")
+                    st.divider()
+            else:
+                st.info("No color configurations found")
+        
+        # Create/Edit Color Configuration
+        st.markdown("### ➕ Create New Color Configuration")
+        
+        default_color = [
+            {'min_value': 0.0, 'max_value': 124.99, 'color': '#08306b'},
+            {'min_value': 125.0, 'max_value': 134.99, 'color': '#2171b5'},
+            {'min_value': 135.0, 'max_value': 144.99, 'color': '#a2cff8'},
+            {'min_value': 145.0, 'max_value': 154.99, 'color': '#ffffff'},
+            {'min_value': 155.0, 'max_value': 164.99, 'color': '#ffa0a0'},
+            {'min_value': 165.0, 'max_value': 199.99, 'color': '#f86868'},
+            {'min_value': 200.0, 'max_value': 249.99, 'color': '#d81919'},
+            {'min_value': 250.0, 'max_value': 999999.0, 'color': '#000000'}
+        ]
+        # Initialize session state for color ranges OUTSIDE form
+        if 'form_color_ranges' not in st.session_state:
+            st.session_state.form_color_ranges = default_color
+        
+        # Color range management OUTSIDE the form
+        st.markdown("#### 🎨 Manage Color Ranges")
+        
+        col_range_control, col_reset = st.columns([3, 1])
+        
+        with col_range_control:
+            col_add, col_remove, col_info = st.columns([1, 1, 2])
+            
+            with col_add:
+                if st.button("➕ Add Range", use_container_width=True):
+                    st.session_state.form_color_ranges.append({
+                        'min_value': 0.0,
+                        'max_value': 100.0,
+                        'color': '#667eea'
+                    })
+                    st.rerun()
+            
+            with col_remove:
+                if st.button("➖ Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
+                    if len(st.session_state.form_color_ranges) > 1:
+                        st.session_state.form_color_ranges.pop()
+                        st.rerun()
+            
+            with col_info:
+                st.info(f"📊 Current ranges: {len(st.session_state.form_color_ranges)}")
+        
+        with col_reset:
+            if st.button("🔄 Reset to Defaults", use_container_width=True):
+                st.session_state.form_color_ranges = default_color
+                st.rerun()
+        
+        st.divider()
+        
+        # Now the form with config details and color ranges display
+        with st.form("color_config_form"):
+            st.markdown("#### 📝 Configuration Details")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                new_config_name = st.text_input("Configuration Name", value="Default", help="e.g., Default, Summer, Winter")
+            
+            with col2:
+                new_zone = st.selectbox(
+                    "Zone",
+                    ["zone1", "zone2", "zone3", "alert"],
+                    format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert"}.get(x)
+                )
+            
+            with col3:
+                new_location = st.text_input("Location", value="tampere", help="Enter location like 'tampere'")
+            
+            st.markdown("#### 🎨 Color Ranges")
+            st.info("💡 Define ranges from lowest to highest values. Ranges should not overlap! Saving will overwrite any existing config for this zone/location combination.")
+            
+            # Display color range inputs (values stored in session state)
+            ranges_to_save = []
+            for idx, color_range in enumerate(st.session_state.form_color_ranges):
+                col_min, col_max, col_color = st.columns([2, 2, 2])
+                
+                with col_min:
+                    min_val = st.number_input(
+                        f"Min Value {idx+1}",
+                        value=float(color_range['min_value']),
+                        step=0.01,
+                        key=f"form_min_{idx}"
+                    )
+                
+                with col_max:
+                    max_val = st.number_input(
+                        f"Max Value {idx+1}",
+                        value=float(color_range['max_value']),
+                        step=0.01,
+                        key=f"form_max_{idx}"
+                    )
+                
+                with col_color:
+                    color_val = st.color_picker(
+                        f"Color {idx+1}",
+                        value=color_range['color'],
+                        key=f"form_color_{idx}"
+                    )
+                
+                ranges_to_save.append({
+                    'min_value': Decimal(str(min_val)),
+                    'max_value': Decimal(str(max_val)),
+                    'color': color_val
+                })
+            
+            st.divider()
+            submit_config = st.form_submit_button("💾 Save Configuration", use_container_width=True, type="primary")
+        
+        # Handle form submission
+        if submit_config:
+            if not new_config_name or not new_zone or not new_location:
+                st.error("Configuration name, zone, and location are required")
+            else:
+                try:
+                    from decimal import Decimal
+                    import uuid
+                    from datetime import datetime
+                    
+                    # Find and delete existing config for this zone/location
+                    response = table_color.scan(
+                        FilterExpression=Attr('zone').eq(new_zone) & 
+                                       Attr('location').eq(new_location)
+                    )
+                    
+                    existing_configs = response.get('Items', [])
+                    
+                    for old_config in existing_configs:
+                        table_color.delete_item(
+                            Key={
+                                'id': old_config['id'],
+                                'config_name#zone': old_config['config_name#zone']
+                            }
+                        )
+                    
+                    # Create new config
+                    new_id = str(uuid.uuid4())
+                    sort_key = f"{new_config_name}#{new_zone}"
+                    
+                    new_item = {
+                        'id': new_id,
+                        'config_name#zone': sort_key,
+                        'config_name': new_config_name,
+                        'location': new_location,
+                        'zone': new_zone,
+                        'ranges': ranges_to_save,
+                        'created_at': datetime.now().isoformat(),
+                        'created_by': st.session_state.get('authenticated_user', 'admin')
+                    }
+                    
+                    table_color.put_item(Item=new_item)
+                    
+                    st.success(f"✅ Color configuration '{new_config_name}' for {new_zone}/{new_location} saved successfully!")
+                    
+                    # Reset form ranges
+                    st.session_state.form_color_ranges = default_color
+                    
+                    time.sleep(2)
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Failed to save configuration: {e}")
