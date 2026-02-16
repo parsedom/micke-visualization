@@ -1146,9 +1146,11 @@ if tab1:
                                 xaxis_title="Date", 
                                 yaxis_title="",
                                 xaxis=dict(tickangle=0),
-                                hovermode='x unified'
+                                hovermode='x unified',
+                                showlegend=False
                             )
-                            fig.update_yaxes(showticklabels=False)
+                            fig.update_yaxes(showticklabels=False, showgrid=False)
+                            fig.update_xaxes(showgrid=False)
                         st.plotly_chart(fig, use_container_width=True)
 
                     else:
@@ -1180,9 +1182,11 @@ if tab1:
                                 height=500, 
                                 xaxis_title="Date", 
                                 yaxis_title="",
-                                xaxis=dict(tickangle=0)
+                                xaxis=dict(tickangle=0),
+                                showlegend=False
                             )
-                            fig_bar.update_yaxes(showticklabels=False)
+                            fig_bar.update_yaxes(showticklabels=False, showgrid=False)
+                            fig_bar.update_xaxes(showgrid=False)
                         st.plotly_chart(fig_bar, use_container_width=True)
                     
                     # Detailed table section
