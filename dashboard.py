@@ -13,6 +13,7 @@ import hmac
 from st_aggrid import AgGrid, GridOptionsBuilder
 import io
 import time
+import uuid
 
 st.set_page_config(
     page_title="Hotel Booking Dashboard",
@@ -164,8 +165,8 @@ table_user = dynamodb.Table('MickeUser')
 table_color = dynamodb.Table('Micke_Color')
 table_logs = dynamodb.Table('MickeLoginLogs')
 
-def get_color_config(zone, location):
-    """Fetch color configuration from DynamoDB for a specific zone and location."""
+def get_color_config(zone, location, dashboard, hotel_group=None):
+    """Fetch color configuration from DynamoDB for a specific zone, location, dashboard, and optionally hotel_group."""
     try:
         # Query using GSI with zone and location
         response = table_color.query(
@@ -175,9 +176,40 @@ def get_color_config(zone, location):
         
         items = response.get('Items', [])
         
-        if items:
+        # Filter by dashboard and hotel_group
+        if hotel_group:
+            # First try to find exact hotel_group match
+            filtered_items = [
+                item for item in items 
+                if item.get('dashboard') == dashboard and item.get('hotel_group') == hotel_group
+            ]
+            
+            # If hotel_group config found, use it
+            if filtered_items:
+                config = filtered_items[0]
+                ranges = config.get('ranges', [])
+                
+                # Convert Decimal to float for use in the app
+                converted_ranges = []
+                for r in ranges:
+                    converted_ranges.append({
+                        'min': float(r['min_value']),
+                        'max': float(r['max_value']),
+                        'color': r['color']
+                    })
+                
+                return converted_ranges
+        
+        # Fall back to zone-based config (without hotel_group or empty hotel_group)
+        # This won't be used for price_dashboard with GLOBAL zone
+        filtered_items = [
+            item for item in items 
+            if item.get('dashboard') == dashboard and (not item.get('hotel_group') or item.get('hotel_group') == '')
+        ]
+        
+        if filtered_items:
             # Get the first active config
-            config = items[0]
+            config = filtered_items[0]
             ranges = config.get('ranges', [])
             
             # Convert Decimal to float for use in the app
@@ -192,13 +224,15 @@ def get_color_config(zone, location):
             return converted_ranges
         else:
             # Fallback to hardcoded defaults if not found
-            st.warning(f"No color config found for zone={zone}, location={location}, using defaults")
-            return get_default_color_ranges().get(zone, [])
+            # For GLOBAL zone (price_dashboard), use zone1 defaults
+            fallback_zone = "zone1" if zone == "GLOBAL" else zone
+            return get_default_color_ranges().get(fallback_zone, [])
             
     except Exception as e:
         st.error(f"Error loading color config from database: {e}")
         # Fallback to hardcoded defaults
-        return get_default_color_ranges().get(zone, [])
+        fallback_zone = "zone1" if zone == "GLOBAL" else zone
+        return get_default_color_ranges().get(fallback_zone, [])
 
     
 def check_password():
@@ -1060,7 +1094,7 @@ if tab1:
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 if hotels:
-                    filtered_df = df[df['name'].isin(hotels)]
+                    filtered_df = df[df['name'].isin(hotels)].copy()
                     filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
 
                     # Bar chart for main selection
@@ -1071,6 +1105,21 @@ if tab1:
                     bar_avg['week_num'] = bar_avg['price_date'].dt.isocalendar().week
                     # Create combined label with day and week on separate lines
                     bar_avg['x_label'] = bar_avg['date_label'] + '<br>' + bar_avg['day_name'] + '<br>Week ' + bar_avg['week_num'].astype(str)
+                    
+                    # For price dashboard, use GLOBAL zone and check for hotel group match
+                    zone_for_colors = "GLOBAL"
+                    hotel_group_for_colors = None
+                    
+                    # Create hotel group identifier from selected hotels
+                    sorted_hotels = ','.join(sorted(hotels))
+                    
+                    # Check if there's a specific color config for this exact hotel group
+                    price_color_ranges = get_color_config(zone_for_colors, location, "price_dashboard", hotel_group=sorted_hotels)
+                    
+                    # Apply colors to each bar based on price
+                    bar_avg['bar_color'] = bar_avg['price'].apply(
+                        lambda x: get_color_from_price_ranges(x, price_color_ranges)
+                    )
 
                     if hotels and line_hotels:
                         # Line over bar chart
@@ -1099,13 +1148,16 @@ if tab1:
                         line_avg['week_num'] = line_avg['price_date'].dt.isocalendar().week
                         line_avg['x_label'] = line_avg['date_label'] + '<br>' + line_avg['day_name'] + '<br>Week ' + line_avg['week_num'].astype(str)
 
-                        # Bar trace
+                        # Bar trace with colors
                         fig = px.bar(
                             bar_avg, x='x_label', y='price',
-                            color_discrete_sequence=['#7dd3c0'], text='price',
+                            text='price',
                             labels={'price': 'Average Price (€)', 'x_label': 'Date'},
                             title='Average Prices with Trend Line'
                         )
+                        
+                        # Apply custom colors to bars
+                        fig.data[0].marker.color = bar_avg['bar_color'].tolist()
 
                         if st.session_state.show_rates_pricing:
                             fig.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
@@ -1155,9 +1207,11 @@ if tab1:
                         # Only bar chart if no line hotels selected
                         fig_bar = px.bar(
                             bar_avg, x='x_label', y='price',
-                            title='Average Prices Across Selected Hotels',
-                            color_discrete_sequence=['#7dd3c0']
+                            title='Average Prices Across Selected Hotels'
                         )
+                        
+                        # Apply custom colors to bars
+                        fig_bar.data[0].marker.color = bar_avg['bar_color'].tolist()
                         
                         if st.session_state.show_rates_pricing:
                             fig_bar.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
@@ -1328,13 +1382,13 @@ if tab2:
         # Load color config from database when zone changes
         if 'current_zone' not in st.session_state or st.session_state.current_zone != zone_selection:
             st.session_state.current_zone = zone_selection
-            st.session_state.color_ranges = get_color_config(zone_selection, calendar_location)
+            st.session_state.color_ranges = get_color_config(zone_selection, calendar_location, "historical_calendar")
 
         # Load data only when button is clicked
         if calendar_query_button:
             with st.spinner("📊 Generating calendar data..."):
                 # Fetch color config from database for current zone
-                st.session_state.color_ranges = get_color_config(zone_selection, calendar_location)
+                st.session_state.color_ranges = get_color_config(zone_selection, calendar_location, "historical_calendar")
                 
                 st.session_state.calendar_data = query_calendar_data(
                     price_start_date=calendar_start,
@@ -1745,7 +1799,7 @@ if admin_panel:
         with st.expander("📋 View Existing Configurations", expanded=False):
             if color_configs:
                 for config in color_configs:
-                    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+                    col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 1])
                     
                     with col1:
                         st.text(f"Config: {config.get('config_name', 'N/A')}")
@@ -1754,6 +1808,15 @@ if admin_panel:
                     with col3:
                         st.text(f"Location: {config.get('location', 'N/A')}")
                     with col4:
+                        st.text(f"Dashboard: {config.get('dashboard', 'N/A')}")
+                    with col5:
+                        hotel_group = config.get('hotel_group', '')
+                        if hotel_group:
+                            num_hotels = len(hotel_group.split(','))
+                            st.text(f"Hotel Group: {num_hotels} hotels")
+                        else:
+                            st.text("Hotel Group: None")
+                    with col6:
                         if st.button("🗑️", key=f"delete_config_{config['id']}", help="Delete this config"):
                             try:
                                 table_color.delete_item(Key={'id': config['id'], 'config_name#zone': config['config_name#zone']})
@@ -1816,27 +1879,68 @@ if admin_panel:
         
         st.divider()
         
+        # Dashboard selection OUTSIDE form to allow dynamic UI updates
+        st.markdown("#### 📝 Select Dashboard Type")
+        new_dashboard = st.selectbox(
+            "Dashboard",
+            ["price_dashboard", "historical_calendar"],
+            format_func=lambda x: {"price_dashboard": "📊 Price Dashboard", "historical_calendar": "📅 Historical Price Calendar"}.get(x),
+            key="dashboard_select_main"
+        )
+        
         # Now the form with config details and color ranges display
         with st.form("color_config_form"):
-            st.markdown("#### 📝 Configuration Details")
             
-            col1, col2, col3 = st.columns(3)
+            if new_dashboard == "price_dashboard":
+                # For price dashboard, only show config name and location (zone is GLOBAL)
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    new_config_name = st.text_input("Configuration Name", value="Default", help="e.g., Default, Summer, Winter")
+                
+                with col2:
+                    new_location = st.text_input("Location", value="tampere", help="Enter location like 'tampere'")
+                
+                # Set zone to GLOBAL for price_dashboard
+                new_zone = "GLOBAL"
+            else:
+                # For historical_calendar, show all fields including zone
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    new_config_name = st.text_input("Configuration Name", value="Default", help="e.g., Default, Summer, Winter")
+                
+                with col2:
+                    new_zone = st.selectbox(
+                        "Zone",
+                        ["zone1", "zone2", "zone3", "alert"],
+                        format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert"}.get(x)
+                    )
+                
+                with col3:
+                    new_location = st.text_input("Location", value="tampere", help="Enter location like 'tampere'")
             
-            with col1:
-                new_config_name = st.text_input("Configuration Name", value="Default", help="e.g., Default, Summer, Winter")
-            
-            with col2:
-                new_zone = st.selectbox(
-                    "Zone",
-                    ["zone1", "zone2", "zone3", "alert"],
-                    format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert"}.get(x)
+            # Show hotel group selection only for price_dashboard
+            new_hotel_group = None
+            if new_dashboard == "price_dashboard":
+                st.markdown("#### 🏨 Hotel Group")
+                st.info("💡 Select hotels for this color configuration. This configuration will be used when ALL selected hotels match.")
+                
+                # Get unique hotel names from all zones
+                all_hotel_names = sorted(list(set(ZONE1_HOTELS + ZONE2_HOTELS + ZONE3_HOTELS + Alert_Comparison)))
+                
+                selected_hotels_for_group = st.multiselect(
+                    "Select Hotels for this Group",
+                    options=all_hotel_names,
+                    help="Select the hotels this color rule applies to"
                 )
-            
-            with col3:
-                new_location = st.text_input("Location", value="tampere", help="Enter location like 'tampere'")
+                
+                if selected_hotels_for_group:
+                    # Create a unique group identifier based on selected hotels
+                    new_hotel_group = ','.join(sorted(selected_hotels_for_group))
             
             st.markdown("#### 🎨 Color Ranges")
-            st.info("💡 Define ranges from lowest to highest values. Ranges should not overlap! Saving will overwrite any existing config for this zone/location combination.")
+            st.info("💡 Define ranges from lowest to highest values. Ranges should not overlap!")
             
             # Display color range inputs (values stored in session state)
             ranges_to_save = []
@@ -1877,19 +1981,22 @@ if admin_panel:
         
         # Handle form submission
         if submit_config:
-            if not new_config_name or not new_zone or not new_location:
-                st.error("Configuration name, zone, and location are required")
+            if not new_config_name or not new_zone or not new_location or not new_dashboard:
+                st.error("Configuration name, zone, location, and dashboard are required")
             else:
                 try:
-                    from decimal import Decimal
-                    import uuid
-                    from datetime import datetime
+ 
                     
-                    # Find and delete existing config for this zone/location
-                    response = table_color.scan(
-                        FilterExpression=Attr('zone').eq(new_zone) & 
-                                       Attr('location').eq(new_location)
-                    )
+                    # Find and delete existing config for this zone/location/dashboard/hotel_group combination
+                    filter_expr = Attr('zone').eq(new_zone) & Attr('location').eq(new_location) & Attr('dashboard').eq(new_dashboard)
+                    
+                    if new_hotel_group:
+                        filter_expr = filter_expr & Attr('hotel_group').eq(new_hotel_group)
+                    else:
+                        # Check for configs without hotel_group or with empty hotel_group
+                        filter_expr = filter_expr & (Attr('hotel_group').not_exists() | Attr('hotel_group').eq(''))
+                    
+                    response = table_color.scan(FilterExpression=filter_expr)
                     
                     existing_configs = response.get('Items', [])
                     
@@ -1911,6 +2018,8 @@ if admin_panel:
                         'config_name': new_config_name,
                         'location': new_location,
                         'zone': new_zone,
+                        'dashboard': new_dashboard,
+                        'hotel_group': new_hotel_group if new_hotel_group else '',
                         'ranges': ranges_to_save,
                         'created_at': datetime.now().isoformat(),
                         'created_by': st.session_state.get('authenticated_user', 'admin')
@@ -1918,7 +2027,8 @@ if admin_panel:
                     
                     table_color.put_item(Item=new_item)
                     
-                    st.success(f"✅ Color configuration '{new_config_name}' for {new_zone}/{new_location} saved successfully!")
+                    group_info = f" for hotel group" if new_hotel_group else ""
+                    st.success(f"✅ Color configuration '{new_config_name}' for {new_zone}/{new_location}/{new_dashboard}{group_info} saved successfully!")
                     
                     # Reset form ranges
                     st.session_state.form_color_ranges = default_color
