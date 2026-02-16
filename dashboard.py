@@ -1031,16 +1031,32 @@ if tab1:
                 if 'line_hotels' not in st.session_state:
                     st.session_state.line_hotels = []
 
+                if 'show_rates_pricing' not in st.session_state:
+                    st.session_state.show_rates_pricing = True
+
                 all_hotels = sorted(df['name'].unique())
                 valid_defaults = [h for h in st.session_state.get('line_hotels', []) if h in all_hotels]
 
-                line_hotels = st.multiselect(
-                    "Select hotels for line chart trend:",
-                    options=all_hotels,
-                    default=valid_defaults,
-                    key="line_chart_selector"
-                )
-                st.session_state.line_hotels = line_hotels
+                col_select, col_display = st.columns([3, 1])
+
+                with col_select:
+                    line_hotels = st.multiselect(
+                        "Select hotels for line chart trend:",
+                        options=all_hotels,
+                        default=valid_defaults,
+                        key="line_chart_selector"
+                    )
+                    st.session_state.line_hotels = line_hotels
+
+                with col_display:
+                    st.markdown("**Display Options**")
+                    show_rates = st.checkbox(
+                        "📊 Show rates and pricing",
+                        value=st.session_state.show_rates_pricing,
+                        key="show_rates_checkbox"
+                    )
+                    st.session_state.show_rates_pricing = show_rates
+
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 if hotels:
@@ -1091,46 +1107,82 @@ if tab1:
                             title='Average Prices with Trend Line'
                         )
 
-                        fig.data[0].texttemplate = '€%{text:.1f}'
-                        fig.data[0].textposition = 'outside'
+                        if st.session_state.show_rates_pricing:
+                            fig.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
+                            fig.data[0].textposition = 'outside'
+                            fig.data[0].hovertemplate = '<b>%{x}</b><br>Price: €%{y:.2f}<extra></extra>'
+                        else:
+                            fig.data[0].text = None
+                            fig.data[0].textposition = 'none'
+                            fig.data[0].hovertemplate = '<extra></extra>'
 
-                        # Scatter trace - match line data to bar data by price_date value
-                        # For each line point, find the matching bar x_label
-                        for idx, line_row in line_avg.iterrows():
-                            matching_bar = bar_avg[bar_avg['price_date'] == line_row['price_date']]
-                            if not matching_bar.empty:
-                                x_pos = matching_bar.iloc[0]['x_label']
-                                fig.add_scatter(
-                                    x=[x_pos],
-                                    y=[line_row['price']],
-                                    mode='markers',
-                                    name='Trend',
-                                    marker=dict(color='red', size=14),
-                                    showlegend=(idx == 0)  # Only show legend for first point
-                                )
+                        # Scatter trace
+                        if st.session_state.show_rates_pricing:
+                            for idx, line_row in line_avg.iterrows():
+                                matching_bar = bar_avg[bar_avg['price_date'] == line_row['price_date']]
+                                if not matching_bar.empty:
+                                    x_pos = matching_bar.iloc[0]['x_label']
+                                    fig.add_scatter(
+                                        x=[x_pos],
+                                        y=[line_row['price']],
+                                        mode='markers',
+                                        name='Trend',
+                                        marker=dict(color='red', size=14),
+                                        showlegend=(idx == 0),
+                                        hovertemplate='<b>Trend</b><br>Price: €%{y:.2f}<extra></extra>'
+                                    )
 
-                        fig.update_layout(
-                            height=500, 
-                            xaxis_title="Date", 
-                            yaxis_title="Average Price (€)",
-                            xaxis=dict(tickangle=0)
-                        )
+                        if st.session_state.show_rates_pricing:
+                            fig.update_layout(
+                                height=500, 
+                                xaxis_title="Date", 
+                                yaxis_title="Average Price (€)",
+                                xaxis=dict(tickangle=0),
+                                hovermode='x unified'
+                            )
+                        else:
+                            fig.update_layout(
+                                height=500, 
+                                xaxis_title="Date", 
+                                yaxis_title="",
+                                xaxis=dict(tickangle=0),
+                                hovermode='x unified'
+                            )
+                            fig.update_yaxes(showticklabels=False)
                         st.plotly_chart(fig, use_container_width=True)
 
                     else:
-                        # Only bar chart if no line hotels selected - UPDATED with x_label
+                        # Only bar chart if no line hotels selected
                         fig_bar = px.bar(
                             bar_avg, x='x_label', y='price',
                             title='Average Prices Across Selected Hotels',
-                            color_discrete_sequence=['#7dd3c0'], text='price'
+                            color_discrete_sequence=['#7dd3c0']
                         )
-                        fig_bar.update_traces(texttemplate='€%{text:.1f}', textposition='outside')
-                        fig_bar.update_layout(
-                            height=500, 
-                            xaxis_title="Date", 
-                            yaxis_title="Average Price (€)",
-                            xaxis=dict(tickangle=0)
-                        )
+                        
+                        if st.session_state.show_rates_pricing:
+                            fig_bar.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
+                            fig_bar.data[0].textposition = 'outside'
+                            fig_bar.data[0].hovertemplate = '<b>%{x}</b><br>Price: €%{y:.2f}<extra></extra>'
+                        else:
+                            fig_bar.data[0].text = None
+                            fig_bar.data[0].textposition = 'none'
+                            fig_bar.data[0].hovertemplate = '<extra></extra>'
+                        
+                        if st.session_state.show_rates_pricing:
+                            fig_bar.update_layout(
+                                height=500, 
+                                xaxis_title="Date", 
+                                yaxis_title="Average Price (€)",
+                                xaxis=dict(tickangle=0)
+                            )
+                        else:
+                            fig_bar.update_layout(
+                                height=500, 
+                                xaxis_title="Date", 
+                                yaxis_title="",
+                                xaxis=dict(tickangle=0)
+                            )
+                            fig_bar.update_yaxes(showticklabels=False)
                         st.plotly_chart(fig_bar, use_container_width=True)
                     
                     # Detailed table section
