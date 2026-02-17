@@ -404,8 +404,17 @@ st.markdown("""
     .cell-value {
         font-size: 18px;
     }
-    .empty-cell {
+   .empty-cell {
         background-color: #ffffff;
+    }
+    /* Prevent multiselect from expanding vertically */
+    div[data-baseweb="select"] > div {
+        max-height: 38px !important;
+        overflow-y: auto !important;
+    }
+    /* Keep the dropdown list normal */
+    div[data-baseweb="popover"] div[data-baseweb="select"] > div {
+        max-height: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1554,7 +1563,8 @@ if admin_panel:
             log_end = st.date_input("End Date", key="log_end")
 
         with col3:
-            download_logs = st.button("⬇️ Download Excel", use_container_width=True)
+            st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+            download_logs = st.button("Download Excel", use_container_width=True)
 
         if download_logs:
             if log_start > log_end:
@@ -1709,7 +1719,8 @@ if admin_panel:
                 )
 
             with col6:
-                if st.button("💾 Save", key=f"save_{user['username']}"):
+                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                if st.button("Save", key=f"save_{user['username']}"):
                     try:
                         table_user.update_item(
                             Key={"username": user["username"]},
@@ -1725,7 +1736,8 @@ if admin_panel:
                         st.error(f"Failed to update user: {e}")
 
             with col7:
-                if st.button("🗑️ Delete", key=f"delete_{user['username']}", use_container_width=True):
+                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                if st.button("Delete", key=f"delete_{user['username']}", use_container_width=True):
                     # Show confirmation dialog
                     st.session_state[f"delete_confirm_{user['username']}"] = True
 
@@ -1772,7 +1784,7 @@ if admin_panel:
             st.error(f"Failed to load color configs: {e}")
             color_configs = []
         
-        with st.expander("📋 View Existing Configurations", expanded=False):
+        with st.expander("View Existing Configurations", expanded=False):
             if color_configs:
                 for config in color_configs:
                     col1, col2, col3, col4, col5, col6, col7 = st.columns([1.5, 2, 2, 2, 1.5, 1, 1])
@@ -1889,7 +1901,7 @@ if admin_panel:
             else:
                 st.info("No color configurations found")
         
-        st.markdown("### ➕ Create New Color Configuration")
+        st.markdown("### Create New Color Configuration")
         
         default_color = [
             {'min_value': 0.0, 'max_value': 124.99, 'color': '#08306b'},
@@ -1905,40 +1917,9 @@ if admin_panel:
         if 'form_color_ranges' not in st.session_state:
             st.session_state.form_color_ranges = default_color
         
-        st.markdown("#### 🎨 Manage Color Ranges")
-        
-        col_range_control, col_reset = st.columns([3, 1])
-        
-        with col_range_control:
-            col_add, col_remove, col_info = st.columns([1, 1, 2])
-            
-            with col_add:
-                if st.button("➕ Add Range", use_container_width=True):
-                    st.session_state.form_color_ranges.append({
-                        'min_value': 0.0,
-                        'max_value': 100.0,
-                        'color': '#667eea'
-                    })
-                    st.rerun()
-            
-            with col_remove:
-                if st.button("➖ Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
-                    if len(st.session_state.form_color_ranges) > 1:
-                        st.session_state.form_color_ranges.pop()
-                        st.rerun()
-            
-            with col_info:
-                st.info(f"📊 Ranges: {len(st.session_state.form_color_ranges)}")
-        
-        with col_reset:
-            if st.button("🔄 Reset", use_container_width=True):
-                st.session_state.form_color_ranges = default_color
-                st.rerun()
-        
-        st.divider()
         
         with st.form("color_config_form"):
-            st.markdown("#### 📝 Configuration Details")
+            st.markdown("#### Configuration Details")
             
             col1, col2 = st.columns(2)
             
@@ -1952,7 +1933,7 @@ if admin_panel:
             with col2:
                 st.markdown("")
             
-            st.markdown("#### 📍 Locations")
+            st.markdown("#### Locations")
             selected_locations = st.multiselect(
                 "Select Locations",
                 ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
@@ -1960,7 +1941,7 @@ if admin_panel:
                 key="config_locations"
             )
             
-            st.markdown("#### 📊 Dashboard Types")
+            st.markdown("#### Dashboard Types")
             selected_dashboards = st.multiselect(
                 "Select Dashboard Types",
                 ["price_dashboard", "historical_calendar"],
@@ -1968,7 +1949,7 @@ if admin_panel:
                 key="config_dashboards"
             )
             
-            st.markdown("#### 🎨 Color Ranges")
+            st.markdown("#### Color Ranges")
             st.info("Define ranges from lowest to highest values")
             
             ranges_to_save = []
@@ -2006,6 +1987,35 @@ if admin_panel:
             
             st.divider()
             submit_config = st.form_submit_button("💾 Save Configuration", use_container_width=True, type="primary")
+
+        col_range_control, col_reset = st.columns([3, 1])
+
+        with col_range_control:
+            col_add, col_remove, col_info = st.columns([1, 1, 2])
+            
+            with col_add:
+                if st.button("Add Range", use_container_width=True):
+                    st.session_state.form_color_ranges.append({
+                        'min_value': 0.0,
+                        'max_value': 100.0,
+                        'color': '#667eea'
+                    })
+                    st.rerun()
+            
+            with col_remove:
+                if st.button("Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
+                    if len(st.session_state.form_color_ranges) > 1:
+                        st.session_state.form_color_ranges.pop()
+                        st.rerun()
+            
+            with col_info:
+                st.info(f"Ranges: {len(st.session_state.form_color_ranges)}")
+        
+        with col_reset:
+            if st.button("Reset", use_container_width=True):
+                st.session_state.form_color_ranges = default_color
+                st.rerun()
+        
         
         if submit_config:
             if not color_config_name or not selected_locations or not selected_dashboards:
