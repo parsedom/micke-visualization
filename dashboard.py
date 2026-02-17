@@ -13,6 +13,7 @@ import hmac
 from st_aggrid import AgGrid, GridOptionsBuilder
 import io
 import time
+import uuid
 
 st.set_page_config(
     page_title="Hotel Booking Dashboard",
@@ -161,26 +162,46 @@ dynamodb = boto3.resource(
 table = dynamodb.Table('HotelPrices')
 table_calender = dynamodb.Table('HotelPricesCalendar')
 table_user = dynamodb.Table('MickeUser')
-table_color = dynamodb.Table('Micke_Color')
+table_color = dynamodb.Table('micke_color_config')
 table_logs = dynamodb.Table('MickeLoginLogs')
 
-def get_color_config(zone, location):
-    """Fetch color configuration from DynamoDB for a specific zone and location."""
+# ==================== COLOR CONFIGURATION FUNCTIONS ====================
+
+def get_color_presets_for_location(location):
+    """Get all color config names that apply to a specific location."""
     try:
-        # Query using GSI with zone and location
-        response = table_color.query(
-            IndexName='zone-location-index',
-            KeyConditionExpression=Key('zone').eq(zone) & Key('location').eq(location),
+        response = table_color.scan(
+            FilterExpression=Attr('locations').contains(location)
         )
         
         items = response.get('Items', [])
         
-        if items:
-            # Get the first active config
-            config = items[0]
-            ranges = config.get('ranges', [])
+        while 'LastEvaluatedKey' in response:
+            response = table_color.scan(
+                FilterExpression=Attr('locations').contains(location),
+                ExclusiveStartKey=response['LastEvaluatedKey']
+            )
+            items.extend(response.get('Items', []))
+        
+        config_names = [item.get('color_config_name') for item in items if item.get('color_config_name')]
+        return sorted(list(set(config_names)))
+    
+    except Exception as e:
+        st.warning(f"Error loading presets for {location}: {e}")
+        return []
+
+
+def get_color_config_by_name(color_config_name):
+    """Get color ranges using the unique config name."""
+    try:
+        response = table_color.query(
+            KeyConditionExpression=Key('color_config_name').eq(color_config_name)
+        )
+        
+        if response.get('Items'):
+            item = response['Items'][0]
+            ranges = item.get('ranges', [])
             
-            # Convert Decimal to float for use in the app
             converted_ranges = []
             for r in ranges:
                 converted_ranges.append({
@@ -191,14 +212,11 @@ def get_color_config(zone, location):
             
             return converted_ranges
         else:
-            # Fallback to hardcoded defaults if not found
-            st.warning(f"No color config found for zone={zone}, location={location}, using defaults")
-            return get_default_color_ranges().get(zone, [])
-            
+            return get_default_color_ranges().get('zone1', [])
+    
     except Exception as e:
-        st.error(f"Error loading color config from database: {e}")
-        # Fallback to hardcoded defaults
-        return get_default_color_ranges().get(zone, [])
+        st.error(f"Error loading color config '{color_config_name}': {e}")
+        return get_default_color_ranges().get('zone1', [])
 
     
 def check_password():
@@ -386,8 +404,17 @@ st.markdown("""
     .cell-value {
         font-size: 18px;
     }
-    .empty-cell {
+   .empty-cell {
         background-color: #ffffff;
+    }
+    /* Prevent multiselect from expanding vertically */
+    div[data-baseweb="select"] > div {
+        max-height: 38px !important;
+        overflow-y: auto !important;
+    }
+    /* Keep the dropdown list normal */
+    div[data-baseweb="popover"] div[data-baseweb="select"] > div {
+        max-height: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -404,36 +431,6 @@ def get_default_color_ranges():
             {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
             {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
             {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
-        ],
-        "zone2": [
-            {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
-            {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
-            {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
-            {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
-            {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
-            {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
-            {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
-            {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
-        ],
-        "zone3": [
-            {'min': 0.0, 'max': 124.99, 'color': '#08306b'},
-            {'min': 125.0, 'max': 134.99, 'color': '#2171b5'},
-            {'min': 135.0, 'max': 144.99, 'color': '#a2cff8'},
-            {'min': 145.0, 'max': 154.99, 'color': '#ffffff'},
-            {'min': 155.0, 'max': 164.99, 'color': '#ffa0a0'},
-            {'min': 165.0, 'max': 199.99, 'color': '#f86868'},
-            {'min': 200.0, 'max': 249.99, 'color': '#d81919'},
-            {'min': 250.0, 'max': 999999.0, 'color': '#000000'}
-        ],
-        "alert": [
-            {'min': 0.0, 'max': 114.99, 'color': '#08306b'},
-            {'min': 115.0, 'max': 124.99, 'color': '#2171b5'},
-            {'min': 125.0, 'max': 134.99, 'color': '#a2cff8'},
-            {'min': 135.0, 'max': 144.99, 'color': '#ffffff'},
-            {'min': 145.0, 'max': 154.99, 'color': '#ffa0a0'},
-            {'min': 155.0, 'max': 189.99, 'color': '#f86868'},
-            {'min': 190.0, 'max': 239.99, 'color': '#d81919'},
-            {'min': 240.0, 'max': 999999.0, 'color': '#000000'}
         ]
     }
 
@@ -443,13 +440,10 @@ def get_text_color_from_background(hex_color):
     Determine if text should be white or black based on background color brightness.
     Uses relative luminance calculation (WCAG standard).
     """
-    # Remove '#' if present
     hex_color = hex_color.lstrip('#')
     
-    # Convert hex to RGB
     r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     
-    # Calculate relative luminance using WCAG formula
     def adjust_color(c):
         c = c / 255.0
         if c <= 0.03928:
@@ -463,7 +457,6 @@ def get_text_color_from_background(hex_color):
     
     luminance = 0.2126 * r_adjusted + 0.7152 * g_adjusted + 0.0722 * b_adjusted
     
-    # If luminance is high (light background), use dark text; otherwise use white text
     return "#000000" if luminance > 0.5 else "#FFFFFF"
 
 
@@ -472,14 +465,12 @@ def get_color_from_price_ranges(value, price_ranges):
     if not price_ranges:
         return "rgb(150, 150, 150)"
     
-    # Sort ranges by min value
     sorted_ranges = sorted(price_ranges, key=lambda x: x['min'])
     
     for range_item in sorted_ranges:
         if range_item['min'] <= value <= range_item['max']:
             return range_item['color']
     
-    # If value is outside all ranges, use the closest range color
     if value < sorted_ranges[0]['min']:
         return sorted_ranges[0]['color']
     else:
@@ -860,6 +851,30 @@ if tab1:
                     key="price_dates_unique"
                 )
             
+            with st.expander("🎨 Color Configuration", expanded=True):
+                st.info("💡 Select a color preset for this location")
+                
+                available_presets = get_color_presets_for_location(location)
+                
+                if available_presets:
+                    selected_preset = st.selectbox(
+                        "Color Setup",
+                        available_presets,
+                        help="Color presets available for this location",
+                        key="price_preset"
+                    )
+                    
+                    if 'last_price_preset' not in st.session_state or \
+                       st.session_state.last_price_preset != selected_preset:
+                        
+                        st.session_state.price_color_ranges = get_color_config_by_name(selected_preset)
+                        st.session_state.last_price_preset = selected_preset
+                    
+                    # st.success(f"✅ Loaded: **{selected_preset}**")
+                else:
+                    st.warning(f"⚠️ No color presets for {location}")
+                    st.session_state.price_color_ranges = get_default_color_ranges()['zone1']
+            
             st.markdown("---")
             query_button = st.button("🚀 Execute Query", type="primary", use_container_width=True)
 
@@ -1060,7 +1075,7 @@ if tab1:
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 if hotels:
-                    filtered_df = df[df['name'].isin(hotels)]
+                    filtered_df = df[df['name'].isin(hotels)].copy()
                     filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
 
                     # Bar chart for main selection
@@ -1071,6 +1086,12 @@ if tab1:
                     bar_avg['week_num'] = bar_avg['price_date'].dt.isocalendar().week
                     # Create combined label with day and week on separate lines
                     bar_avg['x_label'] = bar_avg['date_label'] + '<br>' + bar_avg['day_name'] + '<br>Week ' + bar_avg['week_num'].astype(str)
+                    
+                    price_color_ranges = st.session_state.get('price_color_ranges', get_default_color_ranges()['zone1'])
+                    
+                    bar_avg['bar_color'] = bar_avg['price'].apply(
+                        lambda x: get_color_from_price_ranges(x, price_color_ranges)
+                    )
 
                     if hotels and line_hotels:
                         # Line over bar chart
@@ -1099,13 +1120,16 @@ if tab1:
                         line_avg['week_num'] = line_avg['price_date'].dt.isocalendar().week
                         line_avg['x_label'] = line_avg['date_label'] + '<br>' + line_avg['day_name'] + '<br>Week ' + line_avg['week_num'].astype(str)
 
-                        # Bar trace
+                        # Bar trace with colors
                         fig = px.bar(
                             bar_avg, x='x_label', y='price',
-                            color_discrete_sequence=['#7dd3c0'], text='price',
+                            text='price',
                             labels={'price': 'Average Price (€)', 'x_label': 'Date'},
                             title='Average Prices with Trend Line'
                         )
+                        
+                        # Apply custom colors to bars
+                        fig.data[0].marker.color = bar_avg['bar_color'].tolist()
 
                         if st.session_state.show_rates_pricing:
                             fig.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
@@ -1157,9 +1181,11 @@ if tab1:
                         # Only bar chart if no line hotels selected
                         fig_bar = px.bar(
                             bar_avg, x='x_label', y='price',
-                            title='Average Prices Across Selected Hotels',
-                            color_discrete_sequence=['#7dd3c0']
+                            title='Average Prices Across Selected Hotels'
                         )
+                        
+                        # Apply custom colors to bars
+                        fig_bar.data[0].marker.color = bar_avg['bar_color'].tolist()
                         
                         if st.session_state.show_rates_pricing:
                             fig_bar.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
@@ -1324,21 +1350,36 @@ if tab2:
                     key="calendar_location_key"
                 )
             
-            # REMOVED COLOR SETUP SECTION - Will be in admin panel
+            with st.expander("🎨 Color Configuration", expanded=True):
+                st.info("💡 Select a color preset for this location")
+                
+                available_presets = get_color_presets_for_location(calendar_location)
+                
+                if available_presets:
+                    selected_calendar_preset = st.selectbox(
+                        "Color Setup",
+                        available_presets,
+                        help="Color presets available for this location",
+                        key="calendar_preset"
+                    )
+                    
+                    if 'last_calendar_preset' not in st.session_state or \
+                       st.session_state.last_calendar_preset != selected_calendar_preset:
+                        
+                        st.session_state.color_ranges = get_color_config_by_name(selected_calendar_preset)
+                        st.session_state.last_calendar_preset = selected_calendar_preset
+                    
+                    # st.success(f"✅ Loaded: **{selected_calendar_preset}**")
+                else:
+                    st.warning(f"⚠️ No color presets for {calendar_location}")
+                    st.session_state.color_ranges = get_default_color_ranges()['zone1']
                 
             st.markdown("---")
             calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
 
-        # Load color config from database when zone changes
-        if 'current_zone' not in st.session_state or st.session_state.current_zone != zone_selection:
-            st.session_state.current_zone = zone_selection
-            st.session_state.color_ranges = get_color_config(zone_selection, calendar_location)
-
         # Load data only when button is clicked
         if calendar_query_button:
             with st.spinner("📊 Generating calendar data..."):
-                # Fetch color config from database for current zone
-                st.session_state.color_ranges = get_color_config(zone_selection, calendar_location)
                 
                 st.session_state.calendar_data = query_calendar_data(
                     price_start_date=calendar_start,
@@ -1466,10 +1507,7 @@ if tab2:
                                 display_value = row_display['value']
                                 date_str = datetime.strptime(row_display['date_str'], "%m/%d/%Y").strftime("%d/%m/%Y")
                                 
-                                # Get background color from database config
                                 bg_color = get_color_from_price_ranges(display_value, st.session_state.color_ranges)
-                                
-                                # Get text color based on background brightness
                                 text_color = get_text_color_from_background(bg_color)
                                 
                                 if color_metric == "availability":
@@ -1525,7 +1563,8 @@ if admin_panel:
             log_end = st.date_input("End Date", key="log_end")
 
         with col3:
-            download_logs = st.button("⬇️ Download Excel", use_container_width=True)
+            st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+            download_logs = st.button("Download Excel", use_container_width=True)
 
         if download_logs:
             if log_start > log_end:
@@ -1680,7 +1719,8 @@ if admin_panel:
                 )
 
             with col6:
-                if st.button("💾 Save", key=f"save_{user['username']}"):
+                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                if st.button("Save", key=f"save_{user['username']}"):
                     try:
                         table_user.update_item(
                             Key={"username": user["username"]},
@@ -1696,7 +1736,8 @@ if admin_panel:
                         st.error(f"Failed to update user: {e}")
 
             with col7:
-                if st.button("🗑️ Delete", key=f"delete_{user['username']}", use_container_width=True):
+                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                if st.button("Delete", key=f"delete_{user['username']}", use_container_width=True):
                     # Show confirmation dialog
                     st.session_state[f"delete_confirm_{user['username']}"] = True
 
@@ -1730,14 +1771,12 @@ if admin_panel:
 
 
         st.divider()
-        st.markdown("## 🎨 Color Configuration for Zones")
+        st.markdown("## 🎨 Color Configuration Management")
         
-        # Fetch existing color configs
         try:
             response = table_color.scan()
             color_configs = response.get('Items', [])
             
-            # Continue scanning if there are more items
             while 'LastEvaluatedKey' in response:
                 response = table_color.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
                 color_configs.extend(response.get('Items', []))
@@ -1745,33 +1784,124 @@ if admin_panel:
             st.error(f"Failed to load color configs: {e}")
             color_configs = []
         
-        # Display existing configurations
-        with st.expander("📋 View Existing Configurations", expanded=False):
+        with st.expander("View Existing Configurations", expanded=False):
             if color_configs:
                 for config in color_configs:
-                    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
+                    col1, col2, col3, col4, col5, col6, col7 = st.columns([1.5, 2, 2, 2, 1.5, 1, 1])
                     
                     with col1:
-                        st.text(f"Config: {config.get('config_name', 'N/A')}")
+                        st.text(f"📝 {config.get('color_config_name', 'N/A')}")
                     with col2:
-                        st.text(f"Zone: {config.get('zone', 'N/A')}")
+                        locations = ', '.join(config.get('locations', [])[:2])
+                        if len(config.get('locations', [])) > 2:
+                            locations += f" +{len(config['locations'])-2}"
+                        st.text(f"📍 {locations}")
                     with col3:
-                        st.text(f"Location: {config.get('location', 'N/A')}")
+                        dashboards = ', '.join(config.get('dashboards', []))
+                        st.text(f"📊 {dashboards}")
                     with col4:
-                        if st.button("🗑️", key=f"delete_config_{config['id']}", help="Delete this config"):
+                        num_ranges = len(config.get('ranges', []))
+                        st.text(f"🎨 {num_ranges}")
+                    with col5:
+                        if st.button("✏️ Edit", key=f"edit_config_{config['id']}", use_container_width=True):
+                            st.session_state[f"editing_config_{config['id']}"] = True
+                    with col6:
+                        if st.button("📋", key=f"copy_config_{config['id']}", help="Copy config", use_container_width=True):
+                            st.session_state[f"copy_config_{config['id']}"] = True
+                    with col7:
+                        if st.button("🗑️", key=f"delete_config_{config['id']}", use_container_width=True):
                             try:
-                                table_color.delete_item(Key={'id': config['id'], 'config_name#zone': config['config_name#zone']})
-                                st.success(f"Deleted config")
+                                table_color.delete_item(
+                                    Key={'color_config_name': config['color_config_name']}
+                                )
+                                st.success("Deleted!")
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"Failed to delete: {e}")
+                    
+                    if st.session_state.get(f"editing_config_{config['id']}", False):
+                        st.markdown(f"#### ✏️ Edit: {config.get('color_config_name')}")
+                        
+                        with st.form(f"edit_form_{config['id']}"):
+                            edit_config_name = st.text_input(
+                                "Configuration Name",
+                                value=config.get('color_config_name', ''),
+                                key=f"edit_name_{config['id']}"
+                            )
+                            
+                            edit_locations = st.multiselect(
+                                "Locations",
+                                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
+                                default=config.get('locations', []),
+                                key=f"edit_locs_{config['id']}"
+                            )
+                            
+                            edit_dashboards = st.multiselect(
+                                "Dashboards",
+                                ["price_dashboard", "historical_calendar"],
+                                default=config.get('dashboards', []),
+                                key=f"edit_dash_{config['id']}"
+                            )
+                            
+                            st.markdown("**Color Ranges:**")
+                            edit_ranges = []
+                            for idx, r in enumerate(config.get('ranges', [])):
+                                col_a, col_b, col_c = st.columns([2, 2, 2])
+                                with col_a:
+                                    min_val = st.number_input(
+                                        f"Min {idx+1}",
+                                        value=float(r['min_value']),
+                                        key=f"edit_min_{config['id']}_{idx}"
+                                    )
+                                with col_b:
+                                    max_val = st.number_input(
+                                        f"Max {idx+1}",
+                                        value=float(r['max_value']),
+                                        key=f"edit_max_{config['id']}_{idx}"
+                                    )
+                                with col_c:
+                                    color_val = st.color_picker(
+                                        f"Color {idx+1}",
+                                        value=r['color'],
+                                        key=f"edit_col_{config['id']}_{idx}"
+                                    )
+                                edit_ranges.append({
+                                    'min_value': Decimal(str(min_val)),
+                                    'max_value': Decimal(str(max_val)),
+                                    'color': color_val
+                                })
+                            
+                            if st.form_submit_button("💾 Save Changes"):
+                                try:
+                                    table_color.delete_item(
+                                        Key={'color_config_name': config['color_config_name']}
+                                    )
+                                    
+                                    # Create new config with updated values
+                                    new_item = {
+                                        'id': config['id'],  # Keep same ID
+                                        'color_config_name': edit_config_name,
+                                        'locations': edit_locations,
+                                        'dashboards': edit_dashboards,
+                                        'ranges': edit_ranges,
+                                        'created_at': config.get('created_at', datetime.now().isoformat()),
+                                        'created_by': config.get('created_by', 'admin')
+                                    }
+                                    
+                                    table_color.put_item(Item=new_item)
+                                    st.success("Configuration updated!")
+                                    st.session_state[f"editing_config_{config['id']}"] = False
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to update: {e}")
+                    
                     st.divider()
             else:
                 st.info("No color configurations found")
         
-        # Create/Edit Color Configuration
-        st.markdown("### ➕ Create New Color Configuration")
+        st.markdown("### Create New Color Configuration")
         
         default_color = [
             {'min_value': 0.0, 'max_value': 124.99, 'color': '#08306b'},
@@ -1783,66 +1913,45 @@ if admin_panel:
             {'min_value': 200.0, 'max_value': 249.99, 'color': '#d81919'},
             {'min_value': 250.0, 'max_value': 999999.0, 'color': '#000000'}
         ]
-        # Initialize session state for color ranges OUTSIDE form
+        
         if 'form_color_ranges' not in st.session_state:
             st.session_state.form_color_ranges = default_color
         
-        # Color range management OUTSIDE the form
-        st.markdown("#### 🎨 Manage Color Ranges")
         
-        col_range_control, col_reset = st.columns([3, 1])
-        
-        with col_range_control:
-            col_add, col_remove, col_info = st.columns([1, 1, 2])
-            
-            with col_add:
-                if st.button("➕ Add Range", use_container_width=True):
-                    st.session_state.form_color_ranges.append({
-                        'min_value': 0.0,
-                        'max_value': 100.0,
-                        'color': '#667eea'
-                    })
-                    st.rerun()
-            
-            with col_remove:
-                if st.button("➖ Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
-                    if len(st.session_state.form_color_ranges) > 1:
-                        st.session_state.form_color_ranges.pop()
-                        st.rerun()
-            
-            with col_info:
-                st.info(f"📊 Current ranges: {len(st.session_state.form_color_ranges)}")
-        
-        with col_reset:
-            if st.button("🔄 Reset to Defaults", use_container_width=True):
-                st.session_state.form_color_ranges = default_color
-                st.rerun()
-        
-        st.divider()
-        
-        # Now the form with config details and color ranges display
         with st.form("color_config_form"):
-            st.markdown("#### 📝 Configuration Details")
+            st.markdown("#### Configuration Details")
             
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             
             with col1:
-                new_config_name = st.text_input("Configuration Name", value="Default", help="e.g., Default, Summer, Winter")
-            
-            with col2:
-                new_zone = st.selectbox(
-                    "Zone",
-                    ["zone1", "zone2", "zone3", "alert"],
-                    format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert"}.get(x)
+                color_config_name = st.text_input(
+                    "Configuration Name (Unique)",
+                    value="Default",
+                    key="config_name"
                 )
             
-            with col3:
-                new_location = st.text_input("Location", value="tampere", help="Enter location like 'tampere'")
+            with col2:
+                st.markdown("")
             
-            st.markdown("#### 🎨 Color Ranges")
-            st.info("💡 Define ranges from lowest to highest values. Ranges should not overlap! Saving will overwrite any existing config for this zone/location combination.")
+            st.markdown("#### Locations")
+            selected_locations = st.multiselect(
+                "Select Locations",
+                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
+                default=["tampere"],
+                key="config_locations"
+            )
             
-            # Display color range inputs (values stored in session state)
+            st.markdown("#### Dashboard Types")
+            selected_dashboards = st.multiselect(
+                "Select Dashboard Types",
+                ["price_dashboard", "historical_calendar"],
+                default=["price_dashboard"],
+                key="config_dashboards"
+            )
+            
+            st.markdown("#### Color Ranges")
+            st.info("Define ranges from lowest to highest values")
+            
             ranges_to_save = []
             for idx, color_range in enumerate(st.session_state.form_color_ranges):
                 col_min, col_max, col_color = st.columns([2, 2, 2])
@@ -1878,43 +1987,48 @@ if admin_panel:
             
             st.divider()
             submit_config = st.form_submit_button("💾 Save Configuration", use_container_width=True, type="primary")
+
+        col_range_control, col_reset = st.columns([3, 1])
+
+        with col_range_control:
+            col_add, col_remove, col_info = st.columns([1, 1, 2])
+            
+            with col_add:
+                if st.button("Add Range", use_container_width=True):
+                    st.session_state.form_color_ranges.append({
+                        'min_value': 0.0,
+                        'max_value': 100.0,
+                        'color': '#667eea'
+                    })
+                    st.rerun()
+            
+            with col_remove:
+                if st.button("Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
+                    if len(st.session_state.form_color_ranges) > 1:
+                        st.session_state.form_color_ranges.pop()
+                        st.rerun()
+            
+            with col_info:
+                st.info(f"Ranges: {len(st.session_state.form_color_ranges)}")
         
-        # Handle form submission
+        with col_reset:
+            if st.button("Reset", use_container_width=True):
+                st.session_state.form_color_ranges = default_color
+                st.rerun()
+        
+        
         if submit_config:
-            if not new_config_name or not new_zone or not new_location:
-                st.error("Configuration name, zone, and location are required")
+            if not color_config_name or not selected_locations or not selected_dashboards:
+                st.error("Configuration name, locations, and dashboard types are required")
             else:
                 try:
-                    from decimal import Decimal
-                    import uuid
-                    from datetime import datetime
-                    
-                    # Find and delete existing config for this zone/location
-                    response = table_color.scan(
-                        FilterExpression=Attr('zone').eq(new_zone) & 
-                                       Attr('location').eq(new_location)
-                    )
-                    
-                    existing_configs = response.get('Items', [])
-                    
-                    for old_config in existing_configs:
-                        table_color.delete_item(
-                            Key={
-                                'id': old_config['id'],
-                                'config_name#zone': old_config['config_name#zone']
-                            }
-                        )
-                    
-                    # Create new config
                     new_id = str(uuid.uuid4())
-                    sort_key = f"{new_config_name}#{new_zone}"
                     
                     new_item = {
                         'id': new_id,
-                        'config_name#zone': sort_key,
-                        'config_name': new_config_name,
-                        'location': new_location,
-                        'zone': new_zone,
+                        'color_config_name': color_config_name,
+                        'locations': selected_locations,
+                        'dashboards': selected_dashboards,
                         'ranges': ranges_to_save,
                         'created_at': datetime.now().isoformat(),
                         'created_by': st.session_state.get('authenticated_user', 'admin')
@@ -1922,9 +2036,10 @@ if admin_panel:
                     
                     table_color.put_item(Item=new_item)
                     
-                    st.success(f"✅ Color configuration '{new_config_name}' for {new_zone}/{new_location} saved successfully!")
+                    st.success(f"✅ Configuration '{color_config_name}' saved!")
+                    st.info(f"📍 Locations: {', '.join(selected_locations)}")
+                    st.info(f"📊 Dashboards: {', '.join(selected_dashboards)}")
                     
-                    # Reset form ranges
                     st.session_state.form_color_ranges = default_color
                     
                     time.sleep(2)
