@@ -164,7 +164,7 @@ table_calender = dynamodb.Table('HotelPricesCalendar')
 table_user = dynamodb.Table('MickeUser')
 table_color = dynamodb.Table('micke_color_config')
 table_logs = dynamodb.Table('MickeLoginLogs')
-
+    
 # ==================== COLOR CONFIGURATION FUNCTIONS ====================
 
 def get_color_presets_for_location(location):
@@ -475,6 +475,33 @@ def get_color_from_price_ranges(value, price_ranges):
         return sorted_ranges[0]['color']
     else:
         return sorted_ranges[-1]['color']
+
+
+def make_x_label(price_date_series):
+    """Generate stacked x-axis labels: DAY / DD / Mon, red for weekends"""
+    day_abbr = price_date_series.dt.strftime('%a').str.upper()
+    day_num = price_date_series.dt.strftime('%d').str.lstrip('0')
+    month_abbr = price_date_series.dt.strftime('%b')
+    is_weekend = price_date_series.dt.dayofweek >= 5  # 5=Saturday, 6=Sunday
+    weekend_color = "#ff6b6b"
+    labels = []
+    for i in range(len(price_date_series)):
+        if is_weekend.iloc[i]:
+            label = (
+                f'<b><span style="color:{weekend_color}">' + day_abbr.iloc[i] + '</span></b><br>' +
+                f'<b><span style="color:{weekend_color}">' + day_num.iloc[i] + '</span></b><br>' +
+                f'<b><span style="color:{weekend_color}">' + month_abbr.iloc[i] + '</span></b>'
+            )
+        else:
+            label = (
+                '<b>' + day_abbr.iloc[i] + '</b><br>' +
+                '<b>' + day_num.iloc[i] + '</b><br>' +
+                '<b>' + month_abbr.iloc[i] + '</b>'
+            )
+        labels.append(label)
+
+    return pd.Series(labels, index=price_date_series.index)
+
     
 # ==================== QUERY FUNCTIONS ====================
 def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
@@ -552,37 +579,6 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
     except Exception as e:
         st.error(f"Error querying DynamoDB: {str(e)}")
         return []
-
-# def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
-#     """Query data for calendar heatmap."""
-#     price_dates = []
-#     d = price_start_date
-#     while d <= price_end_date:
-#         price_dates.append(d.strftime("%Y-%m-%d"))
-#         d += timedelta(days=1)
-    
-#     metrics = {
-#         'availability': {},
-#         'price_avg': {},
-#         'free_cancel_avg': {}
-#     }
-
-#     for idx, pdate in enumerate(price_dates, 1):
-#         partition_key = f"{location}#{zone_filter}#{pdate}"
-#         try:
-#             response = table_calender.get_item(
-#                 Key={'location#zone#checkin_date': partition_key}
-#             )
-#             item = response.get('Item')
-#             if item:
-#                 metrics["availability"][pdate] = item.get("availability")
-#                 metrics["free_cancel_avg"][pdate] = item.get("free_cancel_avg")
-#                 metrics["price_avg"][pdate] = item.get("price_avg")
-#         except Exception as e:
-#             st.error(f"Error querying DynamoDB: {str(e)}")
-#             return metrics
-
-#     return metrics
 
 def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
     location = "tampere"
@@ -870,7 +866,6 @@ if tab1:
                         st.session_state.price_color_ranges = get_color_config_by_name(selected_preset)
                         st.session_state.last_price_preset = selected_preset
                     
-                    # st.success(f"✅ Loaded: **{selected_preset}**")
                 else:
                     st.warning(f"⚠️ No color presets for {location}")
                     st.session_state.price_color_ranges = get_default_color_ranges()['zone1']
@@ -1078,27 +1073,61 @@ if tab1:
                     filtered_df = df[df['name'].isin(hotels)].copy()
                     filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
 
-                    # Bar chart for main selection
+                    # Bar chart data
                     bar_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
-                    bar_avg['date_label'] = bar_avg['price_date'].dt.strftime('%b %d')
-                    
-                    bar_avg['day_name'] = bar_avg['price_date'].dt.strftime('%a')
                     bar_avg['week_num'] = bar_avg['price_date'].dt.isocalendar().week
-                    # Create combined label with day and week on separate lines
-                    bar_avg['x_label'] = bar_avg['date_label'] + '<br>' + bar_avg['day_name'] + '<br>Week ' + bar_avg['week_num'].astype(str)
-                    
+                    bar_avg['x_label'] = make_x_label(bar_avg['price_date'])
+
                     price_color_ranges = st.session_state.get('price_color_ranges', get_default_color_ranges()['zone1'])
-                    
                     bar_avg['bar_color'] = bar_avg['price'].apply(
                         lambda x: get_color_from_price_ranges(x, price_color_ranges)
                     )
 
+                    def add_week_annotations(fig, bar_avg):
+                        """Add week label bands below the x-axis spanning the full week."""
+                        x_labels = bar_avg['x_label'].tolist()
+
+                        for week_num, week_group in bar_avg.groupby('week_num'):
+                            x_indices = [x_labels.index(lbl) for lbl in week_group['x_label'] if lbl in x_labels]
+                            if not x_indices:
+                                continue
+
+                            x_start = min(x_indices) - 0.45
+                            x_end = max(x_indices) + 0.45
+                            mid_x = (x_start + x_end) / 2
+                            bg_color = st.get_option("theme.backgroundColor") or "#0e1117"
+
+                            fig.add_shape(
+                                type="rect",
+                                xref="x",
+                                yref="paper",
+                                x0=x_start,
+                                x1=x_end,
+                                y0=-0.32,
+                                y1=-0.18,
+                                fillcolor=bg_color,
+                                line=dict(color="white", width=2),
+                                layer="above"
+                            )
+
+                            fig.add_annotation(
+                                x=mid_x,
+                                y=-0.25,
+                                xref="x",
+                                yref="paper",
+                                text=f"<b>Week {week_num}</b>",
+                                showarrow=False,
+                                font=dict(size=12, color="white"),
+                                align="center",
+                            )
+
+                        return fig
+                    
                     if hotels and line_hotels:
                         # Line over bar chart
                         line_df = df[df['name'].isin(line_hotels)].copy()
                         line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
 
-                        # Pivot table
                         pivot_line = line_df.pivot_table(
                             index='scrape_date',
                             columns='price_date',
@@ -1106,29 +1135,19 @@ if tab1:
                             aggfunc='mean'
                         )
 
-                        # Get mean across scrape dates
                         line_avg = pivot_line.mean(axis=0).reset_index()
                         line_avg.columns = ['price_date', 'price']
                         line_avg = line_avg.dropna(subset=['price'])
-
-                        # Convert to datetime
                         line_avg['price_date'] = pd.to_datetime(line_avg['price_date'])
+                        line_avg['x_label'] = make_x_label(line_avg['price_date'])
 
-                        # Create x_label for line data
-                        line_avg['date_label'] = line_avg['price_date'].dt.strftime('%b %d')
-                        line_avg['day_name'] = line_avg['price_date'].dt.strftime('%a')
-                        line_avg['week_num'] = line_avg['price_date'].dt.isocalendar().week
-                        line_avg['x_label'] = line_avg['date_label'] + '<br>' + line_avg['day_name'] + '<br>Week ' + line_avg['week_num'].astype(str)
-
-                        # Bar trace with colors
                         fig = px.bar(
                             bar_avg, x='x_label', y='price',
                             text='price',
                             labels={'price': 'Average Price (€)', 'x_label': 'Date'},
                             title='Average Prices with Trend Line'
                         )
-                        
-                        # Apply custom colors to bars
+
                         fig.data[0].marker.color = bar_avg['bar_color'].tolist()
 
                         if st.session_state.show_rates_pricing:
@@ -1138,9 +1157,8 @@ if tab1:
                         else:
                             fig.data[0].text = None
                             fig.data[0].textposition = 'none'
-                            fig.data[0].hovertemplate = '<extra></extra>'
+                            fig.data[0].hovertemplate = '<b>%{x}</b><extra></extra>'
 
-                        # Scatter trace
                         if st.session_state.show_rates_pricing:
                             for idx, line_row in line_avg.iterrows():
                                 matching_bar = bar_avg[bar_avg['price_date'] == line_row['price_date']]
@@ -1156,37 +1174,32 @@ if tab1:
                                         hovertemplate='<b>Trend</b><br>Price: €%{y:.2f}<extra></extra>'
                                     )
 
-                        if st.session_state.show_rates_pricing:
-                            fig.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="Average Price (€)",
-                                xaxis=dict(tickangle=0),
-                                hovermode='x unified'
-                            )
-                        else:
-                            fig.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="",
-                                xaxis=dict(tickangle=0),
-                                hovermode='x unified',
-                                showlegend=False
-                            )
+                        fig.update_layout(
+                            height=550,
+                            xaxis_title="",
+                            yaxis_title="Average Price (€)" if st.session_state.show_rates_pricing else "",
+                            xaxis=dict(tickangle=0, tickfont=dict(size=11)),
+                            hovermode='x unified',
+                            margin=dict(b=110),
+                            showlegend=st.session_state.show_rates_pricing
+                        )
+
+                        if not st.session_state.show_rates_pricing:
                             fig.update_yaxes(showticklabels=False, showgrid=False)
                             fig.update_xaxes(showgrid=False)
+
+                        fig = add_week_annotations(fig, bar_avg)
                         st.plotly_chart(fig, use_container_width=True)
 
                     else:
-                        # Only bar chart if no line hotels selected
+                        # Bar chart only
                         fig_bar = px.bar(
                             bar_avg, x='x_label', y='price',
                             title='Average Prices Across Selected Hotels'
                         )
-                        
-                        # Apply custom colors to bars
+
                         fig_bar.data[0].marker.color = bar_avg['bar_color'].tolist()
-                        
+
                         if st.session_state.show_rates_pricing:
                             fig_bar.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
                             fig_bar.data[0].textposition = 'outside'
@@ -1194,31 +1207,27 @@ if tab1:
                         else:
                             fig_bar.data[0].text = None
                             fig_bar.data[0].textposition = 'none'
-                            fig_bar.data[0].hovertemplate = '<extra></extra>'
-                        
-                        if st.session_state.show_rates_pricing:
-                            fig_bar.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="Average Price (€)",
-                                xaxis=dict(tickangle=0)
-                            )
-                        else:
-                            fig_bar.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="",
-                                xaxis=dict(tickangle=0),
-                                showlegend=False
-                            )
+                            fig_bar.data[0].hovertemplate = '<b>%{x}</b><extra></extra>'
+
+                        fig_bar.update_layout(
+                            height=550,
+                            xaxis_title="",
+                            yaxis_title="Average Price (€)" if st.session_state.show_rates_pricing else "",
+                            xaxis=dict(tickangle=0, tickfont=dict(size=11)),
+                            margin=dict(b=110),
+                            showlegend=False
+                        )
+
+                        if not st.session_state.show_rates_pricing:
                             fig_bar.update_yaxes(showticklabels=False, showgrid=False)
                             fig_bar.update_xaxes(showgrid=False)
+
+                        fig_bar = add_week_annotations(fig_bar, bar_avg)
                         st.plotly_chart(fig_bar, use_container_width=True)
                     
                     # Detailed table section
                     st.markdown("### 📋 Detailed Price Matrix")
 
-                    # Create pivot
                     pivot = filtered_df.pivot_table(
                         index=['scrape_date', 'name'], 
                         columns='price_date',
@@ -1226,13 +1235,11 @@ if tab1:
                         aggfunc='mean'
                     )
 
-                    # Format column names
                     pivot.columns = [col.strftime('%Y-%m-%d') if isinstance(col, pd.Timestamp) else col for col in pivot.columns]
                     pivot = pivot.reset_index()
 
                     numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name', 'breakfast_included']]
 
-                    # Add group separators (use None for numeric/boolean)
                     unique_dates = pivot['scrape_date'].unique()
                     if len(unique_dates) > 1:
                         final_pivot = pd.DataFrame()
@@ -1245,7 +1252,6 @@ if tab1:
                                 final_pivot = pd.concat([final_pivot, empty_df], ignore_index=True)
                         pivot = final_pivot
 
-                    # Add average row
                     if numeric_cols:
                         valid_data = pivot[pivot['scrape_date'].notnull()]
                         averages = valid_data[numeric_cols].mean()
@@ -1255,24 +1261,16 @@ if tab1:
                         pivot = pd.concat([pivot, empty_df], ignore_index=True)
 
                         avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE'}
-
                         for col in numeric_cols:
                             if not pd.isna(averages[col]):
-                                avg_row[col] = round(averages[col], 2)  # round to 2 decimals
+                                avg_row[col] = round(averages[col], 2)
                             else:
                                 avg_row[col] = None
                         avg_df = pd.DataFrame([avg_row])
                         pivot = pd.concat([pivot, avg_df], ignore_index=True)
-                    
-                    # pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
 
-                    # Build AgGrid
                     gb = GridOptionsBuilder.from_dataframe(pivot)
-
-                    # Pin first 3 columns
                     gb.configure_columns(['scrape_date', 'name'], pinned='left', minWidth=150)
-
-                    # Numeric columns - same width, 2 decimal precision
                     gb.configure_columns(
                         numeric_cols,
                         type=['numericColumn'],
@@ -1280,21 +1278,15 @@ if tab1:
                         minWidth=100,
                         maxWidth=100
                     )
-
-
-                    # Make columns resizable
                     gb.configure_default_column(resizable=True)
-
-                    # Optional: set row height
                     gb.configure_grid_options(rowHeight=35)
-
                     gridOptions = gb.build()
 
                     AgGrid(
                         pivot,
                         gridOptions=gridOptions,
                         height=600,
-                        fit_columns_on_grid_load=False,  # important: don't shrink
+                        fit_columns_on_grid_load=False,
                         enable_enterprise_modules=False,
                     )
                 
@@ -1305,7 +1297,6 @@ if tab1:
                 st.error("❌ No valid price data found")
 
         else:
-            # Welcome screen
             st.markdown("""
             <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 15px; margin: 2rem 0;">
                 <h2>🎯 Welcome to Hotel Price Analytics</h2>
@@ -1369,7 +1360,6 @@ if tab2:
                         st.session_state.color_ranges = get_color_config_by_name(selected_calendar_preset)
                         st.session_state.last_calendar_preset = selected_calendar_preset
                     
-                    # st.success(f"✅ Loaded: **{selected_calendar_preset}**")
                 else:
                     st.warning(f"⚠️ No color presets for {calendar_location}")
                     st.session_state.color_ranges = get_default_color_ranges()['zone1']
@@ -1377,7 +1367,6 @@ if tab2:
             st.markdown("---")
             calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
 
-        # Load data only when button is clicked
         if calendar_query_button:
             with st.spinner("📊 Generating calendar data..."):
                 
@@ -1394,7 +1383,6 @@ if tab2:
         if 'calendar_data' in st.session_state:
             metrics = st.session_state.calendar_data
             
-            # Initialize with all three metrics
             df_cal_availability = pd.DataFrame({
                 'date': list(metrics['availability'].keys()),
                 'value': list(metrics['availability'].values())
@@ -1410,7 +1398,6 @@ if tab2:
                 'value': list(metrics['free_cancel_avg'].values())
             })
             
-            # Process all data with common date fields
             for df in [df_cal_availability, df_cal_price, df_cal_free_cancel]:
                 df['date'] = pd.to_datetime(df['date'])
                 df['year'] = df['date'].dt.year
@@ -1419,7 +1406,6 @@ if tab2:
                 df['date_str'] = df['date'].dt.strftime('%m/%d/%Y')
                 df['day_num'] = df['date'].dt.dayofweek
             
-            # Get available years and weeks from ALL data
             all_years = sorted(set(
                 list(df_cal_availability['year'].unique()) + 
                 list(df_cal_price['year'].unique()) + 
@@ -1431,7 +1417,6 @@ if tab2:
                 list(df_cal_free_cancel['week'].unique())
             ))
             
-            # Display metric selection
             with st.expander("📊 Display Metric", expanded=True):
                 color_metric = st.selectbox(
                     "Display Metric By",
@@ -1440,7 +1425,6 @@ if tab2:
                     key="color_metric_key"
                 )
             
-            # Filter selections
             col1, col2 = st.columns(2)
             with col1:
                 selected_years = st.multiselect(
@@ -1460,7 +1444,6 @@ if tab2:
             if not selected_years or not selected_weeks:
                 st.error("Please select at least one year and one week")
             else:
-                # Select the appropriate dataframe based on metric for DISPLAY
                 metric_map = {
                     'availability': df_cal_availability,
                     'price_avg': df_cal_price,
@@ -1468,7 +1451,6 @@ if tab2:
                 }
                 df_cal_display = metric_map[color_metric].copy()
                 
-                # Filter by selected years and weeks
                 filtered_cal_display = df_cal_display[
                     (df_cal_display['year'].isin(selected_years)) & 
                     (df_cal_display['week'].isin(selected_weeks))
@@ -1546,7 +1528,6 @@ if tab2:
 if admin_panel:
     with admin_panel:
 
-        # Fetch all users
         try:
             users = table_user.scan().get("Items", [])
         except Exception as e:
@@ -1616,7 +1597,6 @@ if admin_panel:
                     except Exception as e:
                         st.error(f"Failed to generate logs: {e}")
 
-        # ================= ADD STAFF ACCOUNT =================
         st.divider()
         st.markdown("### ➕ Add Member Account")
 
@@ -1666,13 +1646,12 @@ if admin_panel:
                 except Exception as e:
                     st.error(f"Failed to create user: {e}")
 
-        # ================= EXISTING USERS =================
         st.divider()
         st.markdown("## 👥 Member Accounts")
 
         for user in users:
             if user.get("access") == "admin":
-                continue  # skip admin accounts
+                continue
             col1, col2, col3, col4, col5, col6, col7 = st.columns([2.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5])
 
             with col1:
@@ -1738,10 +1717,8 @@ if admin_panel:
             with col7:
                 st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
                 if st.button("Delete", key=f"delete_{user['username']}", use_container_width=True):
-                    # Show confirmation dialog
                     st.session_state[f"delete_confirm_{user['username']}"] = True
 
-            # Confirmation dialog
             if st.session_state.get(f"delete_confirm_{user['username']}", False):
                 st.warning(f"⚠️ Are you sure you want to delete user **{user['username']}**? This action cannot be undone.")
                 col_confirm1, col_confirm2, col_confirm3 = st.columns([1, 1, 2])
@@ -1768,7 +1745,6 @@ if admin_panel:
                 st.divider()
                 
 # ================= COLOR CONFIGURATION MANAGER =================
-
 
         st.divider()
         st.markdown("## 🎨 Color Configuration Management")
@@ -1878,9 +1854,8 @@ if admin_panel:
                                         Key={'color_config_name': config['color_config_name']}
                                     )
                                     
-                                    # Create new config with updated values
                                     new_item = {
-                                        'id': config['id'],  # Keep same ID
+                                        'id': config['id'],
                                         'color_config_name': edit_config_name,
                                         'locations': edit_locations,
                                         'dashboards': edit_dashboards,
