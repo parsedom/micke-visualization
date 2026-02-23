@@ -503,7 +503,8 @@ def make_x_label(price_date_series):
     day_abbr = price_date_series.dt.strftime('%a').str.upper()
     day_num = price_date_series.dt.strftime('%d').str.lstrip('0')
     month_abbr = price_date_series.dt.strftime('%b')
-    is_weekend = price_date_series.dt.dayofweek >= 5  # 5=Saturday, 6=Sunday
+    dayofweek = price_date_series.dt.dayofweek
+    is_weekend = (dayofweek == 4) | (dayofweek == 5)
     weekend_color = "#ff6b6b"
     labels = []
     for i in range(len(price_date_series)):
@@ -1162,7 +1163,7 @@ if tab1:
                                 yref="paper",
                                 x0=x_start,
                                 x1=x_end,
-                                y0=-0.32,
+                                y0=-0.27,
                                 y1=-0.18,
                                 fillcolor=bg_color,
                                 line=dict(color="white", width=2),
@@ -1907,25 +1908,15 @@ if admin_panel:
             if 'std_top_value' not in st.session_state:
                 st.session_state.std_top_value = get_std_top_value()
 
-            col_minus, col_val, col_plus = st.columns([1, 2, 1])
-            with col_minus:
-                if st.button("−", key="std_minus_btn", use_container_width=True):
-                    st.session_state.std_top_value = max(50, st.session_state.std_top_value - 50)
-                    st.rerun()
-            with col_val:
-                new_top_val = st.number_input(
-                    "Top value",
-                    value=int(st.session_state.std_top_value),
-                    min_value=50,
-                    step=50,
-                    key="std_top_number_input",
-                    label_visibility="collapsed"
-                )
-                st.session_state.std_top_value = int(new_top_val)
-            with col_plus:
-                if st.button("+", key="std_plus_btn", use_container_width=True):
-                    st.session_state.std_top_value = st.session_state.std_top_value + 50
-                    st.rerun()
+            new_top_val = st.number_input(
+                "Top value",
+                value=int(st.session_state.std_top_value),
+                min_value=50,
+                step=50,
+                key="std_top_number_input",
+                label_visibility="collapsed"
+            )
+            st.session_state.std_top_value = int(new_top_val)
 
             if st.button("💾 Save for all users", key="std_save_btn", use_container_width=True, type="primary"):
                 if save_std_top_value(st.session_state.std_top_value):
