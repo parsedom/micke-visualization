@@ -601,6 +601,37 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
         st.error(f"Error querying DynamoDB: {str(e)}")
         return []
 
+# def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
+#     """Query data for calendar heatmap."""
+#     price_dates = []
+#     d = price_start_date
+#     while d <= price_end_date:
+#         price_dates.append(d.strftime("%Y-%m-%d"))
+#         d += timedelta(days=1)
+    
+#     metrics = {
+#         'availability': {},
+#         'price_avg': {},
+#         'free_cancel_avg': {}
+#     }
+
+#     for idx, pdate in enumerate(price_dates, 1):
+#         partition_key = f"{location}#{zone_filter}#{pdate}"
+#         try:
+#             response = table_calender.get_item(
+#                 Key={'location#zone#checkin_date': partition_key}
+#             )
+#             item = response.get('Item')
+#             if item:
+#                 metrics["availability"][pdate] = item.get("availability")
+#                 metrics["free_cancel_avg"][pdate] = item.get("free_cancel_avg")
+#                 metrics["price_avg"][pdate] = item.get("price_avg")
+#         except Exception as e:
+#             st.error(f"Error querying DynamoDB: {str(e)}")
+#             return metrics
+
+#     return metrics
+
 def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
     location = "tampere"
     time = "morning"
