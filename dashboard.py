@@ -151,6 +151,8 @@ aws_key = st.secrets["AWS_ACCESS_KEY_ID"]
 aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
+# STD_TOP_VALUE = 600
+
 
 dynamodb = boto3.resource(
     'dynamodb',
@@ -164,7 +166,8 @@ table_calender = dynamodb.Table('HotelPricesCalendar')
 table_user = dynamodb.Table('MickeUser')
 table_color = dynamodb.Table('micke_color_config')
 table_logs = dynamodb.Table('MickeLoginLogs')
-
+table_config = dynamodb.Table('MickeAppConfig')
+    
 # ==================== COLOR CONFIGURATION FUNCTIONS ====================
 
 def get_color_presets_for_location(location):
@@ -217,6 +220,24 @@ def get_color_config_by_name(color_config_name):
     except Exception as e:
         st.error(f"Error loading color config '{color_config_name}': {e}")
         return get_default_color_ranges().get('zone1', [])
+
+def get_std_top_value():
+    try:
+        response = table_config.get_item(Key={"config_key": "std_top_value"})
+        item = response.get("Item")
+        if item:
+            return int(item.get("value", 600))
+    except Exception:
+        pass
+    return 600
+
+def save_std_top_value(value: int):
+    try:
+        table_config.put_item(Item={"config_key": "std_top_value", "value": value})
+        return True
+    except Exception as e:
+        st.error(f"Failed to save config: {e}")
+        return False
 
     
 def check_password():
@@ -475,6 +496,34 @@ def get_color_from_price_ranges(value, price_ranges):
         return sorted_ranges[0]['color']
     else:
         return sorted_ranges[-1]['color']
+
+
+def make_x_label(price_date_series):
+    """Generate stacked x-axis labels: DAY / DD / Mon, red for weekends"""
+    day_abbr = price_date_series.dt.strftime('%a').str.upper()
+    day_num = price_date_series.dt.strftime('%d').str.lstrip('0')
+    month_abbr = price_date_series.dt.strftime('%b')
+    dayofweek = price_date_series.dt.dayofweek
+    is_weekend = (dayofweek == 4) | (dayofweek == 5)
+    weekend_color = "#ff6b6b"
+    labels = []
+    for i in range(len(price_date_series)):
+        if is_weekend.iloc[i]:
+            label = (
+                f'<b><span style="color:{weekend_color}">' + day_abbr.iloc[i] + '</span></b><br>' +
+                f'<b><span style="color:{weekend_color}">' + day_num.iloc[i] + '</span></b><br>' +
+                f'<b><span style="color:{weekend_color}">' + month_abbr.iloc[i] + '</span></b>'
+            )
+        else:
+            label = (
+                '<b>' + day_abbr.iloc[i] + '</b><br>' +
+                '<b>' + day_num.iloc[i] + '</b><br>' +
+                '<b>' + month_abbr.iloc[i] + '</b>'
+            )
+        labels.append(label)
+
+    return pd.Series(labels, index=price_date_series.index)
+
     
 # ==================== QUERY FUNCTIONS ====================
 def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
@@ -870,7 +919,6 @@ if tab1:
                         st.session_state.price_color_ranges = get_color_config_by_name(selected_preset)
                         st.session_state.last_price_preset = selected_preset
                     
-                    # st.success(f"✅ Loaded: **{selected_preset}**")
                 else:
                     st.warning(f"⚠️ No color presets for {location}")
                     st.session_state.price_color_ranges = get_default_color_ranges()['zone1']
@@ -1066,11 +1114,18 @@ if tab1:
                 with col_display:
                     st.markdown("**Display Options**")
                     show_rates = st.checkbox(
-                        "📊 Show rates and pricing",
-                        value=st.session_state.show_rates_pricing,
+                        "💰 Show rates and pricing",
+                        value=st.session_state.get('show_rates_pricing', True),
                         key="show_rates_checkbox"
                     )
                     st.session_state.show_rates_pricing = show_rates
+
+                    show_std = st.checkbox(
+                        "📊 Show standardized comparison",
+                        value=st.session_state.get('show_std_comparison', False),
+                        key="show_std_checkbox"
+                    )
+                    st.session_state.show_std_comparison = show_std
 
                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1078,147 +1133,142 @@ if tab1:
                     filtered_df = df[df['name'].isin(hotels)].copy()
                     filtered_df['price_date'] = pd.to_datetime(filtered_df['price_date'], format='%Y-%m-%d')
 
-                    # Bar chart for main selection
+                    # Bar chart data
                     bar_avg = filtered_df.groupby('price_date')['price'].mean().reset_index()
-                    bar_avg['date_label'] = bar_avg['price_date'].dt.strftime('%b %d')
-                    
-                    bar_avg['day_name'] = bar_avg['price_date'].dt.strftime('%a')
                     bar_avg['week_num'] = bar_avg['price_date'].dt.isocalendar().week
-                    # Create combined label with day and week on separate lines
-                    bar_avg['x_label'] = bar_avg['date_label'] + '<br>' + bar_avg['day_name'] + '<br>Week ' + bar_avg['week_num'].astype(str)
-                    
+                    bar_avg['x_label'] = make_x_label(bar_avg['price_date'])
+
                     price_color_ranges = st.session_state.get('price_color_ranges', get_default_color_ranges()['zone1'])
-                    
                     bar_avg['bar_color'] = bar_avg['price'].apply(
                         lambda x: get_color_from_price_ranges(x, price_color_ranges)
                     )
 
-                    if hotels and line_hotels:
-                        # Line over bar chart
+                    def add_week_annotations(fig, bar_avg):
+                        """Add week label bands below the x-axis spanning the full week."""
+                        x_labels = bar_avg['x_label'].tolist()
+
+                        for week_num, week_group in bar_avg.groupby('week_num'):
+                            x_indices = [x_labels.index(lbl) for lbl in week_group['x_label'] if lbl in x_labels]
+                            if not x_indices:
+                                continue
+
+                            x_start = min(x_indices) - 0.45
+                            x_end = max(x_indices) + 0.45
+                            mid_x = (x_start + x_end) / 2
+                            bg_color = st.get_option("theme.backgroundColor") or "#0e1117"
+
+                            fig.add_shape(
+                                type="rect",
+                                xref="x",
+                                yref="paper",
+                                x0=x_start,
+                                x1=x_end,
+                                y0=-0.27,
+                                y1=-0.18,
+                                fillcolor=bg_color,
+                                line=dict(color="white", width=2),
+                                layer="above"
+                            )
+
+                            fig.add_annotation(
+                                x=mid_x,
+                                y=-0.25,
+                                xref="x",
+                                yref="paper",
+                                text=f"<b>Week {week_num}</b>",
+                                showarrow=False,
+                                font=dict(size=12, color="white"),
+                                align="center",
+                            )
+
+                        return fig
+                    
+                    if 'std_top_value' not in st.session_state:
+                        st.session_state.std_top_value = get_std_top_value()
+                    
+                    show_rates_val = st.session_state.show_rates_pricing
+                    show_std_val = st.session_state.show_std_comparison
+                    std_top = st.session_state.std_top_value    
+
+                    # Build line_avg if line hotels selected
+                    line_avg = None
+                    if line_hotels:
                         line_df = df[df['name'].isin(line_hotels)].copy()
                         line_df['price'] = pd.to_numeric(line_df['price'], errors='coerce')
-
-                        # Pivot table
                         pivot_line = line_df.pivot_table(
-                            index='scrape_date',
-                            columns='price_date',
-                            values='price',
-                            aggfunc='mean'
+                            index='scrape_date', columns='price_date', values='price', aggfunc='mean'
                         )
-
-                        # Get mean across scrape dates
                         line_avg = pivot_line.mean(axis=0).reset_index()
                         line_avg.columns = ['price_date', 'price']
                         line_avg = line_avg.dropna(subset=['price'])
-
-                        # Convert to datetime
                         line_avg['price_date'] = pd.to_datetime(line_avg['price_date'])
+                        line_avg['x_label'] = make_x_label(line_avg['price_date'])
 
-                        # Create x_label for line data
-                        line_avg['date_label'] = line_avg['price_date'].dt.strftime('%b %d')
-                        line_avg['day_name'] = line_avg['price_date'].dt.strftime('%a')
-                        line_avg['week_num'] = line_avg['price_date'].dt.isocalendar().week
-                        line_avg['x_label'] = line_avg['date_label'] + '<br>' + line_avg['day_name'] + '<br>Week ' + line_avg['week_num'].astype(str)
-
-                        # Bar trace with colors
+                    def build_bar_fig(title, show_labels=True, yaxis_range=None):
                         fig = px.bar(
                             bar_avg, x='x_label', y='price',
-                            text='price',
                             labels={'price': 'Average Price (€)', 'x_label': 'Date'},
-                            title='Average Prices with Trend Line'
+                            title=title
                         )
-                        
-                        # Apply custom colors to bars
                         fig.data[0].marker.color = bar_avg['bar_color'].tolist()
 
-                        if st.session_state.show_rates_pricing:
+                        if show_labels:
                             fig.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
                             fig.data[0].textposition = 'outside'
                             fig.data[0].hovertemplate = '<b>%{x}</b><br>Price: €%{y:.2f}<extra></extra>'
                         else:
                             fig.data[0].text = None
                             fig.data[0].textposition = 'none'
-                            fig.data[0].hovertemplate = '<extra></extra>'
+                            fig.data[0].hovertemplate = '<b>%{x}</b><extra></extra>'
 
-                        # Scatter trace
-                        if st.session_state.show_rates_pricing:
+                        # Scatter dots only if line hotels selected AND labels shown
+                        if line_avg is not None and show_labels:
                             for idx, line_row in line_avg.iterrows():
                                 matching_bar = bar_avg[bar_avg['price_date'] == line_row['price_date']]
                                 if not matching_bar.empty:
-                                    x_pos = matching_bar.iloc[0]['x_label']
                                     fig.add_scatter(
-                                        x=[x_pos],
-                                        y=[line_row['price']],
-                                        mode='markers',
-                                        name='Trend',
+                                        x=[matching_bar.iloc[0]['x_label']], y=[line_row['price']],
+                                        mode='markers', name='Trend',
                                         marker=dict(color='red', size=14),
                                         showlegend=(idx == 0),
                                         hovertemplate='<b>Trend</b><br>Price: €%{y:.2f}<extra></extra>'
                                     )
 
-                        if st.session_state.show_rates_pricing:
-                            fig.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="Average Price (€)",
-                                xaxis=dict(tickangle=0),
-                                hovermode='x unified'
-                            )
-                        else:
-                            fig.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="",
-                                xaxis=dict(tickangle=0),
-                                hovermode='x unified',
-                                showlegend=False
-                            )
+                        layout = dict(
+                            height=550,
+                            xaxis_title="",
+                            yaxis_title="Average Price (€)" if show_labels else "",
+                            xaxis=dict(tickangle=0, tickfont=dict(size=11)),
+                            hovermode='x unified',
+                            margin=dict(b=110),
+                            showlegend=show_labels and line_avg is not None
+                        )
+                        if yaxis_range is not None:
+                            layout['yaxis'] = dict(range=[0, yaxis_range])
+
+                        fig.update_layout(**layout)
+
+                        if not show_labels:
                             fig.update_yaxes(showticklabels=False, showgrid=False)
                             fig.update_xaxes(showgrid=False)
-                        st.plotly_chart(fig, use_container_width=True)
 
+                        fig = add_week_annotations(fig, bar_avg)
+                        return fig
+
+                    # All 4 cases handled
+                    if show_rates_val and show_std_val:
+                        st.plotly_chart(build_bar_fig(f'Average Prices Across Selected Hotels', show_labels=True, yaxis_range=std_top), use_container_width=True)
+                    elif show_rates_val and not show_std_val:
+                        st.plotly_chart(build_bar_fig('Average Prices Across Selected Hotels', show_labels=True), use_container_width=True)
+                    elif show_std_val and not show_rates_val:
+                        st.plotly_chart(build_bar_fig(f'Average Prices Across Selected Hotels', show_labels=False, yaxis_range=std_top), use_container_width=True)
                     else:
-                        # Only bar chart if no line hotels selected
-                        fig_bar = px.bar(
-                            bar_avg, x='x_label', y='price',
-                            title='Average Prices Across Selected Hotels'
-                        )
-                        
-                        # Apply custom colors to bars
-                        fig_bar.data[0].marker.color = bar_avg['bar_color'].tolist()
-                        
-                        if st.session_state.show_rates_pricing:
-                            fig_bar.data[0].text = bar_avg['price'].apply(lambda x: f'€{x:.1f}')
-                            fig_bar.data[0].textposition = 'outside'
-                            fig_bar.data[0].hovertemplate = '<b>%{x}</b><br>Price: €%{y:.2f}<extra></extra>'
-                        else:
-                            fig_bar.data[0].text = None
-                            fig_bar.data[0].textposition = 'none'
-                            fig_bar.data[0].hovertemplate = '<extra></extra>'
-                        
-                        if st.session_state.show_rates_pricing:
-                            fig_bar.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="Average Price (€)",
-                                xaxis=dict(tickangle=0)
-                            )
-                        else:
-                            fig_bar.update_layout(
-                                height=500, 
-                                xaxis_title="Date", 
-                                yaxis_title="",
-                                xaxis=dict(tickangle=0),
-                                showlegend=False
-                            )
-                            fig_bar.update_yaxes(showticklabels=False, showgrid=False)
-                            fig_bar.update_xaxes(showgrid=False)
-                        st.plotly_chart(fig_bar, use_container_width=True)
+                        # Both unchecked — bars with no labels (existing behaviour)
+                        st.plotly_chart(build_bar_fig('Average Prices Across Selected Hotels', show_labels=False), use_container_width=True)
                     
                     # Detailed table section
                     st.markdown("### 📋 Detailed Price Matrix")
 
-                    # Create pivot
                     pivot = filtered_df.pivot_table(
                         index=['scrape_date', 'name'], 
                         columns='price_date',
@@ -1226,13 +1276,11 @@ if tab1:
                         aggfunc='mean'
                     )
 
-                    # Format column names
                     pivot.columns = [col.strftime('%Y-%m-%d') if isinstance(col, pd.Timestamp) else col for col in pivot.columns]
                     pivot = pivot.reset_index()
 
                     numeric_cols = [col for col in pivot.columns if col not in ['scrape_date', 'name', 'breakfast_included']]
 
-                    # Add group separators (use None for numeric/boolean)
                     unique_dates = pivot['scrape_date'].unique()
                     if len(unique_dates) > 1:
                         final_pivot = pd.DataFrame()
@@ -1245,7 +1293,6 @@ if tab1:
                                 final_pivot = pd.concat([final_pivot, empty_df], ignore_index=True)
                         pivot = final_pivot
 
-                    # Add average row
                     if numeric_cols:
                         valid_data = pivot[pivot['scrape_date'].notnull()]
                         averages = valid_data[numeric_cols].mean()
@@ -1255,24 +1302,16 @@ if tab1:
                         pivot = pd.concat([pivot, empty_df], ignore_index=True)
 
                         avg_row = {'scrape_date': 'AVERAGE', 'name': 'AVERAGE'}
-
                         for col in numeric_cols:
                             if not pd.isna(averages[col]):
-                                avg_row[col] = round(averages[col], 2)  # round to 2 decimals
+                                avg_row[col] = round(averages[col], 2)
                             else:
                                 avg_row[col] = None
                         avg_df = pd.DataFrame([avg_row])
                         pivot = pd.concat([pivot, avg_df], ignore_index=True)
-                    
-                    # pivot['breakfast_included'] = pivot['breakfast_included'].apply(lambda x: 'Yes' if x else 'No' if x is not None else '')
 
-                    # Build AgGrid
                     gb = GridOptionsBuilder.from_dataframe(pivot)
-
-                    # Pin first 3 columns
                     gb.configure_columns(['scrape_date', 'name'], pinned='left', minWidth=150)
-
-                    # Numeric columns - same width, 2 decimal precision
                     gb.configure_columns(
                         numeric_cols,
                         type=['numericColumn'],
@@ -1280,21 +1319,15 @@ if tab1:
                         minWidth=100,
                         maxWidth=100
                     )
-
-
-                    # Make columns resizable
                     gb.configure_default_column(resizable=True)
-
-                    # Optional: set row height
                     gb.configure_grid_options(rowHeight=35)
-
                     gridOptions = gb.build()
 
                     AgGrid(
                         pivot,
                         gridOptions=gridOptions,
                         height=600,
-                        fit_columns_on_grid_load=False,  # important: don't shrink
+                        fit_columns_on_grid_load=False,
                         enable_enterprise_modules=False,
                     )
                 
@@ -1305,7 +1338,6 @@ if tab1:
                 st.error("❌ No valid price data found")
 
         else:
-            # Welcome screen
             st.markdown("""
             <div style="text-align: center; padding: 3rem; background: #f8f9fa; border-radius: 15px; margin: 2rem 0;">
                 <h2>🎯 Welcome to Hotel Price Analytics</h2>
@@ -1369,7 +1401,6 @@ if tab2:
                         st.session_state.color_ranges = get_color_config_by_name(selected_calendar_preset)
                         st.session_state.last_calendar_preset = selected_calendar_preset
                     
-                    # st.success(f"✅ Loaded: **{selected_calendar_preset}**")
                 else:
                     st.warning(f"⚠️ No color presets for {calendar_location}")
                     st.session_state.color_ranges = get_default_color_ranges()['zone1']
@@ -1377,7 +1408,6 @@ if tab2:
             st.markdown("---")
             calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
 
-        # Load data only when button is clicked
         if calendar_query_button:
             with st.spinner("📊 Generating calendar data..."):
                 
@@ -1394,7 +1424,6 @@ if tab2:
         if 'calendar_data' in st.session_state:
             metrics = st.session_state.calendar_data
             
-            # Initialize with all three metrics
             df_cal_availability = pd.DataFrame({
                 'date': list(metrics['availability'].keys()),
                 'value': list(metrics['availability'].values())
@@ -1410,7 +1439,6 @@ if tab2:
                 'value': list(metrics['free_cancel_avg'].values())
             })
             
-            # Process all data with common date fields
             for df in [df_cal_availability, df_cal_price, df_cal_free_cancel]:
                 df['date'] = pd.to_datetime(df['date'])
                 df['year'] = df['date'].dt.year
@@ -1419,7 +1447,6 @@ if tab2:
                 df['date_str'] = df['date'].dt.strftime('%m/%d/%Y')
                 df['day_num'] = df['date'].dt.dayofweek
             
-            # Get available years and weeks from ALL data
             all_years = sorted(set(
                 list(df_cal_availability['year'].unique()) + 
                 list(df_cal_price['year'].unique()) + 
@@ -1431,7 +1458,6 @@ if tab2:
                 list(df_cal_free_cancel['week'].unique())
             ))
             
-            # Display metric selection
             with st.expander("📊 Display Metric", expanded=True):
                 color_metric = st.selectbox(
                     "Display Metric By",
@@ -1440,7 +1466,6 @@ if tab2:
                     key="color_metric_key"
                 )
             
-            # Filter selections
             col1, col2 = st.columns(2)
             with col1:
                 selected_years = st.multiselect(
@@ -1460,7 +1485,6 @@ if tab2:
             if not selected_years or not selected_weeks:
                 st.error("Please select at least one year and one week")
             else:
-                # Select the appropriate dataframe based on metric for DISPLAY
                 metric_map = {
                     'availability': df_cal_availability,
                     'price_avg': df_cal_price,
@@ -1468,7 +1492,6 @@ if tab2:
                 }
                 df_cal_display = metric_map[color_metric].copy()
                 
-                # Filter by selected years and weeks
                 filtered_cal_display = df_cal_display[
                     (df_cal_display['year'].isin(selected_years)) & 
                     (df_cal_display['week'].isin(selected_weeks))
@@ -1546,504 +1569,355 @@ if tab2:
 if admin_panel:
     with admin_panel:
 
-        # Fetch all users
         try:
             users = table_user.scan().get("Items", [])
         except Exception as e:
             st.error(f"Failed to load users: {e}")
             users = []
 
-                
-        st.markdown("## 📥 Download Login Logs")
-        col1, col2, col3 = st.columns([2, 2, 1])
-        with col1:
-            log_start = st.date_input("Start Date", key="log_start")
+        # ---- 1. Download Login Logs ----
+        with st.expander("📥 Download Login Logs", expanded=False):
+            col1, col2, col3 = st.columns([2, 2, 1])
+            with col1:
+                log_start = st.date_input("Start Date", key="log_start")
+            with col2:
+                log_end = st.date_input("End Date", key="log_end")
+            with col3:
+                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                download_logs = st.button("Download Excel", use_container_width=True)
 
-        with col2:
-            log_end = st.date_input("End Date", key="log_end")
-
-        with col3:
-            st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-            download_logs = st.button("Download Excel", use_container_width=True)
-
-        if download_logs:
-            if log_start > log_end:
-                st.error("Start date must be before end date")
-            else:
-                with st.spinner("Preparing login logs..."):
-                    try:
-                        response = table_logs.scan(
-                            FilterExpression=Attr("login_date").between(
-                                log_start.strftime("%Y-%m-%d"),
-                                log_end.strftime("%Y-%m-%d")
-                            )
-                        )
-
-                        items = response.get("Items", [])
-
-                        while "LastEvaluatedKey" in response:
+            if download_logs:
+                if log_start > log_end:
+                    st.error("Start date must be before end date")
+                else:
+                    with st.spinner("Preparing login logs..."):
+                        try:
                             response = table_logs.scan(
                                 FilterExpression=Attr("login_date").between(
                                     log_start.strftime("%Y-%m-%d"),
                                     log_end.strftime("%Y-%m-%d")
-                                ),
-                                ExclusiveStartKey=response["LastEvaluatedKey"]
-                            )
-                            items.extend(response.get("Items", []))
-
-                        if not items:
-                            st.warning("No login logs found for selected range")
-                        else:
-                            df_logs = pd.DataFrame(items).sort_values(
-                                "login_ts", ascending=False
-                            )
-
-                            buffer = io.BytesIO()
-                            with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-                                df_logs.to_excel(
-                                    writer,
-                                    index=False,
-                                    sheet_name="Login Logs"
                                 )
-
-                            st.download_button(
-                                label="📥 Download Login Logs",
-                                data=buffer.getvalue(),
-                                file_name=f"login_logs_{log_start}_{log_end}.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             )
+                            items = response.get("Items", [])
+                            while "LastEvaluatedKey" in response:
+                                response = table_logs.scan(
+                                    FilterExpression=Attr("login_date").between(
+                                        log_start.strftime("%Y-%m-%d"),
+                                        log_end.strftime("%Y-%m-%d")
+                                    ),
+                                    ExclusiveStartKey=response["LastEvaluatedKey"]
+                                )
+                                items.extend(response.get("Items", []))
 
-                    except Exception as e:
-                        st.error(f"Failed to generate logs: {e}")
+                            if not items:
+                                st.warning("No login logs found for selected range")
+                            else:
+                                df_logs = pd.DataFrame(items).sort_values("login_ts", ascending=False)
+                                buffer = io.BytesIO()
+                                with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+                                    df_logs.to_excel(writer, index=False, sheet_name="Login Logs")
+                                st.download_button(
+                                    label="📥 Download Login Logs",
+                                    data=buffer.getvalue(),
+                                    file_name=f"login_logs_{log_start}_{log_end}.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                )
+                        except Exception as e:
+                            st.error(f"Failed to generate logs: {e}")
 
-        # ================= ADD STAFF ACCOUNT =================
-        st.divider()
-        st.markdown("### ➕ Add Member Account")
+        # ---- 2. Member Accounts ----
+        with st.expander("👥 Member Accounts", expanded=False):
 
-        with st.form("add_staff_form"):
-            new_username = st.text_input("User name")
-            new_password = st.text_input("Password", type="password")
+            st.markdown("#### ➕ Add Member Account")
+            with st.form("add_staff_form"):
+                new_username = st.text_input("User name")
+                new_password = st.text_input("Password", type="password")
+                new_locations = st.multiselect(
+                    "Locations",
+                    ["tampere", "oulu", "rauma", "turku", "jyvaskyla"]
+                )
+                new_boards = st.multiselect(
+                    "Boards Access",
+                    AVAILABLE_BOARDS,
+                    format_func=lambda x: {
+                        "price_dashboard": "📊 Price Dashboard",
+                        "historical_calendar": "📅 Historical Price Calendar"
+                    }.get(x, x)
+                )
+                create_btn = st.form_submit_button("Create account")
 
-            new_locations = st.multiselect(
-                "Locations",
-                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"]
-            )
-            new_boards = st.multiselect(
-                "Boards Access",
-                AVAILABLE_BOARDS,
-                format_func=lambda x: {
-                    "price_dashboard": "📊 Price Dashboard",
-                    "historical_calendar": "📅 Historical Price Calendar"
-                }.get(x, x)
-            )
-            create_btn = st.form_submit_button("Create account")
-
-        if create_btn:
-            if not new_username or not new_password:
-                st.error("Username and password are required")
-            else:
-                try:
-                    existing = table_user.get_item(
-                        Key={"username": new_username}
-                    )
-
-                    if "Item" in existing:
-                        st.error("User already exists")
-                    else:
-                        table_user.put_item(
-                            Item={
+            if create_btn:
+                if not new_username or not new_password:
+                    st.error("Username and password are required")
+                else:
+                    try:
+                        existing = table_user.get_item(Key={"username": new_username})
+                        if "Item" in existing:
+                            st.error("User already exists")
+                        else:
+                            table_user.put_item(Item={
                                 "username": new_username,
                                 "password": new_password,
                                 "access": "basic",
                                 "last_login": "",
                                 "locations": new_locations,
                                 "boards": new_boards
-                            }
-                        )
-                        st.success("Member account created")
-                        st.rerun()
-
-                except Exception as e:
-                    st.error(f"Failed to create user: {e}")
-
-        # ================= EXISTING USERS =================
-        st.divider()
-        st.markdown("## 👥 Member Accounts")
-
-        for user in users:
-            if user.get("access") == "admin":
-                continue  # skip admin accounts
-            col1, col2, col3, col4, col5, col6, col7 = st.columns([2.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5])
-
-            with col1:
-                st.text_input(
-                    "User name",
-                    value=user["username"],
-                    disabled=True,
-                    key=f"username_{user['username']}"
-                )
-
-            with col2:
-                new_password = st.text_input(
-                    "Password",
-                    value=user.get("password", ""),
-                    key=f"password_{user['username']}"
-                )
-
-            with col3:
-                st.text_input(
-                    "Last log in",
-                    value=user.get("last_login", ""),
-                    disabled=True,
-                    key=f"last_login_{user['username']}"
-                )
-            
-            with col4:
-                edit_locations = st.multiselect(
-                    "Locations",
-                    ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
-                    default=user.get("locations", []),
-                    key=f"locations_{user['username']}"
-                )
-
-            with col5:
-                edit_boards = st.multiselect(
-                    "Boards",
-                    AVAILABLE_BOARDS,
-                    default=user.get("boards", []),
-                    format_func=lambda x: {
-                        "price_dashboard": "📊 Price Dashboard",
-                        "historical_calendar": "📅 Historical Price Calendar"
-                    }.get(x, x),
-                    key=f"boards_{user['username']}"
-                )
-
-            with col6:
-                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-                if st.button("Save", key=f"save_{user['username']}"):
-                    try:
-                        table_user.update_item(
-                            Key={"username": user["username"]},
-                            UpdateExpression="SET password = :p, locations = :l, boards = :b",
-                            ExpressionAttributeValues={
-                                ":p": new_password,
-                                ":l": edit_locations,
-                                ":b": edit_boards
-                            }
-                        )
-                        st.success(f"Updated {user['username']}")
-                    except Exception as e:
-                        st.error(f"Failed to update user: {e}")
-
-            with col7:
-                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-                if st.button("Delete", key=f"delete_{user['username']}", use_container_width=True):
-                    # Show confirmation dialog
-                    st.session_state[f"delete_confirm_{user['username']}"] = True
-
-            # Confirmation dialog
-            if st.session_state.get(f"delete_confirm_{user['username']}", False):
-                st.warning(f"⚠️ Are you sure you want to delete user **{user['username']}**? This action cannot be undone.")
-                col_confirm1, col_confirm2, col_confirm3 = st.columns([1, 1, 2])
-                
-                with col_confirm1:
-                    if st.button("✅ Yes, Delete", key=f"confirm_delete_{user['username']}", use_container_width=True):
-                        try:
-                            table_user.delete_item(
-                                Key={"username": user["username"]}
-                            )
-                            st.success(f"User **{user['username']}** has been deleted")
-                            st.session_state[f"delete_confirm_{user['username']}"] = False
-                            time.sleep(1)
+                            })
+                            st.success("Member account created")
                             st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to create user: {e}")
+
+            st.markdown("#### 🟢 Active members")
+            for user in users:
+                if user.get("access") == "admin":
+                    continue
+                col1, col2, col3, col4, col5, col6, col7 = st.columns([2.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5])
+
+                with col1:
+                    st.text_input("User name", value=user["username"], disabled=True, key=f"username_{user['username']}")
+                with col2:
+                    new_password = st.text_input("Password", value=user.get("password", ""), key=f"password_{user['username']}")
+                with col3:
+                    st.text_input("Last log in", value=user.get("last_login", ""), disabled=True, key=f"last_login_{user['username']}")
+                with col4:
+                    edit_locations = st.multiselect(
+                        "Locations",
+                        ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
+                        default=user.get("locations", []),
+                        key=f"locations_{user['username']}"
+                    )
+                with col5:
+                    edit_boards = st.multiselect(
+                        "Boards",
+                        AVAILABLE_BOARDS,
+                        default=user.get("boards", []),
+                        format_func=lambda x: {
+                            "price_dashboard": "📊 Price Dashboard",
+                            "historical_calendar": "📅 Historical Price Calendar"
+                        }.get(x, x),
+                        key=f"boards_{user['username']}"
+                    )
+                with col6:
+                    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                    if st.button("Save", key=f"save_{user['username']}"):
+                        try:
+                            table_user.update_item(
+                                Key={"username": user["username"]},
+                                UpdateExpression="SET password = :p, locations = :l, boards = :b",
+                                ExpressionAttributeValues={
+                                    ":p": new_password,
+                                    ":l": edit_locations,
+                                    ":b": edit_boards
+                                }
+                            )
+                            st.success(f"Updated {user['username']}")
                         except Exception as e:
-                            st.error(f"Failed to delete user: {e}")
-                            st.session_state[f"delete_confirm_{user['username']}"] = False
-                
-                with col_confirm2:
-                    if st.button("❌ Cancel", key=f"cancel_delete_{user['username']}", use_container_width=True):
-                        st.session_state[f"delete_confirm_{user['username']}"] = False
-                        st.rerun()
-                
-                st.divider()
-                
-# ================= COLOR CONFIGURATION MANAGER =================
+                            st.error(f"Failed to update user: {e}")
+                with col7:
+                    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                    if st.button("Delete", key=f"delete_{user['username']}", use_container_width=True):
+                        st.session_state[f"delete_confirm_{user['username']}"] = True
 
-
-        st.divider()
-        st.markdown("## 🎨 Color Configuration Management")
-        
-        try:
-            response = table_color.scan()
-            color_configs = response.get('Items', [])
-            
-            while 'LastEvaluatedKey' in response:
-                response = table_color.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-                color_configs.extend(response.get('Items', []))
-        except Exception as e:
-            st.error(f"Failed to load color configs: {e}")
-            color_configs = []
-        
-        with st.expander("View Existing Configurations", expanded=False):
-            if color_configs:
-                for config in color_configs:
-                    col1, col2, col3, col4, col5, col6, col7 = st.columns([1.5, 2, 2, 2, 1.5, 1, 1])
-                    
-                    with col1:
-                        st.text(f"📝 {config.get('color_config_name', 'N/A')}")
-                    with col2:
-                        locations = ', '.join(config.get('locations', [])[:2])
-                        if len(config.get('locations', [])) > 2:
-                            locations += f" +{len(config['locations'])-2}"
-                        st.text(f"📍 {locations}")
-                    with col3:
-                        dashboards = ', '.join(config.get('dashboards', []))
-                        st.text(f"📊 {dashboards}")
-                    with col4:
-                        num_ranges = len(config.get('ranges', []))
-                        st.text(f"🎨 {num_ranges}")
-                    with col5:
-                        if st.button("✏️ Edit", key=f"edit_config_{config['id']}", use_container_width=True):
-                            st.session_state[f"editing_config_{config['id']}"] = True
-                    with col6:
-                        if st.button("📋", key=f"copy_config_{config['id']}", help="Copy config", use_container_width=True):
-                            st.session_state[f"copy_config_{config['id']}"] = True
-                    with col7:
-                        if st.button("🗑️", key=f"delete_config_{config['id']}", use_container_width=True):
+                if st.session_state.get(f"delete_confirm_{user['username']}", False):
+                    st.warning(f"⚠️ Are you sure you want to delete **{user['username']}**?")
+                    col_c1, col_c2, _ = st.columns([1, 1, 2])
+                    with col_c1:
+                        if st.button("✅ Yes, Delete", key=f"confirm_delete_{user['username']}", use_container_width=True):
                             try:
-                                table_color.delete_item(
-                                    Key={'color_config_name': config['color_config_name']}
-                                )
-                                st.success("Deleted!")
+                                table_user.delete_item(Key={"username": user["username"]})
+                                st.success(f"User **{user['username']}** deleted")
+                                st.session_state[f"delete_confirm_{user['username']}"] = False
                                 time.sleep(1)
                                 st.rerun()
                             except Exception as e:
-                                st.error(f"Failed to delete: {e}")
-                    
-                    if st.session_state.get(f"editing_config_{config['id']}", False):
-                        st.markdown(f"#### ✏️ Edit: {config.get('color_config_name')}")
-                        
-                        with st.form(f"edit_form_{config['id']}"):
-                            edit_config_name = st.text_input(
-                                "Configuration Name",
-                                value=config.get('color_config_name', ''),
-                                key=f"edit_name_{config['id']}"
-                            )
-                            
-                            edit_locations = st.multiselect(
-                                "Locations",
-                                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
-                                default=config.get('locations', []),
-                                key=f"edit_locs_{config['id']}"
-                            )
-                            
-                            edit_dashboards = st.multiselect(
-                                "Dashboards",
-                                ["price_dashboard", "historical_calendar"],
-                                default=config.get('dashboards', []),
-                                key=f"edit_dash_{config['id']}"
-                            )
-                            
-                            st.markdown("**Color Ranges:**")
-                            edit_ranges = []
-                            for idx, r in enumerate(config.get('ranges', [])):
-                                col_a, col_b, col_c = st.columns([2, 2, 2])
-                                with col_a:
-                                    min_val = st.number_input(
-                                        f"Min {idx+1}",
-                                        value=float(r['min_value']),
-                                        key=f"edit_min_{config['id']}_{idx}"
-                                    )
-                                with col_b:
-                                    max_val = st.number_input(
-                                        f"Max {idx+1}",
-                                        value=float(r['max_value']),
-                                        key=f"edit_max_{config['id']}_{idx}"
-                                    )
-                                with col_c:
-                                    color_val = st.color_picker(
-                                        f"Color {idx+1}",
-                                        value=r['color'],
-                                        key=f"edit_col_{config['id']}_{idx}"
-                                    )
-                                edit_ranges.append({
-                                    'min_value': Decimal(str(min_val)),
-                                    'max_value': Decimal(str(max_val)),
-                                    'color': color_val
-                                })
-                            
-                            if st.form_submit_button("💾 Save Changes"):
+                                st.error(f"Failed to delete user: {e}")
+                    with col_c2:
+                        if st.button("❌ Cancel", key=f"cancel_delete_{user['username']}", use_container_width=True):
+                            st.session_state[f"delete_confirm_{user['username']}"] = False
+                            st.rerun()
+                    st.divider()
+
+        # ---- 3. Color Configuration ----
+        with st.expander("🎨 Color Configuration Management", expanded=False):
+
+            try:
+                response = table_color.scan()
+                color_configs = response.get('Items', [])
+                while 'LastEvaluatedKey' in response:
+                    response = table_color.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                    color_configs.extend(response.get('Items', []))
+            except Exception as e:
+                st.error(f"Failed to load color configs: {e}")
+                color_configs = []
+
+            # Use checkbox instead of nested expander
+            if st.checkbox("Show existing configurations", value=False, key="show_existing_configs"):
+                if color_configs:
+                    for config in color_configs:
+                        col1, col2, col3, col4, col5, col6, col7 = st.columns([1.5, 2, 2, 2, 1.5, 1, 1])
+                        with col1: st.text(f"📝 {config.get('color_config_name', 'N/A')}")
+                        with col2:
+                            locations = ', '.join(config.get('locations', [])[:2])
+                            if len(config.get('locations', [])) > 2:
+                                locations += f" +{len(config['locations'])-2}"
+                            st.text(f"📍 {locations}")
+                        with col3: st.text(f"📊 {', '.join(config.get('dashboards', []))}")
+                        with col4: st.text(f"🎨 {len(config.get('ranges', []))}")
+                        with col5:
+                            if st.button("✏️ Edit", key=f"edit_config_{config['id']}", use_container_width=True):
+                                st.session_state[f"editing_config_{config['id']}"] = True
+                        with col6:
+                            if st.button("📋", key=f"copy_config_{config['id']}", use_container_width=True):
+                                st.session_state[f"copy_config_{config['id']}"] = True
+                        with col7:
+                            if st.button("🗑️", key=f"delete_config_{config['id']}", use_container_width=True):
                                 try:
-                                    table_color.delete_item(
-                                        Key={'color_config_name': config['color_config_name']}
-                                    )
-                                    
-                                    # Create new config with updated values
-                                    new_item = {
-                                        'id': config['id'],  # Keep same ID
-                                        'color_config_name': edit_config_name,
-                                        'locations': edit_locations,
-                                        'dashboards': edit_dashboards,
-                                        'ranges': edit_ranges,
-                                        'created_at': config.get('created_at', datetime.now().isoformat()),
-                                        'created_by': config.get('created_by', 'admin')
-                                    }
-                                    
-                                    table_color.put_item(Item=new_item)
-                                    st.success("Configuration updated!")
-                                    st.session_state[f"editing_config_{config['id']}"] = False
+                                    table_color.delete_item(Key={'color_config_name': config['color_config_name']})
+                                    st.success("Deleted!")
                                     time.sleep(1)
                                     st.rerun()
                                 except Exception as e:
-                                    st.error(f"Failed to update: {e}")
-                    
-                    st.divider()
-            else:
-                st.info("No color configurations found")
-        
-        st.markdown("### Create New Color Configuration")
-        
-        default_color = [
-            {'min_value': 0.0, 'max_value': 124.99, 'color': '#08306b'},
-            {'min_value': 125.0, 'max_value': 134.99, 'color': '#2171b5'},
-            {'min_value': 135.0, 'max_value': 144.99, 'color': '#a2cff8'},
-            {'min_value': 145.0, 'max_value': 154.99, 'color': '#ffffff'},
-            {'min_value': 155.0, 'max_value': 164.99, 'color': '#ffa0a0'},
-            {'min_value': 165.0, 'max_value': 199.99, 'color': '#f86868'},
-            {'min_value': 200.0, 'max_value': 249.99, 'color': '#d81919'},
-            {'min_value': 250.0, 'max_value': 999999.0, 'color': '#000000'}
-        ]
-        
-        if 'form_color_ranges' not in st.session_state:
-            st.session_state.form_color_ranges = default_color
-        
-        
-        with st.form("color_config_form"):
-            st.markdown("#### Configuration Details")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                color_config_name = st.text_input(
-                    "Configuration Name (Unique)",
-                    value="Default",
-                    key="config_name"
-                )
-            
-            with col2:
-                st.markdown("")
-            
-            st.markdown("#### Locations")
-            selected_locations = st.multiselect(
-                "Select Locations",
-                ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
-                default=["tampere"],
-                key="config_locations"
-            )
-            
-            st.markdown("#### Dashboard Types")
-            selected_dashboards = st.multiselect(
-                "Select Dashboard Types",
-                ["price_dashboard", "historical_calendar"],
-                default=["price_dashboard"],
-                key="config_dashboards"
-            )
-            
-            st.markdown("#### Color Ranges")
-            st.info("Define ranges from lowest to highest values")
-            
-            ranges_to_save = []
-            for idx, color_range in enumerate(st.session_state.form_color_ranges):
-                col_min, col_max, col_color = st.columns([2, 2, 2])
-                
-                with col_min:
-                    min_val = st.number_input(
-                        f"Min Value {idx+1}",
-                        value=float(color_range['min_value']),
-                        step=0.01,
-                        key=f"form_min_{idx}"
-                    )
-                
-                with col_max:
-                    max_val = st.number_input(
-                        f"Max Value {idx+1}",
-                        value=float(color_range['max_value']),
-                        step=0.01,
-                        key=f"form_max_{idx}"
-                    )
-                
-                with col_color:
-                    color_val = st.color_picker(
-                        f"Color {idx+1}",
-                        value=color_range['color'],
-                        key=f"form_color_{idx}"
-                    )
-                
-                ranges_to_save.append({
-                    'min_value': Decimal(str(min_val)),
-                    'max_value': Decimal(str(max_val)),
-                    'color': color_val
-                })
-            
-            st.divider()
-            submit_config = st.form_submit_button("💾 Save Configuration", use_container_width=True, type="primary")
+                                    st.error(f"Failed to delete: {e}")
 
-        col_range_control, col_reset = st.columns([3, 1])
+                        if st.session_state.get(f"editing_config_{config['id']}", False):
+                            st.markdown(f"#### ✏️ Edit: {config.get('color_config_name')}")
+                            with st.form(f"edit_form_{config['id']}"):
+                                edit_config_name = st.text_input("Configuration Name", value=config.get('color_config_name', ''), key=f"edit_name_{config['id']}")
+                                edit_locations = st.multiselect("Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla"], default=config.get('locations', []), key=f"edit_locs_{config['id']}")
+                                edit_dashboards = st.multiselect("Dashboards", ["price_dashboard", "historical_calendar"], default=config.get('dashboards', []), key=f"edit_dash_{config['id']}")
+                                st.markdown("**Color Ranges:**")
+                                edit_ranges = []
+                                for idx, r in enumerate(config.get('ranges', [])):
+                                    ca, cb, cc = st.columns([2, 2, 2])
+                                    with ca: min_val = st.number_input(f"Min {idx+1}", value=float(r['min_value']), key=f"edit_min_{config['id']}_{idx}")
+                                    with cb: max_val = st.number_input(f"Max {idx+1}", value=float(r['max_value']), key=f"edit_max_{config['id']}_{idx}")
+                                    with cc: color_val = st.color_picker(f"Color {idx+1}", value=r['color'], key=f"edit_col_{config['id']}_{idx}")
+                                    edit_ranges.append({
+                                        'min_value': Decimal(str(min_val)),
+                                        'max_value': Decimal(str(max_val)),
+                                        'color': color_val
+                                    })
+                                if st.form_submit_button("💾 Save Changes"):
+                                    try:
+                                        table_color.delete_item(Key={'color_config_name': config['color_config_name']})
+                                        table_color.put_item(Item={
+                                            'id': config['id'],
+                                            'color_config_name': edit_config_name,
+                                            'locations': edit_locations,
+                                            'dashboards': edit_dashboards,
+                                            'ranges': edit_ranges,
+                                            'created_at': config.get('created_at', datetime.now().isoformat()),
+                                            'created_by': config.get('created_by', 'admin')
+                                        })
+                                        st.success("Configuration updated!")
+                                        st.session_state[f"editing_config_{config['id']}"] = False
+                                        time.sleep(1)
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Failed to update: {e}")
+                        st.divider()
+                else:
+                    st.info("No color configurations found")
 
-        with col_range_control:
-            col_add, col_remove, col_info = st.columns([1, 1, 2])
-            
-            with col_add:
-                if st.button("Add Range", use_container_width=True):
-                    st.session_state.form_color_ranges.append({
-                        'min_value': 0.0,
-                        'max_value': 100.0,
-                        'color': '#667eea'
-                    })
-                    st.rerun()
-            
-            with col_remove:
-                if st.button("Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
-                    if len(st.session_state.form_color_ranges) > 1:
-                        st.session_state.form_color_ranges.pop()
-                        st.rerun()
-            
-            with col_info:
-                st.info(f"Ranges: {len(st.session_state.form_color_ranges)}")
-        
-        with col_reset:
-            if st.button("Reset", use_container_width=True):
+            st.markdown("### Create New Color Configuration")
+
+            default_color = [
+                {'min_value': 0.0, 'max_value': 124.99, 'color': '#08306b'},
+                {'min_value': 125.0, 'max_value': 134.99, 'color': '#2171b5'},
+                {'min_value': 135.0, 'max_value': 144.99, 'color': '#a2cff8'},
+                {'min_value': 145.0, 'max_value': 154.99, 'color': '#ffffff'},
+                {'min_value': 155.0, 'max_value': 164.99, 'color': '#ffa0a0'},
+                {'min_value': 165.0, 'max_value': 199.99, 'color': '#f86868'},
+                {'min_value': 200.0, 'max_value': 249.99, 'color': '#d81919'},
+                {'min_value': 250.0, 'max_value': 999999.0, 'color': '#000000'}
+            ]
+
+            if 'form_color_ranges' not in st.session_state:
                 st.session_state.form_color_ranges = default_color
-                st.rerun()
-        
-        
-        if submit_config:
-            if not color_config_name or not selected_locations or not selected_dashboards:
-                st.error("Configuration name, locations, and dashboard types are required")
-            else:
-                try:
-                    new_id = str(uuid.uuid4())
-                    
-                    new_item = {
-                        'id': new_id,
-                        'color_config_name': color_config_name,
-                        'locations': selected_locations,
-                        'dashboards': selected_dashboards,
-                        'ranges': ranges_to_save,
-                        'created_at': datetime.now().isoformat(),
-                        'created_by': st.session_state.get('authenticated_user', 'admin')
-                    }
-                    
-                    table_color.put_item(Item=new_item)
-                    
-                    st.success(f"✅ Configuration '{color_config_name}' saved!")
-                    st.info(f"📍 Locations: {', '.join(selected_locations)}")
-                    st.info(f"📊 Dashboards: {', '.join(selected_dashboards)}")
-                    
+
+            with st.form("color_config_form"):
+                st.markdown("#### Configuration Details")
+                col1, col2 = st.columns(2)
+                with col1:
+                    color_config_name = st.text_input("Configuration Name (Unique)", value="Default", key="config_name")
+                with col2:
+                    st.markdown("")
+                selected_locations = st.multiselect("Select Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla"], default=["tampere"], key="config_locations")
+                selected_dashboards = st.multiselect("Select Dashboard Types", ["price_dashboard", "historical_calendar"], default=["price_dashboard"], key="config_dashboards")
+                st.markdown("#### Color Ranges")
+                st.info("Define ranges from lowest to highest values")
+                ranges_to_save = []
+                for idx, color_range in enumerate(st.session_state.form_color_ranges):
+                    col_min, col_max, col_color = st.columns([2, 2, 2])
+                    with col_min: min_val = st.number_input(f"Min Value {idx+1}", value=float(color_range['min_value']), step=0.01, key=f"form_min_{idx}")
+                    with col_max: max_val = st.number_input(f"Max Value {idx+1}", value=float(color_range['max_value']), step=0.01, key=f"form_max_{idx}")
+                    with col_color: color_val = st.color_picker(f"Color {idx+1}", value=color_range['color'], key=f"form_color_{idx}")
+                    ranges_to_save.append({
+                        'min_value': Decimal(str(min_val)),
+                        'max_value': Decimal(str(max_val)),
+                        'color': color_val
+                    })
+                st.divider()
+                submit_config = st.form_submit_button("💾 Save Configuration", use_container_width=True, type="primary")
+
+            col_range_control, col_reset = st.columns([3, 1])
+            with col_range_control:
+                col_add, col_remove, col_info = st.columns([1, 1, 2])
+                with col_add:
+                    if st.button("Add Range", use_container_width=True):
+                        st.session_state.form_color_ranges.append({'min_value': 0.0, 'max_value': 100.0, 'color': '#667eea'})
+                        st.rerun()
+                with col_remove:
+                    if st.button("Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
+                        if len(st.session_state.form_color_ranges) > 1:
+                            st.session_state.form_color_ranges.pop()
+                            st.rerun()
+                with col_info:
+                    st.info(f"Ranges: {len(st.session_state.form_color_ranges)}")
+            with col_reset:
+                if st.button("Reset", use_container_width=True):
                     st.session_state.form_color_ranges = default_color
-                    
-                    time.sleep(2)
                     st.rerun()
-                    
-                except Exception as e:
-                    st.error(f"Failed to save configuration: {e}")
+
+            if submit_config:
+                if not color_config_name or not selected_locations or not selected_dashboards:
+                    st.error("Configuration name, locations, and dashboard types are required")
+                else:
+                    try:
+                        table_color.put_item(Item={
+                            'id': str(uuid.uuid4()),
+                            'color_config_name': color_config_name,
+                            'locations': selected_locations,
+                            'dashboards': selected_dashboards,
+                            'ranges': ranges_to_save,
+                            'created_at': datetime.now().isoformat(),
+                            'created_by': st.session_state.get('authenticated_user', 'admin')
+                        })
+                        st.success(f"✅ Configuration '{color_config_name}' saved!")
+                        st.session_state.form_color_ranges = default_color
+                        time.sleep(2)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to save configuration: {e}")
+
+        # ---- 4. Standardized Comparison Configuration ----
+        with st.expander("📊 Standardized Comparison Configuration", expanded=False):
+            st.caption("Average price top value - Price dashboard")
+
+            if 'std_top_value' not in st.session_state:
+                st.session_state.std_top_value = get_std_top_value()
+
+            new_top_val = st.number_input(
+                "Top value",
+                value=int(st.session_state.std_top_value),
+                min_value=50,
+                step=50,
+                key="std_top_number_input",
+                label_visibility="collapsed"
+            )
+            st.session_state.std_top_value = int(new_top_val)
+
+            if st.button("💾 Save for all users", key="std_save_btn", use_container_width=True, type="primary"):
+                if save_std_top_value(st.session_state.std_top_value):
+                    st.success(f"✅ Saved! All users will see max €{st.session_state.std_top_value}")
