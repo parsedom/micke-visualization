@@ -32,6 +32,8 @@ BOARD_LABELS = {
     "historical_calendar": "📅 Historical Price Calender",
 }
 
+ALL_LOCATIONS = ["tampere", "oulu", "rauma", "turku", "jyvaskyla","vaasa","seinajoki"]
+
 # ==================== CONFIGURATION & CONSTANTS ====================
 ZONE1_HOTELS = [
     "Courtyard Tampere City",
@@ -167,6 +169,110 @@ table_user = dynamodb.Table('MickeUser')
 table_color = dynamodb.Table('micke_color_config')
 table_logs = dynamodb.Table('MickeLoginLogs')
 table_config = dynamodb.Table('MickeAppConfig')
+table_zones = dynamodb.Table('MickeZones')
+
+# ==================== ZONE HELPER FUNCTIONS ====================
+
+@st.cache_data(ttl=60)
+def get_zones_for_location(location: str) -> list:
+    """
+    Return all zones for a given location sorted by sort_order → zone_name.
+    PK format: "zone_name#location" — we scan and filter by the location attribute.
+    Cached 60 s to avoid hammering DynamoDB on every widget interaction.
+    """
+    try:
+        response = table_zones.scan(FilterExpression=Attr('location').eq(location))
+        items = response.get('Items', [])
+        while 'LastEvaluatedKey' in response:
+            response = table_zones.scan(
+                FilterExpression=Attr('location').eq(location),
+                ExclusiveStartKey=response['LastEvaluatedKey']
+            )
+            items.extend(response.get('Items', []))
+    except Exception as e:
+        st.warning(f"Could not load zones for {location}: {e}")
+        return []
+
+    items.sort(key=lambda x: (int(x.get('sort_order', 9999)), x.get('zone_name', '')))
+    return items
+
+
+@st.cache_data(ttl=60)
+def get_all_zones() -> list:
+    """Return every zone row sorted by location → sort_order → zone_name."""
+    try:
+        response = table_zones.scan()
+        items = response.get('Items', [])
+        while 'LastEvaluatedKey' in response:
+            response = table_zones.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+            items.extend(response.get('Items', []))
+        items.sort(key=lambda x: (x.get('location', ''),
+                                   int(x.get('sort_order', 9999)),
+                                   x.get('zone_name', '')))
+        return items
+    except Exception as e:
+        st.warning(f"Could not load zones: {e}")
+        return []
+
+
+# def _make_zone_pk(zone_name: str, location: str) -> str:
+#     """Build the partition key string: 'zone_name#location'."""
+#     return f"{zone_name}#{location}"
+
+
+def save_zone(zone_name: str, location: str, hotels: list, sort_order: int = 0) -> bool:
+    """
+    Upsert a zone. PK = "zone_name#location" (single partition key, no sort key).
+    Storing zone_name and location as separate attributes too so we can filter/display them.
+    Clears cache after saving so the UI reflects the change immediately.
+    """
+    try:
+        table_zones.put_item(Item={
+            'zone_name#location': f"{zone_name}#{location}",
+            'zone_name':  zone_name,
+            'location':   location,
+            'hotels':     hotels,
+            'updated_at': datetime.now().isoformat()
+        })
+        get_zones_for_location.clear()
+        get_all_zones.clear()
+        return True
+    except Exception as e:
+        st.error(f"Failed to save zone: {e}")
+        return False
+
+
+def delete_zone(zone_name: str, location: str) -> bool:
+    """Delete a zone using its PK: 'zone_name#location'."""
+    try:
+        table_zones.delete_item(Key={'zone_name#location': f"{zone_name}#{location}"})
+        get_zones_for_location.clear()
+        get_all_zones.clear()
+        return True
+    except Exception as e:
+        st.error(f"Failed to delete zone: {e}")
+        return False
+
+
+def _resolve_zone_hotels(zone_name: str, location: str) -> list:
+    """
+    Fetch hotel list for a zone from DynamoDB using PK 'zone_name#location'.
+    Falls back to legacy hardcoded lists for backward-compat
+    (existing sessions that stored "zone1"/"zone2" etc. still work).
+    """
+    try:
+        resp = table_zones.get_item(Key={'zone_name#location': f"{zone_name}#{location}"})
+        item = resp.get('Item')
+        if item:
+            return item.get('hotels', [])
+    except Exception:
+        pass
+    # Legacy fallback
+    legacy = {
+        'zone1': ZONE1_HOTELS, 'zone2': ZONE2_HOTELS,
+        'zone3': ZONE3_HOTELS, 'alert': Alert_Comparison
+    }
+    return legacy.get(zone_name, ZONE1_HOTELS)
     
 # ==================== COLOR CONFIGURATION FUNCTIONS ====================
 
@@ -263,7 +369,7 @@ def check_password():
                 st.session_state["access"] = user.get("access", "user")
                 if user.get("access") == "admin":
                     st.session_state["boards"] = AVAILABLE_BOARDS
-                    st.session_state["locations"] = ["tampere", "oulu", "rauma", "turku", "jyvaskyla"]
+                    st.session_state["locations"] = ["tampere", "oulu", "rauma", "turku", "jyvaskyla","vaasa","seinajoki"]
                 else:
                     st.session_state["boards"] = user.get("boards", [])
                     st.session_state["locations"] = user.get("locations", [])
@@ -999,40 +1105,42 @@ if tab1:
                         st.session_state.multiselect_key = 0
                     
                     st.markdown("**Quick Selection:**")
-                    col_bt1, col_bt2, col_bt3, col_bt4, col_bt5, col_bt6 = st.columns(6)
-                    
-                    with col_bt1:
+                    location_zones = get_zones_for_location(location)
+                    COLS_PER_ROW   = 6
+                    total_btns     = 2 + len(location_zones)   # "Select All" + "Clear All" + N zones
+                    btn_row        = st.columns(min(COLS_PER_ROW, total_btns))
+                    btn_idx        = 0
+
+                    # Select All (fixed, always first)
+                    with btn_row[btn_idx % COLS_PER_ROW]:
                         if st.button("✅ Select All", key="select_all_btn", use_container_width=True):
-                            st.session_state.selected_hotels = unique_hotels
+                            st.session_state.selected_hotels = list(unique_hotels)
                             st.session_state.multiselect_key += 1
-                    
-                    with col_bt2:
-                        if st.button("🌍 Zone 1", key="select_zone1_btn", use_container_width=True):
-                            available_zone1 = [hotel for hotel in ZONE1_HOTELS if hotel in unique_hotels]
-                            st.session_state.selected_hotels = available_zone1
-                            st.session_state.multiselect_key += 1
-                    
-                    with col_bt3:
-                        if st.button("🏙️ Zone 2", key="select_zone2_btn", use_container_width=True):
-                            available_zone2 = [hotel for hotel in ZONE2_HOTELS if hotel in unique_hotels]
-                            st.session_state.selected_hotels = available_zone2
-                            st.session_state.multiselect_key += 1
-                    
-                    with col_bt4:
-                        if st.button("🚩 Zone 3", key="select_zone3_btn", use_container_width=True):
-                            available_zone3 = [hotel for hotel in ZONE3_HOTELS if hotel in unique_hotels]
-                            st.session_state.selected_hotels = available_zone3
-                            st.session_state.multiselect_key += 1
-                    
-                    with col_bt5:
-                        if st.button("🚨 Alerts", key="select_alert_comp_btn", use_container_width=True):
-                            available_comp = [hotel for hotel in Alert_Comparison if hotel in unique_hotels]
-                            st.session_state.selected_hotels = available_comp
-                            st.session_state.multiselect_key += 1
-                    with col_bt6:
+                    btn_idx += 1
+
+                    # Clear All (fixed, always second)
+                    with btn_row[btn_idx % COLS_PER_ROW]:
                         if st.button("❌ Clear All", key="clear_all_btn", use_container_width=True):
                             st.session_state.selected_hotels = []
                             st.session_state.multiselect_key += 1
+                    btn_idx += 1
+
+                    # One button per DB zone
+                    for zone in location_zones:
+                        z_name   = zone.get('zone_name', 'Zone')
+                        z_hotels = zone.get('hotels', [])
+                        # Unique key: zone_name + location prevents collisions across locations
+                        btn_key  = f"zone_btn_{z_name}__{zone.get('location','')}"
+
+                        if btn_idx > 0 and btn_idx % COLS_PER_ROW == 0:
+                            btn_row = st.columns(COLS_PER_ROW)   # start a new row
+
+                        with btn_row[btn_idx % COLS_PER_ROW]:
+                            if st.button(z_name, key=btn_key, use_container_width=True):
+                                st.session_state.selected_hotels = [h for h in z_hotels if h in unique_hotels]
+                                st.session_state.multiselect_key += 1
+                        btn_idx += 1
+
                     
                     default_hotels = [h for h in st.session_state.selected_hotels if h in unique_hotels]
 
@@ -1046,45 +1154,17 @@ if tab1:
                     st.session_state.selected_hotels = hotels
 
                 with col2:
-                    total_hotels = len(unique_hotels)
-                    st.metric("Total Hotels", total_hotels)
-                    
-                    available_zone1 = len([h for h in ZONE1_HOTELS if h in unique_hotels])
-                    if available_zone1 > 0:
-                        st.metric("🌍 Zone 1 Available", available_zone1)
-
-                    available_zone2 = len([h for h in ZONE2_HOTELS if h in unique_hotels])
-                    if available_zone2 > 0:
-                        st.metric("🏙️ Zone 2 Available", available_zone2)
-
-                    available_zone3 = len([h for h in ZONE3_HOTELS if h in unique_hotels])
-                    if available_zone3 > 0:
-                        st.metric("🚩 Zone 3 Available", available_zone3)
-                    
-                    available_comp = len([h for h in Alert_Comparison if h in unique_hotels])
-                    if available_comp > 0:
-                        st.metric("🚨Alert Comparison hotels Available", available_comp)
+                    st.metric("Total Hotels", len(unique_hotels))
+                    for zone in location_zones:
+                        cnt = len([h for h in zone.get('hotels',[]) if h in unique_hotels])
+                        if cnt > 0: st.metric(f"{zone['zone_name']} Available", cnt)
 
                 with col3:
                     if hotels:
-                        selected_count = len(hotels)
-                        st.metric("Selected", selected_count)
-                        
-                        zone1_selected = len([h for h in hotels if h in ZONE1_HOTELS])
-                        if zone1_selected > 0:
-                            st.metric("🌍 Zone 1 Selected", zone1_selected)
-
-                        zone2_selected = len([h for h in hotels if h in ZONE2_HOTELS])
-                        if zone2_selected > 0:
-                            st.metric("🏙️ Zone 2 Selected", zone2_selected)
-
-                        zone3_selected = len([h for h in hotels if h in ZONE3_HOTELS])
-                        if zone3_selected > 0:
-                            st.metric("🚩 Zone 3 Selected", zone3_selected)
-                        
-                        comp_selected = len([h for h in hotels if h in Alert_Comparison])
-                        if comp_selected > 0:
-                            st.metric("🚨Alert Comparison hotels Selected", comp_selected)
+                        st.metric("Selected", len(hotels))
+                        for zone in location_zones:
+                            cnt = len([h for h in zone.get('hotels',[]) if h in hotels])
+                            if cnt > 0: st.metric(f"{zone['zone_name']} Selected", cnt)
 
                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -1359,28 +1439,29 @@ if tab2:
         
         with st.sidebar:
             st.markdown("### 📅 Calendar Configuration")
-            
-            with st.expander("📍 Zone Selection", expanded=True):
-                zone_selection = st.selectbox(
-                    "Select Zone",
-                    ["zone1", "zone2", "zone3", "alert"],
-                    format_func=lambda x: {"zone1": "🌍 Zone 1", "zone2": "🏙️ Zone 2", "zone3": "🚩 Zone 3", "alert": "🚨 Alert Comparison"}.get(x),
-                    key="zone_selection_key"
-                )
+
+            with st.expander("📍 Location & Zone Selection", expanded=True):
+                allowed_locations  = st.session_state.get("locations", [])
+                cal_allowed        = [l for l in allowed_locations if l == "tampere"] or allowed_locations
+                calendar_location  = st.selectbox("Select Location", cal_allowed,
+                                                   index=0 if cal_allowed else None,
+                                                   key="calendar_location_key")
+                # Build zone dropdown from DB for the selected location
+                cal_zones = get_zones_for_location(calendar_location) if calendar_location else []
+                if cal_zones:
+                    zone_selection = st.selectbox(
+                        "Select Zone",
+                        [z['zone_name'] for z in cal_zones],
+                        key="zone_selection_key"
+                    )
+                else:
+                    st.warning(f"⚠️ No zones found for {calendar_location}")
             
             with st.expander("📅 Date Range", expanded=True):
                 calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
                 calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
 
-            with st.expander("📍 Location Selection", expanded=True):
-                allowed_locations = st.session_state.get("locations", [])
-                allowed_locations = ["tampere"] if "tampere" in allowed_locations else []
-                calendar_location = st.selectbox(
-                    "Select Location",
-                    allowed_locations,
-                    index=0 if allowed_locations else None,
-                    key="calendar_location_key"
-                )
+            
             
             with st.expander("🎨 Color Configuration", expanded=True):
                 st.info("💡 Select a color preset for this location")
@@ -1634,7 +1715,7 @@ if admin_panel:
                 new_password = st.text_input("Password", type="password")
                 new_locations = st.multiselect(
                     "Locations",
-                    ["tampere", "oulu", "rauma", "turku", "jyvaskyla"]
+                    ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"]
                 )
                 new_boards = st.multiselect(
                     "Boards Access",
@@ -1683,7 +1764,7 @@ if admin_panel:
                 with col4:
                     edit_locations = st.multiselect(
                         "Locations",
-                        ["tampere", "oulu", "rauma", "turku", "jyvaskyla"],
+                        ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"],
                         default=user.get("locations", []),
                         key=f"locations_{user['username']}"
                     )
@@ -1784,7 +1865,7 @@ if admin_panel:
                             st.markdown(f"#### ✏️ Edit: {config.get('color_config_name')}")
                             with st.form(f"edit_form_{config['id']}"):
                                 edit_config_name = st.text_input("Configuration Name", value=config.get('color_config_name', ''), key=f"edit_name_{config['id']}")
-                                edit_locations = st.multiselect("Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla"], default=config.get('locations', []), key=f"edit_locs_{config['id']}")
+                                edit_locations = st.multiselect("Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"], default=config.get('locations', []), key=f"edit_locs_{config['id']}")
                                 edit_dashboards = st.multiselect("Dashboards", ["price_dashboard", "historical_calendar"], default=config.get('dashboards', []), key=f"edit_dash_{config['id']}")
                                 st.markdown("**Color Ranges:**")
                                 edit_ranges = []
@@ -1843,7 +1924,7 @@ if admin_panel:
                     color_config_name = st.text_input("Configuration Name (Unique)", value="Default", key="config_name")
                 with col2:
                     st.markdown("")
-                selected_locations = st.multiselect("Select Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla"], default=["tampere"], key="config_locations")
+                selected_locations = st.multiselect("Select Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"], default=["tampere"], key="config_locations")
                 selected_dashboards = st.multiselect("Select Dashboard Types", ["price_dashboard", "historical_calendar"], default=["price_dashboard"], key="config_dashboards")
                 st.markdown("#### Color Ranges")
                 st.info("Define ranges from lowest to highest values")
@@ -1921,3 +2002,95 @@ if admin_panel:
             if st.button("💾 Save for all users", key="std_save_btn", use_container_width=True, type="primary"):
                 if save_std_top_value(st.session_state.std_top_value):
                     st.success(f"✅ Saved! All users will see max €{st.session_state.std_top_value}")
+        
+        # ---- 3. Zone Management ────────────────────────────────────────────
+        with st.expander("🗺️ Zone Management", expanded=False):
+            # ── Create New Zone ──────────────────────────────────────────────
+            st.markdown("#### ➕ Create New Zone")
+            with st.form("create_zone_form"):
+                zf1, zf2 = st.columns([2, 2])
+                with zf1: new_zone_name     = st.text_input("Zone Display Name", placeholder="e.g. Zone 1 City Center")
+                with zf2: new_zone_location = st.selectbox("Location", ALL_LOCATIONS, key="new_zone_loc_sel")
+                new_zone_hotels_raw = st.text_area("Hotels (one per line)", height=200,
+                                                    placeholder="Scandic Tampere City\nSolo Sokos Hotel Torni Tampere\n...")
+                create_zone_btn = st.form_submit_button("💾 Create Zone", type="primary", use_container_width=True)
+
+            if create_zone_btn:
+                if not new_zone_name.strip():
+                    st.error("Zone name is required")
+                else:
+                    hotels_list = [h.strip() for h in new_zone_hotels_raw.splitlines() if h.strip()]
+                    if save_zone(new_zone_name.strip(), new_zone_location, hotels_list):
+                        st.success(f"✅ Zone '{new_zone_name}' created for {new_zone_location} with {len(hotels_list)} hotels!")
+                        time.sleep(1); st.rerun()
+
+            st.markdown("---")
+
+            # ── Existing Zones ───────────────────────────────────────────────
+            st.markdown("#### 📋 Existing Zones")
+            filter_loc = st.selectbox("Filter by location", ["All"] + ALL_LOCATIONS, key="zone_admin_filter_loc")
+            all_zones     = get_all_zones()
+            display_zones = [z for z in all_zones if filter_loc == "All" or z.get('location') == filter_loc]
+
+            if not display_zones:
+                st.info("No zones found. Create one above.")
+            else:
+                for zone in display_zones:
+                    z_name = zone['zone_name']
+                    z_loc  = zone['location']
+                    # State keys use BOTH parts of the composite PK to guarantee uniqueness
+                    sk = f"{z_name}__{z_loc}"
+
+                    lc, ec, dc = st.columns([5, 1, 1])
+                    with lc:
+                        st.markdown(f"**{z_name}** · `{z_loc}` · {len(zone.get('hotels',[]))} hotels")
+                    with ec:
+                        if st.button("✏️ Edit", key=f"zone_edit_{sk}", use_container_width=True):
+                            st.session_state[f"zone_editing_{sk}"] = not st.session_state.get(f"zone_editing_{sk}", False)
+                    with dc:
+                        if st.button("🗑️", key=f"zone_del_{sk}", use_container_width=True):
+                            st.session_state[f"zone_del_confirm_{sk}"] = True
+
+                    # Delete confirmation
+                    if st.session_state.get(f"zone_del_confirm_{sk}", False):
+                        st.warning(f"⚠️ Delete **{z_name}** (`{z_loc}`)?")
+                        yd, nd, _ = st.columns([1, 1, 3])
+                        with yd:
+                            if st.button("✅ Yes", key=f"zone_del_yes_{sk}", use_container_width=True):
+                                if delete_zone(z_name, z_loc):
+                                    st.success("Zone deleted")
+                                    st.session_state[f"zone_del_confirm_{sk}"] = False
+                                    time.sleep(1); st.rerun()
+                        with nd:
+                            if st.button("❌ Cancel", key=f"zone_del_no_{sk}", use_container_width=True):
+                                st.session_state[f"zone_del_confirm_{sk}"] = False; st.rerun()
+
+                    # Inline edit form
+                    if st.session_state.get(f"zone_editing_{sk}", False):
+                        with st.form(f"edit_zone_form_{sk}"):
+                            st.markdown(f"##### ✏️ Editing: **{z_name}** (`{z_loc}`)")
+                            st.caption(
+                                "⚠️ Changing Zone Name or Location changes the PK (`zone_name#location`). "
+                                "The old record will be deleted and a new one created automatically."
+                            )
+                            ef1, ef2 = st.columns([2, 2])
+                            with ef1: edit_z_name  = st.text_input("Zone Name",   value=z_name, key=f"ez_name_{sk}")
+                            with ef2: edit_z_loc   = st.selectbox("Location", ALL_LOCATIONS,
+                                                                    index=ALL_LOCATIONS.index(z_loc) if z_loc in ALL_LOCATIONS else 0,
+                                                                    key=f"ez_loc_{sk}")
+                            edit_hotels_raw = st.text_area("Hotels (one per line)",
+                                                            value="\n".join(zone.get('hotels',[])),
+                                                            height=250, key=f"ez_hotels_{sk}")
+                            save_edit_btn = st.form_submit_button("💾 Save Changes", type="primary", use_container_width=True)
+
+                        if save_edit_btn:
+                            edited_hotels = [h.strip() for h in edit_hotels_raw.splitlines() if h.strip()]
+                            key_changed   = (edit_z_name.strip() != z_name) or (edit_z_loc != z_loc)
+                            if key_changed:
+                                delete_zone(z_name, z_loc)   # remove old composite key first
+                            if save_zone(edit_z_name.strip(), edit_z_loc, edited_hotels):
+                                st.success("✅ Zone updated!")
+                                st.session_state[f"zone_editing_{sk}"] = False
+                                time.sleep(1); st.rerun()
+
+                    st.divider()
