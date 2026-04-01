@@ -14,6 +14,16 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 import io
 import time
 import uuid
+import email as _email_mod
+import email.mime.multipart
+import email.mime.text
+import email.mime.base
+import email.encoders as _enc
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+import smtplib
+from email.message import EmailMessage
 
 st.set_page_config(
     page_title="Hotel Booking Dashboard",
@@ -24,12 +34,14 @@ st.set_page_config(
 
 AVAILABLE_BOARDS = [
     "price_dashboard",
-    "historical_calendar"
+    "historical_calendar",
+    "matrix_automation",
 ]
-
+ 
 BOARD_LABELS = {
-    "price_dashboard": "📊 Price Dashboard",
-    "historical_calendar": "📅 Historical Price Calender",
+    "price_dashboard":    "📊 Price Dashboard",
+    "historical_calendar":"📅 Historical Price Calendar",
+    "matrix_automation":  "📤 Matrix Automation",
 }
 
 ALL_LOCATIONS = ["tampere", "oulu", "rauma", "turku", "jyvaskyla","vaasa","seinajoki"]
@@ -170,6 +182,7 @@ table_color = dynamodb.Table('micke_color_config')
 table_logs = dynamodb.Table('MickeLoginLogs')
 table_config = dynamodb.Table('MickeAppConfig')
 table_zones = dynamodb.Table('MickeZones')
+table_emails = dynamodb.Table('MickeEmailList') 
 
 # ==================== ZONE HELPER FUNCTIONS ====================
 
@@ -273,6 +286,46 @@ def _resolve_zone_hotels(zone_name: str, location: str) -> list:
         'zone3': ZONE3_HOTELS, 'alert': Alert_Comparison
     }
     return legacy.get(zone_name, ZONE1_HOTELS)
+
+## ==================== EMAIL CONFIGURATION FUNCTIONS ====================
+
+@st.cache_data(ttl=30)
+def get_saved_emails() -> list:
+    """Return all saved email addresses from the global list, sorted."""
+    try:
+        resp  = table_emails.scan()
+        items = resp.get('Items', [])
+        while 'LastEvaluatedKey' in resp:
+            resp   = table_emails.scan(ExclusiveStartKey=resp['LastEvaluatedKey'])
+            items.extend(resp.get('Items', []))
+        return sorted([i['email'] for i in items if i.get('email')])
+    except Exception as e:
+        st.warning(f"Could not load email list: {e}")
+        return []
+ 
+ 
+def save_email(email_address: str) -> bool:
+    try:
+        table_emails.put_item(Item={
+            'email':      email_address.strip().lower(),
+            'added_at':   datetime.now().isoformat(),
+            'added_by':   st.session_state.get('authenticated_user', 'admin'),
+        })
+        get_saved_emails.clear()
+        return True
+    except Exception as e:
+        st.error(f"Failed to save email: {e}")
+        return False
+ 
+ 
+def delete_email(email_address: str) -> bool:
+    try:
+        table_emails.delete_item(Key={'email': email_address})
+        get_saved_emails.clear()
+        return True
+    except Exception as e:
+        st.error(f"Failed to delete email: {e}")
+        return False
     
 # ==================== COLOR CONFIGURATION FUNCTIONS ====================
 
@@ -909,7 +962,230 @@ def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", l
         metrics['availability'][pdate] = zone1_avail_pct
     
     return metrics
+
+def _query_matrix_data(location: str, persons: int, time_val: str,
+                        start_date, days_forward: int) -> list:
+    """
+    Query HotelPrices for a single persons/time combo.
+    - scrape_date = start_date (same day the user picks)
+    - checkin window = start_date → start_date + days_forward - 1
+    - nights = 1
+    - No breakfast/cancellation filter — returns all rows
+    """
+    scraped_date_str = start_date.strftime("%Y-%m-%d")
+
+    end_date      = start_date + timedelta(days=days_forward - 1)
+    checkin_start = start_date.strftime("%Y-%m-%d")
+    checkin_end   = end_date.strftime("%Y-%m-%d")
+
+    pk = f"{location}#{persons}#1#{time_val}"
+
+    key_cond    = (
+        Key("location#persons#nights#time").eq(pk) &
+        Key("scraped_date#hotel_id#checkin_date#checkout_date")
+            .between(f"{scraped_date_str}#", f"{scraped_date_str}~")
+    )
+    filter_expr = Attr("checkin_date").between(checkin_start, checkin_end)
+
+    items = []
+    try:
+        resp = table.query(KeyConditionExpression=key_cond,
+                           FilterExpression=filter_expr)
+        items.extend(resp["Items"])
+        while "LastEvaluatedKey" in resp:
+            resp = table.query(
+                KeyConditionExpression=key_cond,
+                FilterExpression=filter_expr,
+                ExclusiveStartKey=resp["LastEvaluatedKey"]
+            )
+            items.extend(resp["Items"])
+    except Exception as e:
+        st.error(f"DynamoDB query error: {e}")
+
+    return [
+        {
+            "name":               item.get("hotel_name", ""),
+            "price":              item.get("price", 0),
+            "checkin_date":       item.get("checkin_date", ""),
+            "hotel_url":          item.get("hotel_url", ""),
+            "review_score":       item.get("review_score", ""),
+            "city":               item.get("city", ""),
+            "distance":           item.get("distance", ""),
+            "breakfast_included": item.get("breakfast_included", False),
+            "free_cancellation":  item.get("free_cancellation", False),
+            "persons":            persons,
+        }
+        for item in items
+    ]
+ 
+def _build_excel_matrix(df: pd.DataFrame, zone_name: str, location: str,
+                         persons_list: list) -> bytes:
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Price Matrix"
+
+    hdr_font   = Font(bold=True, color="000000", name="Arial", size=9)
+    hotel_font = Font(bold=True, name="Arial", size=9)
+    data_font  = Font(name="Arial", size=9)
+    url_font   = Font(name="Arial", size=9, color="0563C1", underline="single")
+
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left   = Alignment(horizontal="left", vertical="center")
+
+    thin = Side(style="thin", color="CCCCCC")
+    brd  = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    META_COLS = ["URL", "Name", "Review Score", "City", "Distance",
+                 "Breakfast Included", "Free Cancellation"]
+    n_meta = len(META_COLS)
+
+    df = df.copy()
+    df["row_id"] = (
+        df["name"].astype(str) + " | " +
+        df["breakfast_included"].astype(str) + " | " +
+        df["free_cancellation"].astype(str)
+    )
+
+    all_dates  = sorted(df["checkin_date"].unique())
+    col_labels = [datetime.strptime(d, "%Y-%m-%d").strftime("%d/%m/%Y")
+                  for d in all_dates]
+
+    all_headers = META_COLS + col_labels
+    n_total     = len(all_headers)
+
+    for ci, label in enumerate(all_headers, start=1):
+        cell = ws.cell(row=1, column=ci, value=label)
+        cell.font = hdr_font
+        cell.alignment = center
+        cell.border = brd
+
+    ws.row_dimensions[1].height = 28
+
+    for ci, w in enumerate([45, 38, 12, 14, 22, 18, 18], start=1):
+        ws.column_dimensions[get_column_letter(ci)].width = w
+    for ci in range(n_meta + 1, n_total + 1):
+        ws.column_dimensions[get_column_letter(ci)].width = 12
+
+    current_row = 2
+
+    for persons in sorted(persons_list):
+        p_df = df[df["persons"] == persons].copy()
+
+        ordered = sorted(p_df["row_id"].unique())
+
+        meta_lookup = (
+            p_df.drop_duplicates(subset=["row_id"])
+                .set_index("row_id")[["hotel_url", "review_score", "city",
+                                      "distance", "breakfast_included",
+                                      "free_cancellation"]]
+                .to_dict("index")
+        )
+
+        pivot = p_df.pivot_table(
+            index="row_id", columns="checkin_date",
+            values="price", aggfunc="first"
+        )
+
+        for row_id in ordered:
+            meta  = meta_lookup.get(row_id, {})
+            hotel = row_id.split(" | ")[0]
+
+            url = meta.get("hotel_url", "")
+            uc  = ws.cell(row=current_row, column=1, value=url)
+            if url:
+                uc.hyperlink = url
+                uc.font = url_font
+            else:
+                uc.font = data_font
+            uc.alignment = left
+            uc.border = brd
+
+            nc = ws.cell(row=current_row, column=2, value=hotel)
+            nc.font = hotel_font
+            nc.alignment = left
+            nc.border = brd
+
+            rv = meta.get("review_score", "")
+            rc = ws.cell(row=current_row, column=3,
+                         value=float(rv) if rv else "")
+            rc.font = data_font
+            rc.alignment = center
+            rc.border = brd
+
+            cc = ws.cell(row=current_row, column=4, value=meta.get("city", ""))
+            cc.font = data_font
+            cc.alignment = left
+            cc.border = brd
+
+            dc = ws.cell(row=current_row, column=5, value=meta.get("distance", ""))
+            dc.font = data_font
+            dc.alignment = left
+            dc.border = brd
+
+            bc = ws.cell(row=current_row, column=6,
+                         value=str(meta.get("breakfast_included", False)))
+            bc.font = data_font
+            bc.alignment = center
+            bc.border = brd
+
+            fc = ws.cell(row=current_row, column=7,
+                         value=str(meta.get("free_cancellation", False)))
+            fc.font = data_font
+            fc.alignment = center
+            fc.border = brd
+
+            for col_offset, date_str in enumerate(all_dates):
+                col_num = n_meta + col_offset + 1
+                try:
+                    val = pivot.loc[row_id, date_str]
+                    if pd.isna(val):
+                        raise KeyError
+                    pc = ws.cell(row=current_row, column=col_num,
+                                 value=round(float(val), 1))
+                    pc.number_format = "0.0"
+                except (KeyError, TypeError):
+                    pc = ws.cell(row=current_row, column=col_num, value="")
+
+                pc.font = data_font
+                pc.alignment = center
+                pc.border = brd
+
+            current_row += 1
+
+    ws.freeze_panes = f"{get_column_letter(n_meta + 1)}2"
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+ 
+ 
+def _send_matrix_email(recipients: list, subject: str, body: str,
+                        xlsx_bytes: bytes, filename: str):
+    """Send Excel matrix as attachment via Gmail SMTP."""
     
+
+    sender_email   = st.secrets["GMAIL_SENDER"]   
+    sender_password = st.secrets["GMAIL_APP_PASSWORD"] 
+
+    msg            = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"]    = sender_email
+    msg["To"]      = ", ".join(recipients)
+    msg.set_content(body)
+
+    msg.add_attachment(
+        xlsx_bytes,
+        maintype="application",
+        subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=filename
+    )
+
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)    
+
+
 def get_color_from_availability(value, min_val, max_val):
     """Generate color based on value (green for high, red for low)."""
     if max_val == min_val:
@@ -927,34 +1203,35 @@ def get_color_from_availability(value, min_val, max_val):
     return f"rgb({int(r)}, {int(g)}, {int(b)})"
 
 # ==================== PAGE NAVIGATION ====================
-boards = st.session_state.get("boards", [])
-
-tabs = [
-    BOARD_LABELS[b]
-    for b in AVAILABLE_BOARDS
-    if b in boards
-]
-
-if st.session_state.get("access") == "admin":
-    tabs.append("🛠️ Admin Panel")
-
-created_tabs = st.tabs(tabs)
-
-tab1 = tab2 = admin_panel = None
+boards   = st.session_state.get("boards", [])
+is_admin = st.session_state.get("access") == "admin"
+ 
+tab_labels = []
+for b in AVAILABLE_BOARDS:
+    if b == "matrix_automation":
+        if is_admin:                              # admin-only tab
+            tab_labels.append(BOARD_LABELS[b])
+    elif b in boards:
+        tab_labels.append(BOARD_LABELS[b])
+ 
+if is_admin:
+    tab_labels.append("🛠️ Admin Panel")
+ 
+created_tabs = st.tabs(tab_labels)
+ 
+tab1 = tab2 = tab_matrix = admin_panel = None
 tab_index = 0
-
+ 
 if "price_dashboard" in boards:
-    tab1 = created_tabs[tab_index]
-    tab_index += 1
-
+    tab1 = created_tabs[tab_index]; tab_index += 1
+ 
 if "historical_calendar" in boards:
-    tab2 = created_tabs[tab_index]
-    tab_index += 1
-
-if st.session_state.get("access") == "admin":
+    tab2 = created_tabs[tab_index]; tab_index += 1
+ 
+if is_admin:
+    tab_matrix  = created_tabs[tab_index]; tab_index += 1
     admin_panel = created_tabs[tab_index]
 
-# Initialize color ranges in session state (do this near the top of your app)
 
 # ==================== TAB 1: PRICE DASHBOARD ====================
 if tab1:
@@ -1647,6 +1924,234 @@ if tab2:
         else:
             st.info("👈 Configure settings and click 'Load Calendar Data' to begin")
 
+if tab_matrix:
+    with tab_matrix:
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("""
+            <div class="main-header">
+                <h1>📤 Matrix Automation</h1>
+                <p>Generate and email hotel price matrices on demand</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+            <div class="user-info">
+                <p><strong>👤 Logged in as:</strong><br>
+                {st.session_state.get('authenticated_user', 'Unknown')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("🚪 Logout", key="matrix_logout",
+                         type="secondary", use_container_width=True):
+                logout()
+
+        st.markdown("### ⚙️ Configuration")
+        fc1, fc2, fc3 = st.columns(3)
+
+        with fc1:
+            st.markdown("**📍 Location & Zone**")
+            mx_location = st.selectbox("Location", ALL_LOCATIONS, key="mx_location")
+            mx_zones_raw = get_zones_for_location(mx_location)
+            if mx_zones_raw:
+                mx_zone = st.selectbox(
+                    "Zone",
+                    [z["zone_name"] for z in mx_zones_raw],
+                    key="mx_zone"
+                )
+            else:
+                st.warning(
+                    f"No zones for **{mx_location}**. "
+                    "Create one in Admin → Zone Management."
+                )
+                mx_zone = ""
+
+        with fc2:
+            st.markdown("**📅 Date & Query Options**")
+            mx_start = st.date_input(
+                "Start Date", value=datetime.today(), key="mx_start",
+                help="First check-in date to include. Scrape date = this date."
+            )
+            mx_days = st.number_input(
+                "Days Forward",
+                min_value=1, max_value=365, value=365,
+                step=1, key="mx_days"
+            )
+            mx_time = st.selectbox(
+                "Scrape Time",
+                ["morning", "evening"],
+                key="mx_time",
+                help="Morning = AM scrape, Evening = PM scrape."
+            )
+            mx_persons = st.selectbox(
+                "Persons",
+                [1, 2],
+                index=1,
+                key="mx_persons",
+                format_func=lambda x: f"{x} Person{'s' if x > 1 else ''}"
+            )
+
+        with fc3:
+            st.markdown("**📧 Email Recipients**")
+            saved_emails = get_saved_emails()
+            if saved_emails:
+                mx_selected_emails = st.multiselect(
+                    "Select from saved emails",
+                    options=saved_emails,
+                    key="mx_email_select"
+                )
+            else:
+                st.info("No saved emails yet — add them in Admin → Email Management.")
+                mx_selected_emails = []
+
+            mx_extra_emails_raw = st.text_area(
+                "Extra recipients (one per line)",
+                placeholder="extra@example.com",
+                height=80,
+                key="mx_extra_emails"
+            )
+
+        st.markdown("---")
+        mx_run = st.button(
+            "🚀 Generate & Send Matrix",
+            type="primary",
+            use_container_width=True,
+            key="mx_run_btn"
+        )
+
+        if mx_run:
+            extra_emails   = [e.strip() for e in mx_extra_emails_raw.splitlines()
+                               if e.strip()]
+            all_recipients = list(dict.fromkeys(mx_selected_emails + extra_emails))
+
+            errs = []
+            if not mx_zone:
+                errs.append("Select a zone.")
+            if not all_recipients:
+                errs.append("Add at least one email recipient.")
+            for err in errs:
+                st.error(err)
+
+            if not errs:
+                start_dt = datetime(mx_start.year, mx_start.month, mx_start.day)
+
+                # ── Step 1: Query DynamoDB ────────────────────────────────
+                with st.status("🔍 Querying hotel prices…", expanded=True) as status:
+                    all_rows = []
+                    st.write(
+                        f"  › {mx_persons} person{'s' if mx_persons > 1 else ''} "
+                        f"/ {mx_time} scrape …"
+                    )
+                    rows = _query_matrix_data(
+                        location=mx_location,
+                        persons=mx_persons,
+                        time_val=mx_time,
+                        start_date=start_dt,
+                        days_forward=int(mx_days)
+                    )
+                    all_rows.extend(rows)
+                    st.write(f"    ✓ {len(rows):,} records")
+                    status.update(
+                        label=f"✅ {len(all_rows):,} records fetched",
+                        state="complete"
+                    )
+
+                if not all_rows:
+                    st.error(
+                        "❌ No data found for the selected scrape date and options. "
+                        "Check the scraper has run on this date for this location and time."
+                    )
+                else:
+                    df_raw = pd.DataFrame(all_rows)
+                    df_raw["price"] = pd.to_numeric(df_raw["price"], errors="coerce")
+                    df_raw = df_raw.dropna(subset=["price"])
+
+                    # ── Step 2: Filter by zone ────────────────────────────
+                    zone_hotels       = _resolve_zone_hotels(mx_zone, mx_location)
+                    df_zone           = df_raw[df_raw["name"].isin(zone_hotels)].copy()
+                    total_zone_hotels = len(zone_hotels)
+                    found_hotels      = df_zone["name"].nunique()
+
+                    st.info(
+                        f"🏨 **{found_hotels} / {total_zone_hotels}** zone hotels "
+                        f"have data.  "
+                        f"Total price records: **{len(df_zone):,}**."
+                    )
+
+                    if df_zone.empty:
+                        st.error(
+                            "❌ None of the zone hotels have data "
+                            "for the selected scrape date."
+                        )
+                    else:
+                        # ── Step 3: Build Excel ───────────────────────────
+                        with st.spinner("📊 Building Excel matrix…"):
+                            xlsx_bytes = _build_excel_matrix(
+                                df=df_zone,
+                                zone_name=mx_zone,
+                                location=mx_location,
+                                persons_list=[mx_persons],
+                            )
+
+                        persons_str = f"{mx_persons}p"
+                        filename    = (
+                            f"price_matrix_{mx_location}_"
+                            f"{mx_zone.replace(' ', '_')}_"
+                            f"{mx_start.strftime('%Y%m%d')}_"
+                            f"{mx_time}.xlsx"
+                        )
+                        subject = (
+                            f"Hotel Price Matrix – {mx_location.title()} | "
+                            f"{mx_zone} | {persons_str} | "
+                            f"{mx_time.title()} | "
+                            f"{mx_start.strftime('%d/%m/%Y')}"
+                        )
+                        body = (
+                            f"Please find attached the hotel price matrix.\n\n"
+                            f"Location  : {mx_location.title()}\n"
+                            f"Zone      : {mx_zone}\n"
+                            f"Persons   : {persons_str}\n"
+                            f"Scrape    : {mx_time}\n"
+                            f"Start date: {mx_start.strftime('%d/%m/%Y')}\n"
+                            f"Days fwd  : {int(mx_days)}\n"
+                            f"Hotels    : {found_hotels} of "
+                            f"{total_zone_hotels} in zone\n"
+                            f"Generated : "
+                            f"{datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+                            f"Sent from the Hotel Dashboard."
+                        )
+
+                        # ── Step 4: Send email ────────────────────────────
+                        with st.spinner(
+                            f"📧 Sending to {len(all_recipients)} recipient(s)…"
+                        ):
+                            try:
+                                _send_matrix_email(
+                                    recipients=all_recipients,
+                                    subject=subject,
+                                    body=body,
+                                    xlsx_bytes=xlsx_bytes,
+                                    filename=filename
+                                )
+                                st.success(
+                                    f"✅ Matrix emailed to: "
+                                    f"**{', '.join(all_recipients)}**"
+                                )
+                            except Exception as email_err:
+                                st.error(f"❌ Email send failed: {email_err}")
+                                st.warning("Download the file below.")
+
+                        # Always offer local download as fallback
+                        st.download_button(
+                            label="⬇️ Download Matrix Excel",
+                            data=xlsx_bytes,
+                            file_name=filename,
+                            mime=(
+                                "application/vnd.openxmlformats-"
+                                "officedocument.spreadsheetml.sheet"
+                            ),
+                            use_container_width=True
+                        )
+
 if admin_panel:
     with admin_panel:
 
@@ -1722,7 +2227,8 @@ if admin_panel:
                     AVAILABLE_BOARDS,
                     format_func=lambda x: {
                         "price_dashboard": "📊 Price Dashboard",
-                        "historical_calendar": "📅 Historical Price Calendar"
+                        "historical_calendar": "📅 Historical Price Calendar",
+                        "matrix_automation": "📤 Matrix Automation"
                     }.get(x, x)
                 )
                 create_btn = st.form_submit_button("Create account")
@@ -1749,10 +2255,12 @@ if admin_panel:
                     except Exception as e:
                         st.error(f"Failed to create user: {e}")
 
+            # ── Active members ────────────────────────────────────────────
             st.markdown("#### 🟢 Active members")
             for user in users:
                 if user.get("access") == "admin":
                     continue
+
                 col1, col2, col3, col4, col5, col6, col7 = st.columns([2.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5])
 
                 with col1:
@@ -1775,7 +2283,8 @@ if admin_panel:
                         default=user.get("boards", []),
                         format_func=lambda x: {
                             "price_dashboard": "📊 Price Dashboard",
-                            "historical_calendar": "📅 Historical Price Calendar"
+                            "historical_calendar": "📅 Historical Price Calendar",
+                            "matrix_automation": "📤 Matrix Automation"
                         }.get(x, x),
                         key=f"boards_{user['username']}"
                     )
@@ -1819,6 +2328,44 @@ if admin_panel:
                             st.rerun()
                     st.divider()
 
+            # ── Admin accounts ────────────────────────────────────────────
+            st.markdown("---")
+            st.markdown("#### 🔐 Admin Accounts")
+            st.caption("Change admin password here. Admin accounts cannot be deleted.")
+
+            for user in users:
+                if user.get("access") != "admin":
+                    continue
+
+                ac1, ac2, ac3 = st.columns([3, 3, 1])
+                with ac1:
+                    st.text_input(
+                        "Username",
+                        value=user["username"],
+                        disabled=True,
+                        key=f"admin_username_{user['username']}"
+                    )
+                with ac2:
+                    admin_new_pw = st.text_input(
+                        "Password",
+                        value=user.get("password", ""),
+                        type="password",
+                        key=f"admin_password_{user['username']}"
+                    )
+                with ac3:
+                    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+                    if st.button("Save", key=f"admin_save_{user['username']}", use_container_width=True):
+                        try:
+                            table_user.update_item(
+                                Key={"username": user["username"]},
+                                UpdateExpression="SET password = :p",
+                                ExpressionAttributeValues={":p": admin_new_pw}
+                            )
+                            st.success(f"✅ Password updated for **{user['username']}**")
+                        except Exception as e:
+                            st.error(f"Failed to update: {e}")
+                st.divider()
+
         # ---- 3. Color Configuration ----
         with st.expander("🎨 Color Configuration Management", expanded=False):
 
@@ -1832,10 +2379,13 @@ if admin_panel:
                 st.error(f"Failed to load color configs: {e}")
                 color_configs = []
 
-            # Use checkbox instead of nested expander
+            # ---- EXISTING CONFIGS ----
             if st.checkbox("Show existing configurations", value=False, key="show_existing_configs"):
                 if color_configs:
                     for config in color_configs:
+                        cid = config["id"]
+                        state_key = f"edit_ranges_{cid}"
+
                         col1, col2, col3, col4, col5, col6, col7 = st.columns([1.5, 2, 2, 2, 1.5, 1, 1])
                         with col1: st.text(f"📝 {config.get('color_config_name', 'N/A')}")
                         with col2:
@@ -1845,14 +2395,32 @@ if admin_panel:
                             st.text(f"📍 {locations}")
                         with col3: st.text(f"📊 {', '.join(config.get('dashboards', []))}")
                         with col4: st.text(f"🎨 {len(config.get('ranges', []))}")
+
                         with col5:
-                            if st.button("✏️ Edit", key=f"edit_config_{config['id']}", use_container_width=True):
-                                st.session_state[f"editing_config_{config['id']}"] = True
+                            if st.button("✏️ Edit", key=f"edit_config_{cid}", use_container_width=True):
+                                st.session_state[f"editing_config_{cid}"] = True
+
                         with col6:
-                            if st.button("📋", key=f"copy_config_{config['id']}", use_container_width=True):
-                                st.session_state[f"copy_config_{config['id']}"] = True
+                            if st.button("📋", key=f"copy_config_{cid}", use_container_width=True):
+                                try:
+                                    new_name = f"{config['color_config_name']}_copy"
+                                    table_color.put_item(Item={
+                                        'id': str(uuid.uuid4()),
+                                        'color_config_name': new_name,
+                                        'locations': config.get('locations', []),
+                                        'dashboards': config.get('dashboards', []),
+                                        'ranges': config.get('ranges', []),
+                                        'created_at': datetime.now().isoformat(),
+                                        'created_by': st.session_state.get('authenticated_user', 'admin')
+                                    })
+                                    st.success(f"Copied as '{new_name}'")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to copy: {e}")
+
                         with col7:
-                            if st.button("🗑️", key=f"delete_config_{config['id']}", use_container_width=True):
+                            if st.button("🗑️", key=f"delete_config_{cid}", use_container_width=True):
                                 try:
                                     table_color.delete_item(Key={'color_config_name': config['color_config_name']})
                                     st.success("Deleted!")
@@ -1861,46 +2429,110 @@ if admin_panel:
                                 except Exception as e:
                                     st.error(f"Failed to delete: {e}")
 
-                        if st.session_state.get(f"editing_config_{config['id']}", False):
+                        # ---- EDIT MODE ----
+                        if st.session_state.get(f"editing_config_{cid}", False):
+
+                            if state_key not in st.session_state:
+                                st.session_state[state_key] = [
+                                    {
+                                        'min_value': float(r['min_value']),
+                                        'max_value': float(r['max_value']),
+                                        'color': r['color']
+                                    }
+                                    for r in config.get('ranges', [])
+                                ]
+
                             st.markdown(f"#### ✏️ Edit: {config.get('color_config_name')}")
-                            with st.form(f"edit_form_{config['id']}"):
-                                edit_config_name = st.text_input("Configuration Name", value=config.get('color_config_name', ''), key=f"edit_name_{config['id']}")
-                                edit_locations = st.multiselect("Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"], default=config.get('locations', []), key=f"edit_locs_{config['id']}")
-                                edit_dashboards = st.multiselect("Dashboards", ["price_dashboard", "historical_calendar"], default=config.get('dashboards', []), key=f"edit_dash_{config['id']}")
-                                st.markdown("**Color Ranges:**")
-                                edit_ranges = []
-                                for idx, r in enumerate(config.get('ranges', [])):
-                                    ca, cb, cc = st.columns([2, 2, 2])
-                                    with ca: min_val = st.number_input(f"Min {idx+1}", value=float(r['min_value']), key=f"edit_min_{config['id']}_{idx}")
-                                    with cb: max_val = st.number_input(f"Max {idx+1}", value=float(r['max_value']), key=f"edit_max_{config['id']}_{idx}")
-                                    with cc: color_val = st.color_picker(f"Color {idx+1}", value=r['color'], key=f"edit_col_{config['id']}_{idx}")
-                                    edit_ranges.append({
-                                        'min_value': Decimal(str(min_val)),
-                                        'max_value': Decimal(str(max_val)),
-                                        'color': color_val
-                                    })
-                                if st.form_submit_button("💾 Save Changes"):
-                                    try:
-                                        table_color.delete_item(Key={'color_config_name': config['color_config_name']})
-                                        table_color.put_item(Item={
-                                            'id': config['id'],
-                                            'color_config_name': edit_config_name,
-                                            'locations': edit_locations,
-                                            'dashboards': edit_dashboards,
-                                            'ranges': edit_ranges,
-                                            'created_at': config.get('created_at', datetime.now().isoformat()),
-                                            'created_by': config.get('created_by', 'admin')
-                                        })
-                                        st.success("Configuration updated!")
-                                        st.session_state[f"editing_config_{config['id']}"] = False
-                                        time.sleep(1)
+
+                            edit_ranges = []
+
+                            for idx, r in enumerate(st.session_state[state_key]):
+                                ca, cb, cc, cd = st.columns([2, 2, 2, 1])
+
+                                with ca:
+                                    min_val = st.number_input(
+                                        f"Min {idx+1}",
+                                        value=float(r['min_value']),
+                                        key=f"edit_min_{cid}_{idx}"
+                                    )
+
+                                with cb:
+                                    max_val = st.number_input(
+                                        f"Max {idx+1}",
+                                        value=float(r['max_value']),
+                                        key=f"edit_max_{cid}_{idx}"
+                                    )
+
+                                with cc:
+                                    color_val = st.color_picker(
+                                        f"Color {idx+1}",
+                                        value=r['color'],
+                                        key=f"edit_col_{cid}_{idx}"
+                                    )
+
+                                with cd:
+                                    if st.button("❌", key=f"remove_{cid}_{idx}"):
+                                        st.session_state[state_key].pop(idx)
                                         st.rerun()
-                                    except Exception as e:
-                                        st.error(f"Failed to update: {e}")
+
+                                edit_ranges.append({
+                                    'min_value': Decimal(str(min_val)),
+                                    'max_value': Decimal(str(max_val)),
+                                    'color': color_val
+                                })
+
+                            col_a, col_b = st.columns(2)
+
+                            with col_a:
+                                if st.button("➕ Add Range", key=f"add_{cid}"):
+                                    st.session_state[state_key].append({
+                                        'min_value': 0.0,
+                                        'max_value': 100.0,
+                                        'color': '#ffffff'
+                                    })
+                                    st.rerun()
+
+                            with col_b:
+                                if st.button("Reset", key=f"reset_{cid}"):
+                                    st.session_state[state_key] = [
+                                        {
+                                            'min_value': float(r['min_value']),
+                                            'max_value': float(r['max_value']),
+                                            'color': r['color']
+                                        }
+                                        for r in config.get('ranges', [])
+                                    ]
+                                    st.rerun()
+
+                            edit_config_name = st.text_input("Configuration Name", value=config.get('color_config_name', ''), key=f"name_{cid}")
+                            edit_locations = st.multiselect("Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"], default=config.get('locations', []), key=f"loc_{cid}")
+                            edit_dashboards = st.multiselect("Dashboards", ["price_dashboard", "historical_calendar"], default=config.get('dashboards', []), key=f"dash_{cid}")
+
+                            if st.button("💾 Save Changes", key=f"save_{cid}"):
+                                try:
+                                    table_color.delete_item(Key={'color_config_name': config['color_config_name']})
+                                    table_color.put_item(Item={
+                                        'id': cid,
+                                        'color_config_name': edit_config_name,
+                                        'locations': edit_locations,
+                                        'dashboards': edit_dashboards,
+                                        'ranges': edit_ranges,
+                                        'created_at': config.get('created_at', datetime.now().isoformat()),
+                                        'created_by': config.get('created_by', 'admin')
+                                    })
+                                    st.session_state[f"editing_config_{cid}"] = False
+                                    st.session_state.pop(state_key, None)
+                                    st.success("Configuration updated!")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to update: {e}")
+
                         st.divider()
                 else:
                     st.info("No color configurations found")
 
+            # ---- CREATE NEW CONFIG ----
             st.markdown("### Create New Color Configuration")
 
             default_color = [
@@ -1917,70 +2549,62 @@ if admin_panel:
             if 'form_color_ranges' not in st.session_state:
                 st.session_state.form_color_ranges = default_color
 
-            with st.form("color_config_form"):
-                st.markdown("#### Configuration Details")
-                col1, col2 = st.columns(2)
-                with col1:
-                    color_config_name = st.text_input("Configuration Name (Unique)", value="Default", key="config_name")
-                with col2:
-                    st.markdown("")
-                selected_locations = st.multiselect("Select Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"], default=["tampere"], key="config_locations")
-                selected_dashboards = st.multiselect("Select Dashboard Types", ["price_dashboard", "historical_calendar"], default=["price_dashboard"], key="config_dashboards")
-                st.markdown("#### Color Ranges")
-                st.info("Define ranges from lowest to highest values")
-                ranges_to_save = []
-                for idx, color_range in enumerate(st.session_state.form_color_ranges):
-                    col_min, col_max, col_color = st.columns([2, 2, 2])
-                    with col_min: min_val = st.number_input(f"Min Value {idx+1}", value=float(color_range['min_value']), step=0.01, key=f"form_min_{idx}")
-                    with col_max: max_val = st.number_input(f"Max Value {idx+1}", value=float(color_range['max_value']), step=0.01, key=f"form_max_{idx}")
-                    with col_color: color_val = st.color_picker(f"Color {idx+1}", value=color_range['color'], key=f"form_color_{idx}")
-                    ranges_to_save.append({
-                        'min_value': Decimal(str(min_val)),
-                        'max_value': Decimal(str(max_val)),
-                        'color': color_val
-                    })
-                st.divider()
-                submit_config = st.form_submit_button("💾 Save Configuration", use_container_width=True, type="primary")
+            color_config_name = st.text_input("Configuration Name", value="Default", key="config_name")
+            selected_locations = st.multiselect("Locations", ["tampere", "oulu", "rauma", "turku", "jyvaskyla", "vaasa", "seinajoki"], default=["tampere"])
+            selected_dashboards = st.multiselect("Dashboards", ["price_dashboard", "historical_calendar"], default=["price_dashboard"])
 
-            col_range_control, col_reset = st.columns([3, 1])
-            with col_range_control:
-                col_add, col_remove, col_info = st.columns([1, 1, 2])
-                with col_add:
-                    if st.button("Add Range", use_container_width=True):
-                        st.session_state.form_color_ranges.append({'min_value': 0.0, 'max_value': 100.0, 'color': '#667eea'})
-                        st.rerun()
-                with col_remove:
-                    if st.button("Remove Last", use_container_width=True, disabled=len(st.session_state.form_color_ranges) <= 1):
-                        if len(st.session_state.form_color_ranges) > 1:
-                            st.session_state.form_color_ranges.pop()
-                            st.rerun()
-                with col_info:
-                    st.info(f"Ranges: {len(st.session_state.form_color_ranges)}")
-            with col_reset:
-                if st.button("Reset", use_container_width=True):
+            st.markdown("#### Color Ranges")
+
+            ranges_to_save = []
+            for idx, r in enumerate(st.session_state.form_color_ranges):
+                c1, c2, c3 = st.columns([2, 2, 2])
+                with c1:
+                    min_val = st.number_input(f"Min {idx}", value=float(r['min_value']), key=f"new_min_{idx}")
+                with c2:
+                    max_val = st.number_input(f"Max {idx}", value=float(r['max_value']), key=f"new_max_{idx}")
+                with c3:
+                    color_val = st.color_picker(f"Color {idx}", value=r['color'], key=f"new_col_{idx}")
+
+                ranges_to_save.append({
+                    'min_value': Decimal(str(min_val)),
+                    'max_value': Decimal(str(max_val)),
+                    'color': color_val
+                })
+
+            cadd, crem, creset = st.columns(3)
+
+            with cadd:
+                if st.button("➕ Add Range"):
+                    st.session_state.form_color_ranges.append({'min_value': 0.0, 'max_value': 100.0, 'color': '#ffffff'})
+                    st.rerun()
+
+            with crem:
+                if st.button("➖ Remove Last") and len(st.session_state.form_color_ranges) > 1:
+                    st.session_state.form_color_ranges.pop()
+                    st.rerun()
+
+            with creset:
+                if st.button("Reset"):
                     st.session_state.form_color_ranges = default_color
                     st.rerun()
 
-            if submit_config:
-                if not color_config_name or not selected_locations or not selected_dashboards:
-                    st.error("Configuration name, locations, and dashboard types are required")
-                else:
-                    try:
-                        table_color.put_item(Item={
-                            'id': str(uuid.uuid4()),
-                            'color_config_name': color_config_name,
-                            'locations': selected_locations,
-                            'dashboards': selected_dashboards,
-                            'ranges': ranges_to_save,
-                            'created_at': datetime.now().isoformat(),
-                            'created_by': st.session_state.get('authenticated_user', 'admin')
-                        })
-                        st.success(f"✅ Configuration '{color_config_name}' saved!")
-                        st.session_state.form_color_ranges = default_color
-                        time.sleep(2)
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to save configuration: {e}")
+            if st.button("💾 Save Configuration", type="primary"):
+                try:
+                    table_color.put_item(Item={
+                        'id': str(uuid.uuid4()),
+                        'color_config_name': color_config_name,
+                        'locations': selected_locations,
+                        'dashboards': selected_dashboards,
+                        'ranges': ranges_to_save,
+                        'created_at': datetime.now().isoformat(),
+                        'created_by': st.session_state.get('authenticated_user', 'admin')
+                    })
+                    st.success("Saved!")
+                    st.session_state.form_color_ranges = default_color
+                    time.sleep(1)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed: {e}")
 
         # ---- 4. Standardized Comparison Configuration ----
         with st.expander("📊 Standardized Comparison Configuration", expanded=False):
@@ -2094,3 +2718,58 @@ if admin_panel:
                                 time.sleep(1); st.rerun()
 
                     st.divider()
+
+        with st.expander("📧 Email Management", expanded=False):
+            st.caption(
+                "Global email list — addresses saved here appear as selectable "
+                "recipients in the Matrix Automation tab."
+            )
+ 
+            # Add
+            st.markdown("#### ➕ Add Email Address")
+            em_c1, em_c2 = st.columns([4, 1])
+            with em_c1:
+                new_email_input = st.text_input(
+                    "Email address",
+                    placeholder="name@company.com",
+                    label_visibility="collapsed",
+                    key="new_email_input"
+                )
+            with em_c2:
+                add_email_btn = st.button(
+                    "Add", type="primary",
+                    use_container_width=True,
+                    key="add_email_btn"
+                )
+ 
+            if add_email_btn:
+                val = new_email_input.strip().lower()
+                if not val or "@" not in val:
+                    st.error("Enter a valid email address.")
+                else:
+                    if save_email(val):
+                        st.success(f"✅ **{val}** added.")
+                        time.sleep(0.5)
+                        st.rerun()
+ 
+            st.markdown("---")
+ 
+            # List
+            st.markdown("#### 📋 Saved Email Addresses")
+            current_emails = get_saved_emails()
+ 
+            if not current_emails:
+                st.info("No email addresses saved yet.")
+            else:
+                st.caption(f"{len(current_emails)} address(es) in the global list.")
+                for em in current_emails:
+                    ec1, ec2 = st.columns([5, 1])
+                    with ec1:
+                        st.markdown(f"📧 `{em}`")
+                    with ec2:
+                        if st.button("🗑️", key=f"del_email_{em}",
+                                     use_container_width=True):
+                            if delete_email(em):
+                                st.success(f"Removed **{em}**.")
+                                time.sleep(0.5)
+                                st.rerun()
