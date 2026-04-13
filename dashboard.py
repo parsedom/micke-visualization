@@ -1021,8 +1021,7 @@ def _query_matrix_data(location: str, persons: int, time_val: str,
 def _build_excel_matrix(df: pd.DataFrame, zone_name: str, location: str,
                          persons_list: list) -> bytes:
     wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Price Matrix"
+    wb.remove(wb.active)
 
     hdr_font   = Font(bold=True, color="000000", name="Arial", size=9)
     hotel_font = Font(bold=True, name="Arial", size=9)
@@ -1049,110 +1048,111 @@ def _build_excel_matrix(df: pd.DataFrame, zone_name: str, location: str,
     all_dates  = sorted(df["checkin_date"].unique())
     col_labels = [datetime.strptime(d, "%Y-%m-%d").strftime("%d/%m/%Y")
                   for d in all_dates]
-
     all_headers = META_COLS + col_labels
     n_total     = len(all_headers)
 
-    for ci, label in enumerate(all_headers, start=1):
-        cell = ws.cell(row=1, column=ci, value=label)
-        cell.font = hdr_font
-        cell.alignment = center
-        cell.border = brd
+    FILTERS = [
+        ("No Extras",          False, False),
+        ("Free Cancellation",  False, True),
+        ("Breakfast Included", True,  False),
+        ("Breakfast + Cancel", True,  True),
+    ]
 
-    ws.row_dimensions[1].height = 28
+    def _write_sheet(ws, filtered_df):
+        for ci, label in enumerate(all_headers, start=1):
+            cell = ws.cell(row=1, column=ci, value=label)
+            cell.font      = hdr_font
+            cell.alignment = center
+            cell.border    = brd
+        ws.row_dimensions[1].height = 28
 
-    for ci, w in enumerate([45, 38, 12, 14, 22, 18, 18], start=1):
-        ws.column_dimensions[get_column_letter(ci)].width = w
-    for ci in range(n_meta + 1, n_total + 1):
-        ws.column_dimensions[get_column_letter(ci)].width = 12
+        for ci, w in enumerate([45, 38, 12, 14, 22, 18, 18], start=1):
+            ws.column_dimensions[get_column_letter(ci)].width = w
+        for ci in range(n_meta + 1, n_total + 1):
+            ws.column_dimensions[get_column_letter(ci)].width = 12
 
-    current_row = 2
+        if filtered_df.empty:
+            ws.cell(row=2, column=1, value="No data for this filter combination.").font = data_font
+            return
 
-    for persons in sorted(persons_list):
-        p_df = df[df["persons"] == persons].copy()
+        current_row = 2
+        for persons in sorted(persons_list):
+            p_df = filtered_df[filtered_df["persons"] == persons].copy()
+            if p_df.empty:
+                continue
 
-        ordered = sorted(p_df["row_id"].unique())
+            ordered = sorted(p_df["row_id"].unique())
+            meta_lookup = (
+                p_df.drop_duplicates(subset=["row_id"])
+                    .set_index("row_id")[["hotel_url", "review_score", "city",
+                                          "distance", "breakfast_included",
+                                          "free_cancellation"]]
+                    .to_dict("index")
+            )
+            pivot = p_df.pivot_table(
+                index="row_id", columns="checkin_date",
+                values="price", aggfunc="first"
+            )
 
-        meta_lookup = (
-            p_df.drop_duplicates(subset=["row_id"])
-                .set_index("row_id")[["hotel_url", "review_score", "city",
-                                      "distance", "breakfast_included",
-                                      "free_cancellation"]]
-                .to_dict("index")
+            for row_id in ordered:
+                meta  = meta_lookup.get(row_id, {})
+                hotel = row_id.split(" | ")[0]
+
+                url = meta.get("hotel_url", "")
+                uc  = ws.cell(row=current_row, column=1, value=url)
+                if url:
+                    uc.hyperlink = url
+                    uc.font = url_font
+                else:
+                    uc.font = data_font
+                uc.alignment = left
+                uc.border    = brd
+
+                nc = ws.cell(row=current_row, column=2, value=hotel)
+                nc.font = hotel_font; nc.alignment = left; nc.border = brd
+
+                rv = meta.get("review_score", "")
+                rc = ws.cell(row=current_row, column=3, value=float(rv) if rv else "")
+                rc.font = data_font; rc.alignment = center; rc.border = brd
+
+                cc = ws.cell(row=current_row, column=4, value=meta.get("city", ""))
+                cc.font = data_font; cc.alignment = left; cc.border = brd
+
+                dc = ws.cell(row=current_row, column=5, value=meta.get("distance", ""))
+                dc.font = data_font; dc.alignment = left; dc.border = brd
+
+                bc = ws.cell(row=current_row, column=6,
+                             value=str(meta.get("breakfast_included", False)))
+                bc.font = data_font; bc.alignment = center; bc.border = brd
+
+                fc = ws.cell(row=current_row, column=7,
+                             value=str(meta.get("free_cancellation", False)))
+                fc.font = data_font; fc.alignment = center; fc.border = brd
+
+                for col_offset, date_str in enumerate(all_dates):
+                    col_num = n_meta + col_offset + 1
+                    try:
+                        val = pivot.loc[row_id, date_str]
+                        if pd.isna(val):
+                            raise KeyError
+                        pc = ws.cell(row=current_row, column=col_num,
+                                     value=round(float(val), 1))
+                        pc.number_format = "0.0"
+                    except (KeyError, TypeError):
+                        pc = ws.cell(row=current_row, column=col_num, value="")
+                    pc.font = data_font; pc.alignment = center; pc.border = brd
+
+                current_row += 1
+
+        ws.freeze_panes = f"{get_column_letter(n_meta + 1)}2"
+
+    for sheet_label, bf, fc_flag in FILTERS:
+        mask = (
+            (df["breakfast_included"] == bf) &
+            (df["free_cancellation"]  == fc_flag)
         )
-
-        pivot = p_df.pivot_table(
-            index="row_id", columns="checkin_date",
-            values="price", aggfunc="first"
-        )
-
-        for row_id in ordered:
-            meta  = meta_lookup.get(row_id, {})
-            hotel = row_id.split(" | ")[0]
-
-            url = meta.get("hotel_url", "")
-            uc  = ws.cell(row=current_row, column=1, value=url)
-            if url:
-                uc.hyperlink = url
-                uc.font = url_font
-            else:
-                uc.font = data_font
-            uc.alignment = left
-            uc.border = brd
-
-            nc = ws.cell(row=current_row, column=2, value=hotel)
-            nc.font = hotel_font
-            nc.alignment = left
-            nc.border = brd
-
-            rv = meta.get("review_score", "")
-            rc = ws.cell(row=current_row, column=3,
-                         value=float(rv) if rv else "")
-            rc.font = data_font
-            rc.alignment = center
-            rc.border = brd
-
-            cc = ws.cell(row=current_row, column=4, value=meta.get("city", ""))
-            cc.font = data_font
-            cc.alignment = left
-            cc.border = brd
-
-            dc = ws.cell(row=current_row, column=5, value=meta.get("distance", ""))
-            dc.font = data_font
-            dc.alignment = left
-            dc.border = brd
-
-            bc = ws.cell(row=current_row, column=6,
-                         value=str(meta.get("breakfast_included", False)))
-            bc.font = data_font
-            bc.alignment = center
-            bc.border = brd
-
-            fc = ws.cell(row=current_row, column=7,
-                         value=str(meta.get("free_cancellation", False)))
-            fc.font = data_font
-            fc.alignment = center
-            fc.border = brd
-
-            for col_offset, date_str in enumerate(all_dates):
-                col_num = n_meta + col_offset + 1
-                try:
-                    val = pivot.loc[row_id, date_str]
-                    if pd.isna(val):
-                        raise KeyError
-                    pc = ws.cell(row=current_row, column=col_num,
-                                 value=round(float(val), 1))
-                    pc.number_format = "0.0"
-                except (KeyError, TypeError):
-                    pc = ws.cell(row=current_row, column=col_num, value="")
-
-                pc.font = data_font
-                pc.alignment = center
-                pc.border = brd
-
-            current_row += 1
-
-    ws.freeze_panes = f"{get_column_letter(n_meta + 1)}2"
+        ws = wb.create_sheet(title=sheet_label)
+        _write_sheet(ws, df[mask].copy())
 
     buf = io.BytesIO()
     wb.save(buf)
