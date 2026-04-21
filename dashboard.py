@@ -1019,7 +1019,7 @@ def _query_matrix_data(location: str, persons: int, time_val: str,
     ]
  
 def _build_excel_matrix(df: pd.DataFrame, zone_name: str, location: str,
-                         persons_list: list) -> bytes:
+                         persons_list: list, single_sheet: str = None) -> bytes:
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
@@ -1146,13 +1146,19 @@ def _build_excel_matrix(df: pd.DataFrame, zone_name: str, location: str,
 
         ws.freeze_panes = f"{get_column_letter(n_meta + 1)}2"
 
-    for sheet_label, bf, fc_flag in FILTERS:
-        mask = (
-            (df["breakfast_included"] == bf) &
-            (df["free_cancellation"]  == fc_flag)
-        )
-        ws = wb.create_sheet(title=sheet_label)
-        _write_sheet(ws, df[mask].copy())
+    if single_sheet:
+        # Filtered mode one sheet with exactly the pre-filtered data
+        ws = wb.create_sheet(title=single_sheet)
+        _write_sheet(ws, df)
+    else:
+        # All data mode — 4 sheets split by breakfast/cancellation combo
+        for sheet_label, bf, fc_flag in FILTERS:
+            mask = (
+                (df["breakfast_included"] == bf) &
+                (df["free_cancellation"]  == fc_flag)
+            )
+            ws = wb.create_sheet(title=sheet_label)
+            _write_sheet(ws, df[mask].copy())
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -1272,16 +1278,79 @@ if tab1:
                 cancellation_filter = st.checkbox("✅ Free Cancellation", value=False)
             
             with st.expander("📅 Date Ranges", expanded=True):
-                scraped_date_range = st.date_input(
-                    "View Dates", 
-                    value=[], 
-                    key="scrape_dates_unique"
-                )
-                price_date_range = st.date_input(
-                    "Stay Dates", 
-                    value=[], 
-                    key="price_dates_unique"
-                )
+                import datetime as _dt
+
+                def year_has_week53(year):
+                    try:
+                        _dt.date.fromisocalendar(year, 53, 1)
+                        return True
+                    except ValueError:
+                        return False
+
+                current_year = datetime.now().year
+
+                # ── View Dates (Scraped) ──────────────────────────────────────
+                st.markdown("**View Dates**")
+                view_mode = st.radio("View date input mode", ["📅 Calendar", "📆 Week"],
+                                    horizontal=True, key="view_date_mode",
+                                    label_visibility="collapsed")
+
+                selected_view_weeks = []  # always initialize
+
+                if view_mode == "📅 Calendar":
+                    scraped_date_range = st.date_input(
+                        "View Dates", value=[],
+                        key="scrape_dates_unique",
+                        label_visibility="collapsed"
+                    )
+                    scraped_week_selection = None
+                else:
+                    view_year_options = list(range(current_year - 2, current_year + 1))
+                    view_year = st.selectbox(
+                        "Year", view_year_options,
+                        index=len(view_year_options) - 1,
+                        key="view_year_sel"
+                    )
+                    max_view_week = 53 if year_has_week53(view_year) else 52
+                    selected_view_weeks = st.multiselect(
+                        "Weeks", list(range(1, max_view_week + 1)),
+                        format_func=lambda w: f"Week {w}",
+                        key="view_week_sel"
+                    )
+                    scraped_date_range = []
+                    scraped_week_selection = (view_year, selected_view_weeks) if selected_view_weeks else None
+
+                st.markdown("---")
+
+                # ── Stay Dates (Checkin) ─────────────────────────────────────
+                st.markdown("**Stay Dates**")
+                stay_mode = st.radio("Stay date input mode", ["📅 Calendar", "📆 Week"],
+                                    horizontal=True, key="stay_date_mode",
+                                    label_visibility="collapsed")
+
+                selected_stay_weeks = []  # always initialize
+
+                if stay_mode == "📅 Calendar":
+                    price_date_range = st.date_input(
+                        "Stay Dates", value=[],
+                        key="price_dates_unique",
+                        label_visibility="collapsed"
+                    )
+                    stay_week_selection = None
+                else:
+                    stay_year_options = list(range(current_year - 2, current_year + 3))
+                    stay_year = st.selectbox(
+                        "Year", stay_year_options, index=2,
+                        key="stay_year_sel"
+                    )
+                    max_stay_week = 53 if year_has_week53(stay_year) else 52
+                    selected_stay_weeks = st.multiselect(
+                        "Weeks", list(range(1, max_stay_week + 1)),
+                        format_func=lambda w: f"Week {w}",
+                        key="stay_week_sel"
+                    )
+                    price_date_range = []
+                    stay_week_selection = (stay_year, selected_stay_weeks) if selected_stay_weeks else None
             
             with st.expander("🎨 Color Configuration", expanded=True):
                 st.info("💡 Select a color preset for this location")
@@ -1310,22 +1379,59 @@ if tab1:
             query_button = st.button("🚀 Execute Query", type="primary", use_container_width=True)
 
         if query_button:
-            if len(scraped_date_range) != 2:
-                st.error("⚠️ Please select both scrape dates")
-                st.stop()
-            if len(price_date_range) != 2:
-                st.error("⚠️ Please select both stay dates")
-                st.stop()
+            def weeks_to_date_range(year, weeks):
+                import datetime as _dt
+                all_days = []
+                invalid = []
+                for w in weeks:
+                    try:
+                        all_days += [
+                            _dt.date.fromisocalendar(year, w, 1),
+                            _dt.date.fromisocalendar(year, w, 7)
+                        ]
+                    except ValueError:
+                        invalid.append(w)
+                if invalid:
+                    st.warning(f"⚠️ Week(s) {invalid} don't exist in {year} and were skipped.")
+                return (min(all_days), max(all_days)) if all_days else (None, None)
 
-            scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
-            scraped_end = scraped_date_range[1].strftime("%Y-%m-%d")
-            
-            try:
+            # ── Resolve scraped (view) dates ──────────────────────────────
+            if view_mode == "📅 Calendar":
+                if len(scraped_date_range) != 2:
+                    st.error("⚠️ Please select both View Dates (start & end)")
+                    st.stop()
+                scraped_start = scraped_date_range[0].strftime("%Y-%m-%d")
+                scraped_end   = scraped_date_range[1].strftime("%Y-%m-%d")
+            else:
+                if not selected_view_weeks:
+                    st.error("⚠️ Please select at least one View week")
+                    st.stop()
+                _vy, _vw = scraped_week_selection
+                _vs, _ve = weeks_to_date_range(_vy, _vw)
+                if _vs is None:
+                    st.error(f"❌ None of the selected View weeks exist in {_vy}.")
+                    st.stop()
+                scraped_start = _vs.strftime("%Y-%m-%d")
+                scraped_end   = _ve.strftime("%Y-%m-%d")
+
+            # ── Resolve stay (price/checkin) dates ───────────────────────
+            if stay_mode == "📅 Calendar":
+                if len(price_date_range) != 2:
+                    st.error("⚠️ Please select both Stay Dates (start & end)")
+                    st.stop()
                 price_start = price_date_range[0].strftime("%d-%m-%Y")
-                price_end = price_date_range[1].strftime("%d-%m-%Y")
-            except ValueError:
-                price_start = price_date_range[0].strftime("%d-%m-%Y")
-                price_end = price_date_range[1].strftime("%d-%m-%Y")
+                price_end   = price_date_range[1].strftime("%d-%m-%Y")
+            else:
+                if not selected_stay_weeks:
+                    st.error("⚠️ Please select at least one Stay week")
+                    st.stop()
+                _sy, _sw = stay_week_selection
+                _ss, _se = weeks_to_date_range(_sy, _sw)
+                if _ss is None:
+                    st.error(f"❌ None of the selected Stay weeks exist in {_sy}.")
+                    st.stop()
+                price_start = _ss.strftime("%d-%m-%Y")
+                price_end   = _se.strftime("%d-%m-%Y")
 
             with st.spinner("🔍 Searching hotels..."):
                 filters = {
@@ -1334,9 +1440,7 @@ if tab1:
                     "persons": str(persons),
                     "nights": str(nights)
                 }
-                
                 date_range = f"{price_start} - {price_end}"
-                
                 results = query_hotels(
                     filters=filters,
                     date_range=date_range,
@@ -1735,8 +1839,66 @@ if tab2:
                     st.warning(f"⚠️ No zones found for {calendar_location}")
             
             with st.expander("📅 Date Range", expanded=True):
-                calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
-                calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
+                selected_cal_weeks = [] 
+
+                cal_mode = st.radio("Date input mode", ["📅 Calendar", "📆 Week"],
+                                    horizontal=True, key="cal_date_mode",
+                                    label_visibility="collapsed")
+
+                if cal_mode == "📅 Calendar":
+                    calendar_start = st.date_input("Start Date", value=datetime(2025, 12, 1), key="cal_start_key")
+                    calendar_end = st.date_input("End Date", value=datetime(2025, 12, 15), key="cal_end_key")
+                else:
+                    current_year = datetime.now().year
+                    cal_year_options = list(range(current_year - 2, current_year + 3))
+                    cal_year = st.selectbox(
+                        "Year", cal_year_options,
+                        index=cal_year_options.index(current_year),
+                        key="cal_year_sel"
+                    )
+
+                    # Only show week 53 if the selected year actually has it
+                    import datetime as _dt
+                    def year_has_week53(year):
+                        try:
+                            _dt.date.fromisocalendar(year, 53, 1)
+                            return True
+                        except ValueError:
+                            return False
+
+                    max_week = 53 if year_has_week53(cal_year) else 52
+                    all_cal_weeks = list(range(1, max_week + 1))
+
+                    selected_cal_weeks = st.multiselect(
+                        "Weeks", all_cal_weeks,
+                        format_func=lambda w: f"Week {w}",
+                        key="cal_week_sel"
+                    )
+
+                    if selected_cal_weeks:
+                        all_days = []
+                        invalid_weeks = []
+                        for w in selected_cal_weeks:
+                            try:
+                                monday = _dt.date.fromisocalendar(cal_year, w, 1)
+                                sunday = _dt.date.fromisocalendar(cal_year, w, 7)
+                                all_days += [monday, sunday]
+                            except ValueError:
+                                invalid_weeks.append(w)
+
+                        if invalid_weeks:
+                            st.warning(f"⚠️ Week(s) {invalid_weeks} don't exist in {cal_year} and were skipped.")
+
+                        if all_days:
+                            calendar_start = min(all_days)
+                            calendar_end = max(all_days)
+                        else:
+                            calendar_start = None
+                            calendar_end = None
+                            st.error(f"None of the selected weeks exist in {cal_year}.")
+                    else:
+                        calendar_start = None
+                        calendar_end = None
 
             
             
@@ -1767,8 +1929,14 @@ if tab2:
             calendar_query_button = st.button("🔄 Load Calendar Data", type="primary", use_container_width=True)
 
         if calendar_query_button:
+            if cal_mode == "📆 Week" and (not selected_cal_weeks or calendar_start is None or calendar_end is None):
+                st.error("⚠️ Please select at least one valid week before loading data.")
+                st.stop()
+            elif cal_mode == "📅 Calendar" and (calendar_start is None or calendar_end is None):
+                st.error("⚠️ Please select a valid date range.")
+                st.stop()
+
             with st.spinner("📊 Generating calendar data..."):
-                
                 st.session_state.calendar_data = query_calendar_data(
                     price_start_date=calendar_start,
                     price_end_date=calendar_end,
@@ -1989,6 +2157,19 @@ if tab_matrix:
                 key="mx_persons",
                 format_func=lambda x: f"{x} Person{'s' if x > 1 else ''}"
             )
+            st.markdown("**🔽 Data Filters**")
+            mx_filter_mode = st.radio(
+                "Include in Excel",
+                ["All data (no filter)", "Apply filters"],
+                key="mx_filter_mode",
+                horizontal=True
+            )
+            if mx_filter_mode == "Apply filters":
+                mx_breakfast = st.checkbox("🍳 Breakfast Included", value=False, key="mx_breakfast")
+                mx_free_cancel = st.checkbox("✅ Free Cancellation", value=False, key="mx_free_cancel")
+            else:
+                mx_breakfast = None
+                mx_free_cancel = None
 
         with fc3:
             st.markdown("**📧 Email Recipients**")
@@ -2083,13 +2264,54 @@ if tab_matrix:
                             "for the selected scrape date."
                         )
                     else:
-                        # ── Step 3: Build Excel ───────────────────────────
+                        # ── Step 3: Apply breakfast/cancellation filter ───
+                        if mx_filter_mode == "Apply filters":
+                            df_excel = df_zone.copy()
+
+                            if mx_breakfast and mx_free_cancel:
+                                df_excel = df_excel[
+                                    (df_excel["breakfast_included"] == True) &
+                                    (df_excel["free_cancellation"] == True)
+                                ]
+                                filter_desc = "Breakfast_FreeCancel"
+                            elif mx_breakfast and not mx_free_cancel:
+                                df_excel = df_excel[
+                                    (df_excel["breakfast_included"] == True) &
+                                    (df_excel["free_cancellation"] == False)
+                                ]
+                                filter_desc = "Breakfast"
+                            elif mx_free_cancel and not mx_breakfast:
+                                df_excel = df_excel[
+                                    (df_excel["breakfast_included"] == False) &
+                                    (df_excel["free_cancellation"] == True)
+                                ]
+                                filter_desc = "FreeCancel"
+                            else:
+                                # Both unchecked — no extras
+                                df_excel = df_excel[
+                                    (df_excel["breakfast_included"] == False) &
+                                    (df_excel["free_cancellation"] == False)
+                                ]
+                                filter_desc = "NoExtras"
+
+                            if df_excel.empty:
+                                st.error("❌ No records match the selected filters. Try different filter options.")
+                                st.stop()
+
+                            st.info(f"🔽 Filter applied — **{filter_desc.replace('_', ' + ')}**: {len(df_excel):,} records")
+
+                        else:
+                            df_excel = df_zone.copy()
+                            filter_desc = "all"
+
+                        # ── Step 4: Build Excel ───────────────────────────
                         with st.spinner("📊 Building Excel matrix…"):
                             xlsx_bytes = _build_excel_matrix(
-                                df=df_zone,
+                                df=df_excel,
                                 zone_name=mx_zone,
                                 location=mx_location,
                                 persons_list=[mx_persons],
+                                single_sheet=filter_desc.replace("_", " + ") if mx_filter_mode == "Apply filters" else None,
                             )
 
                         persons_str = f"{mx_persons}p"
@@ -2097,7 +2319,8 @@ if tab_matrix:
                             f"price_matrix_{mx_location}_"
                             f"{mx_zone.replace(' ', '_')}_"
                             f"{mx_start.strftime('%Y%m%d')}_"
-                            f"{mx_time}.xlsx"
+                            f"{mx_time}_"
+                            f"{filter_desc}.xlsx"
                         )
                         subject = (
                             f"Hotel Price Matrix – {mx_location.title()} | "
@@ -2113,6 +2336,7 @@ if tab_matrix:
                             f"Scrape    : {mx_time}\n"
                             f"Start date: {mx_start.strftime('%d/%m/%Y')}\n"
                             f"Days fwd  : {int(mx_days)}\n"
+                            f"Filter    : {filter_desc.replace('_', ' + ')}\n"
                             f"Hotels    : {found_hotels} of "
                             f"{total_zone_hotels} in zone\n"
                             f"Generated : "
@@ -2120,7 +2344,7 @@ if tab_matrix:
                             f"Sent from the Hotel Dashboard."
                         )
 
-                        # ── Step 4: Send email ────────────────────────────
+                        # ── Step 5: Send email ────────────────────────────
                         with st.spinner(
                             f"📧 Sending to {len(all_recipients)} recipient(s)…"
                         ):
