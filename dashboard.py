@@ -166,7 +166,7 @@ aws_secret = st.secrets["AWS_SECRET_ACCESS_KEY"]
 region = st.secrets["AWS_DEFAULT_REGION"]
 
 # STD_TOP_VALUE = 600
-
+FINLAND_TZ = pytz.timezone('Europe/Helsinki')
 
 dynamodb = boto3.resource(
     'dynamodb',
@@ -183,6 +183,7 @@ table_logs = dynamodb.Table('MickeLoginLogs')
 table_config = dynamodb.Table('MickeAppConfig')
 table_zones = dynamodb.Table('MickeZones')
 table_emails = dynamodb.Table('MickeEmailList') 
+table_automations = dynamodb.Table('MickeAutomations')
 
 # ==================== ZONE HELPER FUNCTIONS ====================
 
@@ -326,6 +327,121 @@ def delete_email(email_address: str) -> bool:
     except Exception as e:
         st.error(f"Failed to delete email: {e}")
         return False
+    
+
+# ==================== AUTOMATION HELPER FUNCTIONS ====================
+ 
+def finland_hour_to_utc(finland_hour: int) -> int:
+    """
+    Convert a Finland local hour (0-23) to UTC hour.
+    Uses today's date so DST (UTC+2 winter / UTC+3 summer) is handled automatically.
+    """
+    now_fin  = datetime.now(FINLAND_TZ)
+    local_dt = FINLAND_TZ.localize(
+        datetime(now_fin.year, now_fin.month, now_fin.day, finland_hour, 0, 0)
+    )
+    return local_dt.astimezone(pytz.utc).hour
+ 
+ 
+def build_cron_expression(schedule_type: str, finland_hour: int,
+                           day_of_week: str = None) -> str:
+    """
+    Build an EventBridge Scheduler cron string from Finland time.
+    schedule_type: 'daily'  → cron(0 <utc_hour> * * ? *)
+    schedule_type: 'weekly' → cron(0 <utc_hour> ? * <DOW> *)
+    """
+    utc_hour = finland_hour_to_utc(finland_hour)
+    if schedule_type == 'daily':
+        return f"cron(0 {utc_hour} * * ? *)"
+    else:
+        return f"cron(0 {utc_hour} ? * {day_of_week} *)"
+ 
+ 
+def _filter_desc_from_flags(breakfast: bool, free_cancel: bool) -> str:
+    """Return a consistent filter description string."""
+    if breakfast and free_cancel:
+        return "Breakfast_FreeCancel"
+    elif breakfast:
+        return "Breakfast"
+    elif free_cancel:
+        return "FreeCancel"
+    else:
+        return "NoExtras"
+ 
+ 
+def load_automations() -> list:
+    """Scan all automation records from DynamoDB, sorted by name."""
+    try:
+        resp  = table_automations.scan()
+        items = resp.get('Items', [])
+        while 'LastEvaluatedKey' in resp:
+            resp   = table_automations.scan(ExclusiveStartKey=resp['LastEvaluatedKey'])
+            items.extend(resp.get('Items', []))
+        return sorted(items, key=lambda x: x.get('name', ''))
+    except Exception as e:
+        st.error(f"Failed to load automations: {e}")
+        return []
+ 
+ 
+def _scheduler_client():
+    return boto3.client('scheduler',
+                        aws_access_key_id=aws_key,
+                        aws_secret_access_key=aws_secret,
+                        region_name=region)
+ 
+ 
+def _lambda_client():
+    return boto3.client('lambda',
+                        aws_access_key_id=aws_key,
+                        aws_secret_access_key=aws_secret,
+                        region_name=region)
+ 
+ 
+def create_eventbridge_schedule(automation_id, cron_expr, enabled,
+                                 lambda_arn, eventbridge_role_arn):
+    schedule_name = f"matrix-{automation_id}"
+    try:
+        _scheduler_client().create_schedule(
+            Name=schedule_name,
+            ScheduleExpression=cron_expr,
+            Target={
+                'Arn':     lambda_arn,
+                'RoleArn': eventbridge_role_arn,
+                'Input':   json.dumps({'automation_id': automation_id})
+            },
+            FlexibleTimeWindow={'Mode': 'OFF'},
+            State='ENABLED' if enabled else 'DISABLED'
+        )
+        return schedule_name
+    except Exception as e:
+        st.error(f"EventBridge create error: {e}")
+        return None
+ 
+ 
+def update_eventbridge_schedule(schedule_name, cron_expr, enabled,
+                                 lambda_arn, eventbridge_role_arn, automation_id):
+    try:
+        _scheduler_client().update_schedule(
+            Name=schedule_name,
+            ScheduleExpression=cron_expr,
+            Target={
+                'Arn':     lambda_arn,
+                'RoleArn': eventbridge_role_arn,
+                'Input':   json.dumps({'automation_id': automation_id})
+            },
+            FlexibleTimeWindow={'Mode': 'OFF'},
+            State='ENABLED' if enabled else 'DISABLED'
+        )
+    except Exception as e:
+        st.error(f"EventBridge update error: {e}")
+ 
+ 
+def delete_eventbridge_schedule(schedule_name):
+    try:
+        _scheduler_client().delete_schedule(Name=schedule_name)
+    except Exception as e:
+        st.warning(f"Could not delete EventBridge schedule '{schedule_name}': {e}")
+
     
 # ==================== COLOR CONFIGURATION FUNCTIONS ====================
 
@@ -2997,3 +3113,567 @@ if admin_panel:
                                 st.success(f"Removed **{em}**.")
                                 time.sleep(0.5)
                                 st.rerun()
+        
+
+        with st.expander("⏰ Scheduled Automations", expanded=False):
+
+            try:
+                LAMBDA_ARN           = st.secrets["LAMBDA_ARN"]
+                EVENTBRIDGE_ROLE_ARN = st.secrets["EVENTBRIDGE_ROLE_ARN"]
+            except KeyError:
+                st.error("⚠️ `LAMBDA_ARN` and/or `EVENTBRIDGE_ROLE_ARN` are missing from Streamlit secrets.")
+                st.stop()
+
+            DAY_OPTIONS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+            DAY_LABELS  = {
+                "MON": "Monday",  "TUE": "Tuesday", "WED": "Wednesday",
+                "THU": "Thursday","FRI": "Friday",  "SAT": "Saturday",
+                "SUN": "Sunday"
+            }
+
+            now_fin = datetime.now(FINLAND_TZ)
+            utc_off = now_fin.strftime('%z')
+            st.info(
+                f"🇫🇮 All times are **Finland time** (Europe/Helsinki). "
+                f"Current offset from UTC: **{utc_off[:3]}:{utc_off[3:]}** "
+                f"(DST handled automatically)."
+            )
+
+            # ── CREATE NEW AUTOMATION ────────────────────────────────────
+            st.markdown("#### ➕ Create New Automation")
+
+            # Row 1: Name / Location / Zone  — ALL OUTSIDE FORM so zone updates live
+            cr1, cr2, cr3 = st.columns([2, 2, 2])
+            with cr1:
+                auto_name = st.text_input(
+                    "Automation Name",
+                    placeholder="e.g. Tampere Zone1 Morning Daily",
+                    key="new_auto_name"
+                )
+            with cr2:
+                auto_location = st.selectbox(
+                    "Location", ALL_LOCATIONS, key="new_auto_location"
+                )
+            with cr3:
+                auto_zones_raw = get_zones_for_location(auto_location)
+                zone_options   = [z['zone_name'] for z in auto_zones_raw] if auto_zones_raw else []
+                if zone_options:
+                    auto_zone = st.selectbox("Zone", zone_options, key="new_auto_zone")
+                else:
+                    st.warning("No zones for this location — create one in Zone Management.")
+                    auto_zone = ""
+
+            # Row 2: Persons / Scrape Time / Days Forward
+            cr4, cr5, cr6 = st.columns([2, 2, 2])
+            with cr4:
+                auto_persons = st.selectbox(
+                    "Persons", [1, 2], index=1, key="new_auto_persons"
+                )
+            with cr5:
+                auto_time = st.selectbox(
+                    "Scrape Time", ["morning", "evening"], key="new_auto_time"
+                )
+            with cr6:
+                auto_days_fwd = st.number_input(
+                    "Days Forward", min_value=1, max_value=365,
+                    value=365, step=1, key="new_auto_days_fwd"
+                )
+
+            # Row 3: Data Filters — outside form so checkboxes react immediately
+            st.markdown("**🔽 Data Filters**")
+            flt1, flt2, flt3 = st.columns([2, 2, 2])
+            with flt1:
+                auto_filter_mode = st.radio(
+                    "Include in Excel",
+                    ["All data (no filter)", "Apply filters"],
+                    key="new_auto_filter_mode",
+                    horizontal=True
+                )
+            with flt2:
+                auto_breakfast = st.checkbox(
+                    "🍳 Breakfast Included",
+                    value=False,
+                    key="new_auto_breakfast",
+                    disabled=(auto_filter_mode == "All data (no filter)")
+                )
+            with flt3:
+                auto_free_cancel = st.checkbox(
+                    "✅ Free Cancellation",
+                    value=False,
+                    key="new_auto_free_cancel",
+                    disabled=(auto_filter_mode == "All data (no filter)")
+                )
+
+            # Row 4: Schedule — outside form so day picker shows/hides live
+            st.markdown("**⏱️ Schedule**")
+            sc1, sc2, sc3 = st.columns([2, 2, 2])
+            with sc1:
+                sched_type = st.radio(
+                    "Run frequency",
+                    ["Every day", "Once a week"],
+                    horizontal=True,
+                    key="new_auto_sched_type"
+                )
+            with sc2:
+                auto_fin_hour = st.selectbox(
+                    "Run time (Finland time)",
+                    list(range(24)),
+                    format_func=lambda h: f"{h:02d}:00 Finland",
+                    index=8,
+                    key="new_auto_fin_hour"
+                )
+                preview_utc = finland_hour_to_utc(auto_fin_hour)
+                st.caption(f"≈ {preview_utc:02d}:00 UTC (today's DST offset)")
+            with sc3:
+                if sched_type == "Once a week":
+                    auto_dow = st.selectbox(
+                        "Day of week",
+                        DAY_OPTIONS,
+                        format_func=lambda d: DAY_LABELS[d],
+                        key="new_auto_dow"
+                    )
+                else:
+                    auto_dow = None
+                    st.caption("Runs every day at the selected time.")
+
+            auto_enabled = st.checkbox(
+                "Enable immediately", value=True, key="new_auto_enabled"
+            )
+
+            # Recipients
+            st.markdown("**📧 Recipients**")
+            saved_emails_auto = get_saved_emails()
+            auto_recipients   = st.multiselect(
+                "Recipients (from saved list)",
+                options=saved_emails_auto,
+                key="new_auto_recipients"
+            )
+            auto_extra_emails = st.text_area(
+                "Extra recipients (one per line)",
+                placeholder="extra@example.com",
+                height=68,
+                key="new_auto_extra_emails"
+            )
+
+            # Submit button (plain button, no form needed now)
+            if st.button("💾 Create Automation", type="primary",
+                         use_container_width=True, key="new_auto_submit"):
+
+                extra     = [e.strip() for e in auto_extra_emails.splitlines() if e.strip()]
+                all_recip = list(dict.fromkeys(auto_recipients + extra))
+
+                auto_filter_desc = (
+                    _filter_desc_from_flags(auto_breakfast, auto_free_cancel)
+                    if auto_filter_mode == "Apply filters"
+                    else "all"
+                )
+
+                errs = []
+                if not auto_name.strip():
+                    errs.append("Automation name is required.")
+                if not auto_zone:
+                    errs.append("Select a valid zone.")
+                if sched_type == "Once a week" and not auto_dow:
+                    errs.append("Select a day of week.")
+                if not all_recip:
+                    errs.append("Add at least one recipient.")
+                for err in errs:
+                    st.error(err)
+
+                if not errs:
+                    auto_id   = str(uuid.uuid4())
+                    cron_expr = build_cron_expression(
+                        schedule_type='daily' if sched_type == "Every day" else 'weekly',
+                        finland_hour=auto_fin_hour,
+                        day_of_week=auto_dow
+                    )
+                    sched_name = create_eventbridge_schedule(
+                        automation_id=auto_id,
+                        cron_expr=cron_expr,
+                        enabled=auto_enabled,
+                        lambda_arn=LAMBDA_ARN,
+                        eventbridge_role_arn=EVENTBRIDGE_ROLE_ARN
+                    )
+                    if sched_name:
+                        try:
+                            table_automations.put_item(Item={
+                                'automation_id':             auto_id,
+                                'name':                      auto_name.strip(),
+                                'location':                  auto_location,
+                                'zone':                      auto_zone,
+                                'persons':                   auto_persons,
+                                'time_val':                  auto_time,
+                                'days_forward':              int(auto_days_fwd),
+                                'filter_mode':               auto_filter_mode,
+                                'filter_breakfast':          auto_breakfast if auto_filter_mode == "Apply filters" else False,
+                                'filter_free_cancel':        auto_free_cancel if auto_filter_mode == "Apply filters" else False,
+                                'filter_desc':               auto_filter_desc,
+                                'schedule_type':             'daily' if sched_type == "Every day" else 'weekly',
+                                'schedule_dow':              auto_dow or '',
+                                'schedule_hour_finland':     auto_fin_hour,
+                                'schedule_cron':             cron_expr,
+                                'recipients':                all_recip,
+                                'enabled':                   auto_enabled,
+                                'eventbridge_schedule_name': sched_name,
+                                'created_at':  datetime.now(FINLAND_TZ).isoformat(),
+                                'created_by':  st.session_state.get('authenticated_user', 'admin'),
+                                'last_run':    '',
+                                'last_status': ''
+                            })
+                            freq_str    = "every day" if sched_type == "Every day" \
+                                          else f"every {DAY_LABELS.get(auto_dow, '?')}"
+                            filter_disp = auto_filter_desc.replace('_', ' + ')
+                            st.success(
+                                f"✅ **{auto_name}** created — runs {freq_str} at "
+                                f"{auto_fin_hour:02d}:00 Finland time. "
+                                f"Filter: **{filter_disp}**."
+                            )
+                            time.sleep(1); st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to save automation to DynamoDB: {e}")
+
+            # ── EXISTING AUTOMATIONS LIST ────────────────────────────────
+            st.markdown("---")
+            st.markdown("#### 📋 Existing Automations")
+
+            automations = load_automations()
+
+            if not automations:
+                st.info("No automations yet. Create one above.")
+            else:
+                for auto in automations:
+                    aid              = auto['automation_id']
+                    sched_name       = auto.get('eventbridge_schedule_name', '')
+                    fin_hour         = int(auto.get('schedule_hour_finland', 0))
+                    sched_type_saved = auto.get('schedule_type', 'daily')
+                    dow_saved        = auto.get('schedule_dow', '')
+
+                    freq_desc = (
+                        f"Every day @ {fin_hour:02d}:00 🇫🇮"
+                        if sched_type_saved == 'daily'
+                        else f"Every {DAY_LABELS.get(dow_saved, dow_saved)} @ {fin_hour:02d}:00 🇫🇮"
+                    )
+
+                    saved_filter_desc = auto.get('filter_desc', 'all')
+                    filter_disp = (
+                        saved_filter_desc.replace('_', ' + ')
+                        if saved_filter_desc != 'all'
+                        else 'All data'
+                    )
+
+                    last_run    = auto.get('last_run', '')
+                    last_status = auto.get('last_status', '')
+                    if   last_status == 'success':       status_badge = "✅ success"
+                    elif last_status.startswith('fail'): status_badge = f"❌ {last_status}"
+                    elif last_status == '':              status_badge = "⏳ not yet run"
+                    else:                                status_badge = last_status
+
+                    with st.container():
+                        sc1, sc2, sc3, sc4 = st.columns([3, 3, 2, 1])
+                        with sc1:
+                            st.markdown(f"**{auto.get('name','')}**")
+                            st.caption(
+                                f"{auto.get('location','')} · {auto.get('zone','')} · "
+                                f"{auto.get('persons','')}p · {auto.get('time_val','')} · "
+                                f"🔽 {filter_disp}"
+                            )
+                        with sc2:
+                            st.markdown(f"🗓️ {freq_desc}")
+                            st.caption(
+                                f"📧 {len(auto.get('recipients',[]))} recipient(s) · "
+                                f"📅 {int(auto.get('days_forward', 365))} days fwd"
+                            )
+                        with sc3:
+                            st.markdown(f"Last: `{last_run[:16] if last_run else 'Never'}`")
+                            st.caption(status_badge)
+                        with sc4:
+                            is_on     = auto.get('enabled', True)
+                            new_state = st.toggle("On", value=is_on, key=f"auto_toggle_{aid}")
+                            if new_state != is_on:
+                                cron_expr = auto.get(
+                                    'schedule_cron',
+                                    build_cron_expression(sched_type_saved, fin_hour, dow_saved or None)
+                                )
+                                update_eventbridge_schedule(
+                                    sched_name, cron_expr, new_state,
+                                    LAMBDA_ARN, EVENTBRIDGE_ROLE_ARN, aid
+                                )
+                                try:
+                                    table_automations.update_item(
+                                        Key={'automation_id': aid},
+                                        UpdateExpression='SET enabled = :e',
+                                        ExpressionAttributeValues={':e': new_state}
+                                    )
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to toggle: {e}")
+
+                    ab1, ab2, ab3, ab4 = st.columns([2, 2, 2, 2])
+                    with ab1:
+                        if st.button("▶️ Run Now", key=f"auto_run_{aid}", use_container_width=True):
+                            with st.spinner("Invoking Lambda…"):
+                                try:
+                                    resp = _lambda_client().invoke(
+                                        FunctionName=LAMBDA_ARN,
+                                        InvocationType='RequestResponse',
+                                        Payload=json.dumps({'automation_id': aid})
+                                    )
+                                    payload = json.loads(resp['Payload'].read().decode())
+                                    if resp.get('StatusCode') == 200:
+                                        st.success("✅ Lambda invoked successfully!")
+                                    else:
+                                        st.error(f"Lambda returned: {payload}")
+                                except Exception as e:
+                                    st.error(f"Invoke failed: {e}")
+                    with ab2:
+                        if st.button("✏️ Edit", key=f"auto_edit_{aid}", use_container_width=True):
+                            st.session_state[f"auto_editing_{aid}"] = \
+                                not st.session_state.get(f"auto_editing_{aid}", False)
+                    with ab3:
+                        if st.button("🗑️ Delete", key=f"auto_del_{aid}", use_container_width=True):
+                            st.session_state[f"auto_del_confirm_{aid}"] = True
+                    with ab4:
+                        recip_list = auto.get('recipients', [])
+                        st.caption(
+                            "\n".join(recip_list[:3]) +
+                            (f"\n+{len(recip_list)-3} more" if len(recip_list) > 3 else "")
+                        )
+
+                    if st.session_state.get(f"auto_del_confirm_{aid}", False):
+                        st.warning(
+                            f"⚠️ Delete **{auto.get('name','')}**? "
+                            "This also removes the EventBridge schedule."
+                        )
+                        yd, nd, _ = st.columns([1, 1, 3])
+                        with yd:
+                            if st.button("✅ Yes", key=f"auto_del_yes_{aid}", use_container_width=True):
+                                delete_eventbridge_schedule(sched_name)
+                                try:
+                                    table_automations.delete_item(Key={'automation_id': aid})
+                                    st.success("Deleted.")
+                                    st.session_state[f"auto_del_confirm_{aid}"] = False
+                                    time.sleep(1); st.rerun()
+                                except Exception as e:
+                                    st.error(f"DB delete failed: {e}")
+                        with nd:
+                            if st.button("❌ Cancel", key=f"auto_del_no_{aid}", use_container_width=True):
+                                st.session_state[f"auto_del_confirm_{aid}"] = False; st.rerun()
+
+                    # ── Inline edit — also fully outside any form ────────
+                    if st.session_state.get(f"auto_editing_{aid}", False):
+                        st.markdown(f"##### ✏️ Editing: {auto.get('name','')}")
+
+                        ee1, ee2, ee3 = st.columns([2, 2, 2])
+                        with ee1:
+                            e_name = st.text_input(
+                                "Name", value=auto.get('name', ''),
+                                key=f"e_name_{aid}"
+                            )
+                        with ee2:
+                            e_loc_options = ALL_LOCATIONS
+                            e_loc = st.selectbox(
+                                "Location", e_loc_options,
+                                index=e_loc_options.index(auto.get('location', 'tampere'))
+                                if auto.get('location') in e_loc_options else 0,
+                                key=f"e_loc_{aid}"
+                            )
+                        with ee3:
+                            e_zones      = get_zones_for_location(e_loc)
+                            e_zone_names = [z['zone_name'] for z in e_zones]
+                            cur_z_idx    = (e_zone_names.index(auto.get('zone', ''))
+                                            if auto.get('zone') in e_zone_names else 0)
+                            e_zone = st.selectbox(
+                                "Zone",
+                                e_zone_names if e_zone_names else ["—"],
+                                index=cur_z_idx,
+                                key=f"e_zone_{aid}"
+                            )
+
+                        eg1, eg2, eg3 = st.columns([2, 2, 2])
+                        with eg1:
+                            e_persons = st.selectbox(
+                                "Persons", [1, 2],
+                                index=[1, 2].index(int(auto.get('persons', 2))),
+                                key=f"e_persons_{aid}"
+                            )
+                        with eg2:
+                            e_time = st.selectbox(
+                                "Scrape Time", ["morning", "evening"],
+                                index=["morning", "evening"].index(
+                                    auto.get('time_val', 'morning')),
+                                key=f"e_time_{aid}"
+                            )
+                        with eg3:
+                            e_days_fwd = st.number_input(
+                                "Days Forward", min_value=1, max_value=365,
+                                value=int(auto.get('days_forward', 365)),
+                                key=f"e_days_fwd_{aid}"
+                            )
+
+                        # Edit filters — live reactive
+                        st.markdown("**🔽 Data Filters**")
+                        ef1, ef2, ef3 = st.columns([2, 2, 2])
+                        with ef1:
+                            e_filter_mode = st.radio(
+                                "Include in Excel",
+                                ["All data (no filter)", "Apply filters"],
+                                index=0 if auto.get('filter_mode', 'All data (no filter)') == "All data (no filter)" else 1,
+                                key=f"e_filter_mode_{aid}",
+                                horizontal=True
+                            )
+                        with ef2:
+                            e_breakfast = st.checkbox(
+                                "🍳 Breakfast Included",
+                                value=auto.get('filter_breakfast', False),
+                                key=f"e_breakfast_{aid}",
+                                disabled=(e_filter_mode == "All data (no filter)")
+                            )
+                        with ef3:
+                            e_free_cancel = st.checkbox(
+                                "✅ Free Cancellation",
+                                value=auto.get('filter_free_cancel', False),
+                                key=f"e_free_cancel_{aid}",
+                                disabled=(e_filter_mode == "All data (no filter)")
+                            )
+
+                        # Edit schedule — live reactive
+                        st.markdown("**⏱️ Schedule**")
+                        es1, es2, es3 = st.columns([2, 2, 2])
+                        with es1:
+                            e_sched_type = st.radio(
+                                "Run frequency",
+                                ["Every day", "Once a week"],
+                                index=0 if auto.get('schedule_type', 'daily') == 'daily' else 1,
+                                horizontal=True,
+                                key=f"e_sched_type_{aid}"
+                            )
+                        with es2:
+                            e_fin_hour = st.selectbox(
+                                "Run time (Finland time)",
+                                list(range(24)),
+                                format_func=lambda h: f"{h:02d}:00 Finland",
+                                index=int(auto.get('schedule_hour_finland', 8)),
+                                key=f"e_fin_hour_{aid}"
+                            )
+                            st.caption(f"≈ {finland_hour_to_utc(e_fin_hour):02d}:00 UTC")
+                        with es3:
+                            if e_sched_type == "Once a week":
+                                cur_dow_idx = (
+                                    DAY_OPTIONS.index(auto.get('schedule_dow', 'MON'))
+                                    if auto.get('schedule_dow') in DAY_OPTIONS else 0
+                                )
+                                e_dow = st.selectbox(
+                                    "Day of week", DAY_OPTIONS,
+                                    format_func=lambda d: DAY_LABELS[d],
+                                    index=cur_dow_idx,
+                                    key=f"e_dow_{aid}"
+                                )
+                            else:
+                                e_dow = None
+                                st.caption("Runs every day.")
+
+                        e_enabled = st.checkbox(
+                            "Enabled",
+                            value=auto.get('enabled', True),
+                            key=f"e_enabled_{aid}"
+                        )
+
+                        # Edit recipients
+                        st.markdown("**📧 Recipients**")
+                        saved_emails_edit = get_saved_emails()
+                        cur_recip = auto.get('recipients', [])
+                        e_recipients = st.multiselect(
+                            "Recipients",
+                            options=saved_emails_edit,
+                            default=[r for r in cur_recip if r in saved_emails_edit],
+                            key=f"e_recip_{aid}"
+                        )
+                        e_extra = st.text_area(
+                            "Extra recipients (one per line)",
+                            value="\n".join(
+                                [r for r in cur_recip if r not in saved_emails_edit]
+                            ),
+                            height=68,
+                            key=f"e_extra_{aid}"
+                        )
+
+                        # Save / Cancel buttons
+                        esave1, esave2 = st.columns([1, 1])
+                        with esave1:
+                            if st.button("💾 Save Changes", type="primary",
+                                         use_container_width=True,
+                                         key=f"e_save_{aid}"):
+
+                                e_extra_list = [e.strip() for e in e_extra.splitlines() if e.strip()]
+                                e_all_recip  = list(dict.fromkeys(e_recipients + e_extra_list))
+
+                                e_filter_desc = (
+                                    _filter_desc_from_flags(e_breakfast, e_free_cancel)
+                                    if e_filter_mode == "Apply filters"
+                                    else "all"
+                                )
+
+                                e_errs = []
+                                if not e_name.strip(): e_errs.append("Name required.")
+                                if not e_all_recip:    e_errs.append("Add at least one recipient.")
+                                for err in e_errs:
+                                    st.error(err)
+
+                                if not e_errs:
+                                    e_cron = build_cron_expression(
+                                        schedule_type='daily' if e_sched_type == "Every day" else 'weekly',
+                                        finland_hour=e_fin_hour,
+                                        day_of_week=e_dow
+                                    )
+                                    update_eventbridge_schedule(
+                                        sched_name, e_cron, e_enabled,
+                                        LAMBDA_ARN, EVENTBRIDGE_ROLE_ARN, aid
+                                    )
+                                    try:
+                                        table_automations.update_item(
+                                            Key={'automation_id': aid},
+                                            UpdateExpression=(
+                                                "SET #n=:n, #loc=:l, #z=:z, persons=:p, "
+                                                "time_val=:t, days_forward=:df, "
+                                                "filter_mode=:fm, filter_breakfast=:fb, "
+                                                "filter_free_cancel=:ffc, filter_desc=:fd, "
+                                                "schedule_type=:st, schedule_dow=:sd, "
+                                                "schedule_hour_finland=:sfh, schedule_cron=:sc, "
+                                                "recipients=:r, enabled=:e"
+                                            ),
+                                            ExpressionAttributeNames={
+                                                '#n':   'name',
+                                                '#loc': 'location',
+                                                '#z':   'zone'
+                                            },
+                                            ExpressionAttributeValues={
+                                                ':n':   e_name.strip(),
+                                                ':l':   e_loc,
+                                                ':z':   e_zone,
+                                                ':p':   e_persons,
+                                                ':t':   e_time,
+                                                ':df':  int(e_days_fwd),
+                                                ':fm':  e_filter_mode,
+                                                ':fb':  e_breakfast if e_filter_mode == "Apply filters" else False,
+                                                ':ffc': e_free_cancel if e_filter_mode == "Apply filters" else False,
+                                                ':fd':  e_filter_desc,
+                                                ':st':  'daily' if e_sched_type == "Every day" else 'weekly',
+                                                ':sd':  e_dow or '',
+                                                ':sfh': e_fin_hour,
+                                                ':sc':  e_cron,
+                                                ':r':   e_all_recip,
+                                                ':e':   e_enabled
+                                            }
+                                        )
+                                        st.success("✅ Automation updated!")
+                                        st.session_state[f"auto_editing_{aid}"] = False
+                                        time.sleep(1); st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Failed to update: {e}")
+                        with esave2:
+                            if st.button("❌ Cancel", use_container_width=True,
+                                         key=f"e_cancel_{aid}"):
+                                st.session_state[f"auto_editing_{aid}"] = False
+                                st.rerun()
+
+                    st.divider()
