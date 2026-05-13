@@ -3415,14 +3415,13 @@ if admin_panel:
                                 try:
                                     resp = _lambda_client().invoke(
                                         FunctionName=LAMBDA_ARN,
-                                        InvocationType='RequestResponse',
+                                        InvocationType='Event',
                                         Payload=json.dumps({'automation_id': aid})
                                     )
-                                    payload = json.loads(resp['Payload'].read().decode())
-                                    if resp.get('StatusCode') == 200:
-                                        st.success("✅ Lambda invoked successfully!")
+                                    if resp.get('StatusCode') == 202:
+                                        st.success("✅ Lambda triggered! Running in background — email will arrive shortly.")
                                     else:
-                                        st.error(f"Lambda returned: {payload}")
+                                        st.error(f"Unexpected status code: {resp.get('StatusCode')}")
                                 except Exception as e:
                                     st.error(f"Invoke failed: {e}")
                     with ab2:
