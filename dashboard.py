@@ -24,6 +24,8 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import smtplib
 from email.message import EmailMessage
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 st.set_page_config(
     page_title="Hotel Booking Dashboard",
@@ -175,8 +177,8 @@ dynamodb = boto3.resource(
     region_name=region
 )
 
-table = dynamodb.Table('HotelPrices')
-table_calender = dynamodb.Table('HotelPricesCalendar')
+# table = dynamodb.Table('HotelPrices')
+# table_calender = dynamodb.Table('HotelPricesCalendar')
 table_user = dynamodb.Table('MickeUser')
 table_color = dynamodb.Table('micke_color_config')
 table_logs = dynamodb.Table('MickeLoginLogs')
@@ -186,6 +188,15 @@ table_emails = dynamodb.Table('MickeEmailList')
 table_automations = dynamodb.Table('MickeAutomations')
 
 # ==================== ZONE HELPER FUNCTIONS ====================
+
+def get_db_conn():
+    return psycopg2.connect(
+        host=st.secrets["PG_HOST"],
+        dbname=st.secrets["PG_DB"],
+        user=st.secrets["PG_USER"],
+        password=st.secrets["PG_PASS"],
+        port=st.secrets.get("PG_PORT", 5432)
+    )
 
 @st.cache_data(ttl=60)
 def get_zones_for_location(location: str) -> list:
@@ -801,80 +812,156 @@ def make_x_label(price_date_series):
 
     
 # ==================== QUERY FUNCTIONS ====================
-def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
-    """Query DynamoDB for hotel prices based on filters and date ranges."""
-    location = filters.get('location')
-    time = filters.get('time')
-    persons = filters.get('persons')
-    nights = filters.get('nights')
+# def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
+#     """Query DynamoDB for hotel prices based on filters and date ranges."""
+#     location = filters.get('location')
+#     time = filters.get('time')
+#     persons = filters.get('persons')
+#     nights = filters.get('nights')
     
+#     if date_range:
+#         dates = date_range.split(' - ')
+#         def convert_date_format(date_str):
+#             day, month, year = date_str.split('-')
+#             return f"{year}-{month}-{day}"
+        
+#         checkin_start = convert_date_format(dates[0])
+#         checkin_end = convert_date_format(dates[1])
+#     else:
+#         checkin_start = None
+#         checkin_end = None
+
+#     partition_key = f"{location}#{persons}#{nights}#{time}"
+    
+#     filter_expression = None
+#     if checkin_start and checkin_end:
+#         filter_expression = Attr('checkin_date').between(checkin_start, checkin_end)
+    
+#     all_items = []
+    
+#     try:
+#         key_condition = (
+#             Key('location#persons#nights#time').eq(partition_key) &
+#             Key('scraped_date#hotel_id#checkin_date#checkout_date')
+#                 .between(f"{scraped_date_start}#", f"{scraped_date_end}~")
+#         )
+        
+#         response = table.query(
+#             KeyConditionExpression=key_condition,
+#             FilterExpression=filter_expression
+#         )
+        
+#         items = response['Items']
+        
+#         while 'LastEvaluatedKey' in response:
+#             response = table.query(
+#                 KeyConditionExpression=key_condition,
+#                 FilterExpression=filter_expression,
+#                 ExclusiveStartKey=response['LastEvaluatedKey']
+#             )
+#             items.extend(response['Items'])
+        
+#         all_items.extend(items)
+        
+#         transformed_items = []
+#         for item in all_items:
+#             transformed_items.append({
+#                 'name': item.get('hotel_name', ''),
+#                 'price': item.get('price', 0),
+#                 'price_date': item.get('checkin_date', ''),
+#                 'scrape_date': item.get('scraped_date', ''),
+#                 'location': item.get('location', ''),
+#                 'persons': item.get('persons', 0),
+#                 'nights': item.get('nights', 0),
+#                 'time': item.get('time', ''),
+#                 'review_score': item.get('review_score', 0),
+#                 'city': item.get('city', ''),
+#                 'distance': item.get('distance', ''),
+#                 'hotel_url': item.get('hotel_url', ''),
+#                 'breakfast_included': item.get('breakfast_included', False),
+#                 'free_cancellation': item.get('free_cancellation', False)
+#             })
+        
+#         return transformed_items
+    
+#     except Exception as e:
+#         st.error(f"Error querying DynamoDB: {str(e)}")
+#         return []
+
+def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
+    """Query PostgreSQL for hotel prices based on filters and date ranges."""
+    location = filters.get('location')
+    time_val = filters.get('time')
+    persons  = filters.get('persons')
+    nights   = filters.get('nights')
+
     if date_range:
         dates = date_range.split(' - ')
         def convert_date_format(date_str):
             day, month, year = date_str.split('-')
             return f"{year}-{month}-{day}"
-        
         checkin_start = convert_date_format(dates[0])
-        checkin_end = convert_date_format(dates[1])
+        checkin_end   = convert_date_format(dates[1])
     else:
         checkin_start = None
-        checkin_end = None
+        checkin_end   = None
 
-    partition_key = f"{location}#{persons}#{nights}#{time}"
-    
-    filter_expression = None
-    if checkin_start and checkin_end:
-        filter_expression = Attr('checkin_date').between(checkin_start, checkin_end)
-    
-    all_items = []
-    
+    sql = """
+        SELECT
+            hotel_name,
+            hotel_url,
+            review_score,
+            city,
+            distance,
+            breakfast_included,
+            free_cancellation,
+            scraped_date::text   AS scraped_date,
+            persons,
+            kv.key               AS price_date,
+            kv.value::numeric    AS price
+        FROM hotel_prices,
+             jsonb_each(prices) AS kv(key, value)
+        WHERE location    = %s
+          AND persons     = %s
+          AND nights      = %s
+          AND time        = %s
+          AND scraped_date BETWEEN %s AND %s
+          AND kv.key      BETWEEN %s AND %s
+    """
+    params = (
+        location, str(persons), str(nights), time_val,
+        scraped_date_start, scraped_date_end,
+        checkin_start, checkin_end
+    )
+
     try:
-        key_condition = (
-            Key('location#persons#nights#time').eq(partition_key) &
-            Key('scraped_date#hotel_id#checkin_date#checkout_date')
-                .between(f"{scraped_date_start}#", f"{scraped_date_end}~")
-        )
-        
-        response = table.query(
-            KeyConditionExpression=key_condition,
-            FilterExpression=filter_expression
-        )
-        
-        items = response['Items']
-        
-        while 'LastEvaluatedKey' in response:
-            response = table.query(
-                KeyConditionExpression=key_condition,
-                FilterExpression=filter_expression,
-                ExclusiveStartKey=response['LastEvaluatedKey']
-            )
-            items.extend(response['Items'])
-        
-        all_items.extend(items)
-        
-        transformed_items = []
-        for item in all_items:
-            transformed_items.append({
-                'name': item.get('hotel_name', ''),
-                'price': item.get('price', 0),
-                'price_date': item.get('checkin_date', ''),
-                'scrape_date': item.get('scraped_date', ''),
-                'location': item.get('location', ''),
-                'persons': item.get('persons', 0),
-                'nights': item.get('nights', 0),
-                'time': item.get('time', ''),
-                'review_score': item.get('review_score', 0),
-                'city': item.get('city', ''),
-                'distance': item.get('distance', ''),
-                'hotel_url': item.get('hotel_url', ''),
-                'breakfast_included': item.get('breakfast_included', False),
-                'free_cancellation': item.get('free_cancellation', False)
-            })
-        
-        return transformed_items
-    
+        with get_db_conn() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(sql, params)
+                rows = cur.fetchall()
+
+        return [
+            {
+                'name':               row['hotel_name'],
+                'price':              float(row['price']),
+                'price_date':         row['price_date'],
+                'scrape_date':        row['scraped_date'],
+                'location':           location,
+                'persons':            row['persons'],
+                'nights':             nights,
+                'time':               time_val,
+                'review_score':       row['review_score'],
+                'city':               row['city'],
+                'distance':           row['distance'],
+                'hotel_url':          row['hotel_url'],
+                'breakfast_included': row['breakfast_included'],
+                'free_cancellation':  row['free_cancellation'],
+            }
+            for row in rows
+        ]
+
     except Exception as e:
-        st.error(f"Error querying DynamoDB: {str(e)}")
+        st.error(f"Error querying PostgreSQL: {str(e)}")
         return []
 
 # def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
@@ -908,232 +995,446 @@ def query_hotels(filters, date_range, scraped_date_start, scraped_date_end):
 
 #     return metrics
 
-def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
-    location = "tampere"
-    time = "morning"
-    persons = 2
-    nights = 1
+# def query_calendar_hotels(date_range, scraped_date_start, scraped_date_end):
+#     location = "tampere"
+#     time = "morning"
+#     persons = 2
+#     nights = 1
 
-    if date_range:
-        dates = date_range.split(' - ')
-        day, month, year = dates[0].split('-')
-        checkin_date = f"{year}-{month}-{day}"
-    else:
-        return []
+#     if date_range:
+#         dates = date_range.split(' - ')
+#         day, month, year = dates[0].split('-')
+#         checkin_date = f"{year}-{month}-{day}"
+#     else:
+#         return []
 
-    partition_key = f"{location}#{persons}#{nights}#{time}"
+#     partition_key = f"{location}#{persons}#{nights}#{time}"
 
-    all_items = []
+#     all_items = []
 
-    try:
-        key_condition = (
-            Key('location#persons#nights#time').eq(partition_key) &
-            Key('checkin_date#scraped_date').between(
-                f"{checkin_date}#{scraped_date_start}",
-                f"{checkin_date}#{scraped_date_end}~"
-            )
-        )
+#     try:
+#         key_condition = (
+#             Key('location#persons#nights#time').eq(partition_key) &
+#             Key('checkin_date#scraped_date').between(
+#                 f"{checkin_date}#{scraped_date_start}",
+#                 f"{checkin_date}#{scraped_date_end}~"
+#             )
+#         )
 
-        response = table.query(
-            IndexName='hotel_prices_by_checkin_scraped',
-            KeyConditionExpression=key_condition
-        )
+#         response = table.query(
+#             IndexName='hotel_prices_by_checkin_scraped',
+#             KeyConditionExpression=key_condition
+#         )
 
-        items = response['Items']
+#         items = response['Items']
 
-        while 'LastEvaluatedKey' in response:
-            response = table.query(
-                IndexName='hotel_prices_by_checkin_scraped',
-                KeyConditionExpression=key_condition,
-                ExclusiveStartKey=response['LastEvaluatedKey']
-            )
-            items.extend(response['Items'])
+#         while 'LastEvaluatedKey' in response:
+#             response = table.query(
+#                 IndexName='hotel_prices_by_checkin_scraped',
+#                 KeyConditionExpression=key_condition,
+#                 ExclusiveStartKey=response['LastEvaluatedKey']
+#             )
+#             items.extend(response['Items'])
 
-        all_items.extend(items)
+#         all_items.extend(items)
 
-        transformed_items = []
-        for item in all_items:
-            transformed_items.append({
-                'name': item.get('hotel_name', ''),
-                'price': item.get('price', 0),
-                'price_date': item.get('checkin_date', ''),
-                'scrape_date': item.get('scraped_date', ''),
-                'location': item.get('location', ''),
-                'persons': item.get('persons', 0),
-                'nights': item.get('nights', 0),
-                'time': item.get('time', ''),
-                'review_score': item.get('review_score', 0),
-                'city': item.get('city', ''),
-                'distance': item.get('distance', ''),
-                'hotel_url': item.get('hotel_url', ''),
-                'breakfast_included': item.get('breakfast_included', False),
-                'free_cancellation': item.get('free_cancellation', False)
-            })
+#         transformed_items = []
+#         for item in all_items:
+#             transformed_items.append({
+#                 'name': item.get('hotel_name', ''),
+#                 'price': item.get('price', 0),
+#                 'price_date': item.get('checkin_date', ''),
+#                 'scrape_date': item.get('scraped_date', ''),
+#                 'location': item.get('location', ''),
+#                 'persons': item.get('persons', 0),
+#                 'nights': item.get('nights', 0),
+#                 'time': item.get('time', ''),
+#                 'review_score': item.get('review_score', 0),
+#                 'city': item.get('city', ''),
+#                 'distance': item.get('distance', ''),
+#                 'hotel_url': item.get('hotel_url', ''),
+#                 'breakfast_included': item.get('breakfast_included', False),
+#                 'free_cancellation': item.get('free_cancellation', False)
+#             })
 
-        return transformed_items
+#         return transformed_items
 
-    except Exception:
-        return []
+#     except Exception:
+#         return []
+    
+# def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
+#     """Query data for calendar heatmap."""
+#     price_dates = []
+#     d = price_start_date
+#     while d <= price_end_date:
+#         price_dates.append(d.strftime("%Y-%m-%d"))  # YYYY-MM-DD (DB format)
+#         d += timedelta(days=1)
+    
+#     time = "morning"
+#     persons = 2
+#     nights = 1
+#     partition_key = f"{location}#{persons}#{nights}#{time}"
+    
+#     metrics = {
+#         'availability': {},
+#         'price_avg': {},
+#         'free_cancel_avg': {}
+#     }
+    
+#     zone_mapping = {
+#         'zone1': ZONE1_HOTELS,
+#         'zone2': ZONE2_HOTELS,
+#         'zone3': ZONE3_HOTELS,
+#         'alert': Alert_Comparison
+#     }
+    
+#     selected_zone = zone_mapping.get(zone_filter, ZONE1_HOTELS)
+    
+#     for idx, pdate in enumerate(price_dates, 1):
+#         # For this price date, scrape window is 30 days before it
+#         price_dt = datetime.strptime(pdate, "%Y-%m-%d")
+#         scrape_start_dt = price_dt - timedelta(days=30)
+        
+#         scraped_start = scrape_start_dt.strftime("%Y-%m-%d")
+#         scraped_end = pdate
+
+#         price_ddmmyyyy = price_dt.strftime("%d-%m-%Y")
+#         date_range_for_query = f"{price_ddmmyyyy} - {price_ddmmyyyy}"
+
+
+#         results = query_calendar_hotels(
+#             date_range=date_range_for_query,
+#             scraped_date_start=scraped_start,
+#             scraped_date_end=scraped_end
+#         )
+
+#         # Query for price averages (30-day scrape window)
+#         if not results:
+#             metrics['free_cancel_avg'][pdate] = 0
+#             metrics['price_avg'][pdate] = 0
+#             metrics['availability'][pdate] = 0
+#             continue
+
+#         df = pd.DataFrame(results)
+#         df['price'] = pd.to_numeric(df['price'], errors='coerce')
+#         df = df.dropna(subset=['price'])
+#         fc_df = df.copy()
+#         wo_df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
+
+#         fc_df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == True)]
+
+#         wo_unique_hotels = sorted(wo_df['name'].unique())
+#         fc_unique_hotels = sorted(fc_df['name'].unique())
+
+#         wo_available_zone1 = [hotel for hotel in selected_zone if hotel in wo_unique_hotels]
+#         fc_available_zone1 = [hotel for hotel in selected_zone if hotel in fc_unique_hotels]
+
+#         wo_df_zone1 = wo_df[wo_df['name'].isin(wo_available_zone1)]
+#         fc_df_zone1 = fc_df[fc_df['name'].isin(fc_available_zone1)]
+
+#         wo_avg = round(wo_df_zone1['price'].mean(),2) if not wo_df_zone1.empty else 0
+#         fc_avg = round(fc_df_zone1['price'].mean(),2) if not fc_df_zone1.empty else 0
+
+#         total_records = len(df)
+#         price_ddmmyyyy_avail = price_dt.strftime("%d-%m-%Y")
+#         date_range_for_avail = f"{price_ddmmyyyy_avail} - {price_ddmmyyyy_avail}"
+        
+#         results_avail = query_calendar_hotels(
+#             date_range=date_range_for_avail,
+#             scraped_date_start=pdate,
+#             scraped_date_end=pdate
+#         )
+        
+#         if results_avail:
+#             df_avail = pd.DataFrame(results_avail)
+#             df_avail['price'] = pd.to_numeric(df_avail['price'], errors='coerce')
+#             df_avail = df_avail.dropna(subset=['price'])
+#             df_avail = df_avail[(df_avail['breakfast_included'] == False)]
+#             unique_hotels_avail = sorted(df_avail['name'].unique())
+#             available_zone1 = [hotel for hotel in selected_zone if hotel in unique_hotels_avail]
+#         else:
+#             available_zone1 = []
+        
+#         num_zone1_available = len(available_zone1)
+
+#         TOTAL_ZONE1 = len(selected_zone)
+#         zone1_avail_pct = round((num_zone1_available / TOTAL_ZONE1) * 100, 1) if TOTAL_ZONE1 > 0 else 0
+
+#         metrics['free_cancel_avg'][pdate] = fc_avg
+#         metrics['price_avg'][pdate] = wo_avg
+#         metrics['availability'][pdate] = zone1_avail_pct
+    
+#     return metrics
 
 def query_calendar_data(price_start_date, price_end_date, zone_filter="zone1", location="tampere"):
-    """Query data for calendar heatmap."""
-    price_dates = []
-    d = price_start_date
-    while d <= price_end_date:
-        price_dates.append(d.strftime("%Y-%m-%d"))  # YYYY-MM-DD (DB format)
-        d += timedelta(days=1)
-    
-    time = "morning"
+    """Query data for calendar heatmap — 2 DB calls total regardless of date range."""
+
+    location_db = "tampere"
+    time_val = "morning"
     persons = 2
     nights = 1
-    partition_key = f"{location}#{persons}#{nights}#{time}"
-    
-    metrics = {
-        'availability': {},
-        'price_avg': {},
-        'free_cancel_avg': {}
-    }
-    
+
     zone_mapping = {
         'zone1': ZONE1_HOTELS,
         'zone2': ZONE2_HOTELS,
         'zone3': ZONE3_HOTELS,
         'alert': Alert_Comparison
     }
-    
-    selected_zone = zone_mapping.get(zone_filter, ZONE1_HOTELS)
-    
-    for idx, pdate in enumerate(price_dates, 1):
-        # For this price date, scrape window is 30 days before it
-        price_dt = datetime.strptime(pdate, "%Y-%m-%d")
-        scrape_start_dt = price_dt - timedelta(days=30)
-        
-        scraped_start = scrape_start_dt.strftime("%Y-%m-%d")
-        scraped_end = pdate
+    zone_hotels = zone_mapping.get(zone_filter, ZONE1_HOTELS)
+    zone_hotels_set = set(zone_hotels)
 
-        price_ddmmyyyy = price_dt.strftime("%d-%m-%Y")
-        date_range_for_query = f"{price_ddmmyyyy} - {price_ddmmyyyy}"
+    price_dates = []
+    d = price_start_date
+    while d <= price_end_date:
+        price_dates.append(d.strftime("%Y-%m-%d"))
+        d += timedelta(days=1)
 
+    if not price_dates:
+        return {'availability': {}, 'price_avg': {}, 'free_cancel_avg': {}}
 
-        results = query_calendar_hotels(
-            date_range=date_range_for_query,
-            scraped_date_start=scraped_start,
-            scraped_date_end=scraped_end
-        )
+    checkin_start   = price_dates[0]
+    checkin_end     = price_dates[-1]
+    earliest_scrape = (price_start_date - timedelta(days=30)).strftime("%Y-%m-%d")
+    latest_scrape   = price_end_date.strftime("%Y-%m-%d")
 
-        # Query for price averages (30-day scrape window)
-        if not results:
-            metrics['free_cancel_avg'][pdate] = 0
-            metrics['price_avg'][pdate] = 0
-            metrics['availability'][pdate] = 0
-            continue
+    price_sql = """
+        SELECT
+            hotel_name,
+            breakfast_included,
+            free_cancellation,
+            scraped_date::text AS scraped_date,
+            kv.key             AS checkin_date,
+            kv.value::numeric  AS price
+        FROM hotel_prices,
+             jsonb_each(prices) AS kv(key, value)
+        WHERE location     = %s
+          AND persons      = %s
+          AND nights       = %s
+          AND time         = %s
+          AND scraped_date BETWEEN %s AND %s
+          AND kv.key       BETWEEN %s AND %s
+    """
 
-        df = pd.DataFrame(results)
-        df['price'] = pd.to_numeric(df['price'], errors='coerce')
-        df = df.dropna(subset=['price'])
-        fc_df = df.copy()
-        wo_df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == False)]
+    avail_sql = """
+        SELECT
+            hotel_name,
+            breakfast_included,
+            scraped_date::text AS scraped_date,
+            kv.key             AS checkin_date,
+            kv.value::numeric  AS price
+        FROM hotel_prices,
+             jsonb_each(prices) AS kv(key, value)
+        WHERE location          = %s
+          AND persons           = %s
+          AND nights            = %s
+          AND time              = %s
+          AND scraped_date::text = kv.key
+          AND kv.key            BETWEEN %s AND %s
+    """
 
-        fc_df = df[(df['breakfast_included'] == False) & (df['free_cancellation'] == True)]
+    try:
+        with get_db_conn() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
 
-        wo_unique_hotels = sorted(wo_df['name'].unique())
-        fc_unique_hotels = sorted(fc_df['name'].unique())
+                cur.execute(price_sql, (
+                    location_db, str(persons), str(nights), time_val,
+                    earliest_scrape, latest_scrape,
+                    checkin_start, checkin_end
+                ))
+                df_prices = pd.DataFrame(cur.fetchall())
 
-        wo_available_zone1 = [hotel for hotel in selected_zone if hotel in wo_unique_hotels]
-        fc_available_zone1 = [hotel for hotel in selected_zone if hotel in fc_unique_hotels]
+                cur.execute(avail_sql, (
+                    location_db, str(persons), str(nights), time_val,
+                    checkin_start, checkin_end
+                ))
+                df_avail = pd.DataFrame(cur.fetchall())
 
-        wo_df_zone1 = wo_df[wo_df['name'].isin(wo_available_zone1)]
-        fc_df_zone1 = fc_df[fc_df['name'].isin(fc_available_zone1)]
+    except Exception as e:
+        st.error(f"Error querying database: {e}")
+        return {'availability': {}, 'price_avg': {}, 'free_cancel_avg': {}}
 
-        wo_avg = round(wo_df_zone1['price'].mean(),2) if not wo_df_zone1.empty else 0
-        fc_avg = round(fc_df_zone1['price'].mean(),2) if not fc_df_zone1.empty else 0
+    if df_prices.empty and df_avail.empty:
+        return {'availability': {}, 'price_avg': {}, 'free_cancel_avg': {}}
 
-        total_records = len(df)
-        price_ddmmyyyy_avail = price_dt.strftime("%d-%m-%Y")
-        date_range_for_avail = f"{price_ddmmyyyy_avail} - {price_ddmmyyyy_avail}"
-        
-        results_avail = query_calendar_hotels(
-            date_range=date_range_for_avail,
-            scraped_date_start=pdate,
-            scraped_date_end=pdate
-        )
-        
-        if results_avail:
-            df_avail = pd.DataFrame(results_avail)
-            df_avail['price'] = pd.to_numeric(df_avail['price'], errors='coerce')
-            df_avail = df_avail.dropna(subset=['price'])
-            df_avail = df_avail[(df_avail['breakfast_included'] == False)]
-            unique_hotels_avail = sorted(df_avail['name'].unique())
-            available_zone1 = [hotel for hotel in selected_zone if hotel in unique_hotels_avail]
+    # Pre-process once outside the loop
+    if not df_prices.empty:
+        df_prices['price'] = pd.to_numeric(df_prices['price'], errors='coerce')
+        df_prices = df_prices[df_prices['hotel_name'].isin(zone_hotels_set)]
+        df_wo = df_prices[
+            (df_prices['breakfast_included'] == False) &
+            (df_prices['free_cancellation']  == False)
+        ]
+        df_fc = df_prices[
+            (df_prices['breakfast_included'] == False) &
+            (df_prices['free_cancellation']  == True)
+        ]
+    else:
+        df_wo = pd.DataFrame()
+        df_fc = pd.DataFrame()
+
+    if not df_avail.empty:
+        df_avail['price'] = pd.to_numeric(df_avail['price'], errors='coerce')
+        df_avail_filtered = df_avail[
+            (df_avail['hotel_name'].isin(zone_hotels_set)) &
+            (df_avail['breakfast_included'] == False)
+        ]
+    else:
+        df_avail_filtered = pd.DataFrame()
+
+    metrics = {'availability': {}, 'price_avg': {}, 'free_cancel_avg': {}}
+
+    for pdate in price_dates:
+        price_dt     = datetime.strptime(pdate, "%Y-%m-%d")
+        scrape_floor = (price_dt - timedelta(days=30)).strftime("%Y-%m-%d")
+
+        if not df_wo.empty:
+            wo_day = df_wo[
+                (df_wo['checkin_date'] == pdate) &
+                (df_wo['scraped_date'] >= scrape_floor) &
+                (df_wo['scraped_date'] <= pdate)
+            ]
+            metrics['price_avg'][pdate] = round(wo_day['price'].mean(), 2) if not wo_day.empty else 0
         else:
-            available_zone1 = []
-        
-        num_zone1_available = len(available_zone1)
+            metrics['price_avg'][pdate] = 0
 
-        TOTAL_ZONE1 = len(selected_zone)
-        zone1_avail_pct = round((num_zone1_available / TOTAL_ZONE1) * 100, 1) if TOTAL_ZONE1 > 0 else 0
+        if not df_fc.empty:
+            fc_day = df_fc[
+                (df_fc['checkin_date'] == pdate) &
+                (df_fc['scraped_date'] >= scrape_floor) &
+                (df_fc['scraped_date'] <= pdate)
+            ]
+            metrics['free_cancel_avg'][pdate] = round(fc_day['price'].mean(), 2) if not fc_day.empty else 0
+        else:
+            metrics['free_cancel_avg'][pdate] = 0
 
-        metrics['free_cancel_avg'][pdate] = fc_avg
-        metrics['price_avg'][pdate] = wo_avg
-        metrics['availability'][pdate] = zone1_avail_pct
-    
+        if not df_avail_filtered.empty:
+            avail_day    = df_avail_filtered[df_avail_filtered['checkin_date'] == pdate]
+            found_hotels = set(avail_day['hotel_name'].unique())
+            num_available = len(zone_hotels_set & found_hotels)
+            metrics['availability'][pdate] = (
+                round((num_available / len(zone_hotels_set)) * 100, 1)
+                if zone_hotels_set else 0
+            )
+        else:
+            metrics['availability'][pdate] = 0
+
     return metrics
+
+# def _query_matrix_data(location: str, persons: int, time_val: str,
+#                         start_date, days_forward: int) -> list:
+#     """
+#     Query HotelPrices for a single persons/time combo.
+#     - scrape_date = start_date (same day the user picks)
+#     - checkin window = start_date → start_date + days_forward - 1
+#     - nights = 1
+#     - No breakfast/cancellation filter — returns all rows
+#     """
+#     scraped_date_str = start_date.strftime("%Y-%m-%d")
+
+#     end_date      = start_date + timedelta(days=days_forward - 1)
+#     checkin_start = start_date.strftime("%Y-%m-%d")
+#     checkin_end   = end_date.strftime("%Y-%m-%d")
+
+#     pk = f"{location}#{persons}#1#{time_val}"
+
+#     key_cond    = (
+#         Key("location#persons#nights#time").eq(pk) &
+#         Key("scraped_date#hotel_id#checkin_date#checkout_date")
+#             .between(f"{scraped_date_str}#", f"{scraped_date_str}~")
+#     )
+#     filter_expr = Attr("checkin_date").between(checkin_start, checkin_end)
+
+#     items = []
+#     try:
+#         resp = table.query(KeyConditionExpression=key_cond,
+#                            FilterExpression=filter_expr)
+#         items.extend(resp["Items"])
+#         while "LastEvaluatedKey" in resp:
+#             resp = table.query(
+#                 KeyConditionExpression=key_cond,
+#                 FilterExpression=filter_expr,
+#                 ExclusiveStartKey=resp["LastEvaluatedKey"]
+#             )
+#             items.extend(resp["Items"])
+#     except Exception as e:
+#         st.error(f"DynamoDB query error: {e}")
+
+#     return [
+#         {
+#             "name":               item.get("hotel_name", ""),
+#             "price":              item.get("price", 0),
+#             "checkin_date":       item.get("checkin_date", ""),
+#             "hotel_url":          item.get("hotel_url", ""),
+#             "review_score":       item.get("review_score", ""),
+#             "city":               item.get("city", ""),
+#             "distance":           item.get("distance", ""),
+#             "breakfast_included": item.get("breakfast_included", False),
+#             "free_cancellation":  item.get("free_cancellation", False),
+#             "persons":            persons,
+#         }
+#         for item in items
+#     ]
 
 def _query_matrix_data(location: str, persons: int, time_val: str,
                         start_date, days_forward: int) -> list:
-    """
-    Query HotelPrices for a single persons/time combo.
-    - scrape_date = start_date (same day the user picks)
-    - checkin window = start_date → start_date + days_forward - 1
-    - nights = 1
-    - No breakfast/cancellation filter — returns all rows
-    """
     scraped_date_str = start_date.strftime("%Y-%m-%d")
-
-    end_date      = start_date + timedelta(days=days_forward - 1)
+    end_date = start_date + timedelta(days=days_forward - 1)
     checkin_start = start_date.strftime("%Y-%m-%d")
-    checkin_end   = end_date.strftime("%Y-%m-%d")
+    checkin_end = end_date.strftime("%Y-%m-%d")
 
-    pk = f"{location}#{persons}#1#{time_val}"
-
-    key_cond    = (
-        Key("location#persons#nights#time").eq(pk) &
-        Key("scraped_date#hotel_id#checkin_date#checkout_date")
-            .between(f"{scraped_date_str}#", f"{scraped_date_str}~")
+    sql = """
+        SELECT
+            hotel_name,
+            hotel_url,
+            review_score,
+            city,
+            distance,
+            breakfast_included,
+            free_cancellation,
+            persons,
+            kv.key              AS checkin_date,
+            kv.value::numeric   AS price
+        FROM hotel_prices,
+             jsonb_each(prices) AS kv(key, value)
+        WHERE location    = %s
+          AND persons     = %s
+          AND nights      = '1'
+          AND time        = %s
+          AND scraped_date = %s
+          AND kv.key      BETWEEN %s AND %s
+    """
+    params = (
+        location, str(persons), time_val,
+        scraped_date_str,
+        checkin_start, checkin_end
     )
-    filter_expr = Attr("checkin_date").between(checkin_start, checkin_end)
 
-    items = []
     try:
-        resp = table.query(KeyConditionExpression=key_cond,
-                           FilterExpression=filter_expr)
-        items.extend(resp["Items"])
-        while "LastEvaluatedKey" in resp:
-            resp = table.query(
-                KeyConditionExpression=key_cond,
-                FilterExpression=filter_expr,
-                ExclusiveStartKey=resp["LastEvaluatedKey"]
-            )
-            items.extend(resp["Items"])
+        with get_db_conn() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(sql, params)
+                rows = cur.fetchall()
+
+        return [
+            {
+                'name':               row['hotel_name'],
+                'price':              float(row['price']),
+                'checkin_date':       row['checkin_date'],
+                'hotel_url':          row['hotel_url'],
+                'review_score':       row['review_score'],
+                'city':               row['city'],
+                'distance':           row['distance'],
+                'breakfast_included': row['breakfast_included'],
+                'free_cancellation':  row['free_cancellation'],
+                'persons':            persons,
+            }
+            for row in rows
+        ]
+
     except Exception as e:
         st.error(f"DynamoDB query error: {e}")
-
-    return [
-        {
-            "name":               item.get("hotel_name", ""),
-            "price":              item.get("price", 0),
-            "checkin_date":       item.get("checkin_date", ""),
-            "hotel_url":          item.get("hotel_url", ""),
-            "review_score":       item.get("review_score", ""),
-            "city":               item.get("city", ""),
-            "distance":           item.get("distance", ""),
-            "breakfast_included": item.get("breakfast_included", False),
-            "free_cancellation":  item.get("free_cancellation", False),
-            "persons":            persons,
-        }
-        for item in items
-    ]
- 
+        return []
+    
 def _build_excel_matrix(df: pd.DataFrame, zone_name: str, location: str,
                          persons_list: list, single_sheet: str = None) -> bytes:
     wb = openpyxl.Workbook()
